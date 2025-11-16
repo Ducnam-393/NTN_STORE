@@ -1,0 +1,137 @@
+﻿@model List<NTN_STORE.Models.Product>
+
+@{
+    ViewData["Title"] = "Sản phẩm";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid">
+    <div class="row px-xl-5">
+
+        <!-- Filter Sidebar -->
+        <div class="col-lg-3 col-md-4">
+            <form method="get">
+
+                <!-- Search -->
+                <div class="bg-light p-4 mb-4">
+                    <h5 class="font-weight-bold mb-3">Tìm kiếm</h5>
+                    <input name="search" class="form-control" placeholder="Tìm giày..."
+                           value="@ViewBag.Search" />
+                </div>
+
+                <!-- Category -->
+                <div class="bg-light p-4 mb-4">
+                    <h5 class="font-weight-bold mb-3">Danh mục</h5>
+                    @foreach (var c in ViewBag.Categories)
+                    {
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label>@c.Name</label>
+                            <input type="radio" name="categoryId" value="@c.Id"
+                                   @(ViewBag.CurrentCategory == c.Id ? "checked" : "") />
+                        </div>
+                    }
+                </div>
+
+                <!-- Brand -->
+                <div class="bg-light p-4 mb-4">
+                    <h5 class="font-weight-bold mb-3">Thương hiệu</h5>
+                    @foreach (var b in ViewBag.Brands)
+                    {
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label>@b.Name</label>
+                            <input type="radio" name="brandId" value="@b.Id"
+                                   @(ViewBag.CurrentBrand == b.Id ? "checked" : "") />
+                        </div>
+                    }
+                </div>
+
+                <!-- Price Filter -->
+                <div class="bg-light p-4 mb-4">
+                    <h5 class="font-weight-bold mb-3">Khoảng giá</h5>
+                    <input name="minPrice" class="form-control mb-2" placeholder="Giá thấp nhất"
+                           value="@ViewBag.MinPrice" />
+                    <input name="maxPrice" class="form-control mb-2" placeholder="Giá cao nhất"
+                           value="@ViewBag.MaxPrice" />
+                </div>
+
+                <button class="btn btn-primary w-100">Lọc sản phẩm</button>
+                <a href="/Product" class="btn btn-secondary w-100 mt-2">Reset</a>
+
+            </form>
+        </div>
+
+        <!-- Product List -->
+        <div class="col-lg-9 col-md-8">
+            <div class="row pb-3">
+
+                @foreach (var p in Model)
+                {
+                    <div class="col-lg-4 col-md-6 col-sm-6 pb-1">
+                        <div class="product-item bg-light mb-4">
+                            <div class="product-img position-relative overflow-hidden">
+                                <img class="img-fluid w-100"
+                                     src="@(p.Images?.FirstOrDefault()?.ImageUrl ?? "/img/default-shoe.jpg")" />
+
+                                <div class="product-action">
+                                    <a class="btn btn-outline-dark btn-square" href="#">
+                                        <i class="fa fa-shopping-cart"></i>
+                                    </a>
+                                    <a class="btn btn-outline-dark btn-square" href="#">
+                                        <i class="far fa-heart"></i>
+                                    </a>
+                                    <a class="btn btn-outline-dark btn-square" href="#">
+                                        <i class="fa fa-search"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="text-center py-4">
+                                <a class="h6 text-decoration-none text-truncate"
+                                   href="/Product/Detail/@p.Id">@p.Name</a>
+
+                                <div class="d-flex align-items-center justify-content-center mt-2">
+                                    <h5>@p.Price.ToString("N0")₫</h5>
+
+                                    @if (p.OriginalPrice.HasValue)
+                                    {
+                                        <h6 class="text-muted ml-2">
+                                            <del>@p.OriginalPrice.Value.ToString("N0")₫</del>
+                                        </h6>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination justify-content-center">
+                @{
+                    int total = ViewBag.TotalItems;
+                    int page = ViewBag.Page;
+                    int pageSize = ViewBag.PageSize;
+                    int totalPages = (int)Math.Ceiling((double)total / pageSize);
+                }
+
+                <nav>
+                    <ul class="pagination">
+
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            <li class="page-item @(page == i ? "active" : "")">
+                                <a class="page-link" href="?page=@i">@i</a>
+                            </li>
+                        }
+
+                    </ul>
+                </nav>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
