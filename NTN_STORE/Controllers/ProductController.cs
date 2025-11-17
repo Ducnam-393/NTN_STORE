@@ -7,8 +7,6 @@ using System;
 
 namespace NTN_STORE.Controllers
 {
-    [Area("Admin")]
-    [Authorize(Roles = "Admin")]
     public class ProductController : Controller
     {
         private readonly NTNStoreContext _context;

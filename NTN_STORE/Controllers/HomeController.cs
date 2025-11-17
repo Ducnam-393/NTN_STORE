@@ -4,8 +4,6 @@ using NTN_STORE.Models.ViewModels;
 
 namespace NTN_STORE.Controllers
 {
-    [Area("Admin")]
-    [Authorize(Roles = "Admin")]
     public class HomeController : Controller
     {
         public IActionResult Index()

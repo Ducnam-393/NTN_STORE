@@ -10,8 +10,7 @@ using Microsoft.AspNetCore.Identity; // Dùng UserManager
 
 namespace NTN_STORE.Controllers
 {
-    [Area("Admin")]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class CartController : Controller
     {
         private readonly NTNStoreContext _context;
