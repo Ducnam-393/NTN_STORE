@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 namespace NTN_STORE.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = "Admin")]
     public class ProductsController : Controller
     {
         private readonly NTNStoreContext _context;

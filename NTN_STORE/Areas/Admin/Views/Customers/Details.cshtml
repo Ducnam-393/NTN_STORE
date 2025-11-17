@@ -1,0 +1,47 @@
+﻿@model Microsoft.AspNetCore.Identity.IdentityUser
+@{
+    ViewData["Title"] = "Chi tiết Khách hàng";
+    var roles = ViewBag.Roles as IList<string>;
+}
+
+<h1 class="h3 mb-4 text-gray-800">Chi tiết Khách hàng</h1>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Thông tin Tài khoản</h6>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">ID Người dùng</dt>
+            <dd class="col-sm-9">@Model.Id</dd>
+
+            <dt class="col-sm-3">Tên đăng nhập</dt>
+            <dd class="col-sm-9">@Model.UserName</dd>
+
+            <dt class="col-sm-3">Email</dt>
+            <dd class="col-sm-9">@Model.Email</dd>
+
+            <dt class="col-sm-3">Email đã xác nhận</dt>
+            <dd class="col-sm-9">@Model.EmailConfirmed</dd>
+
+            <dt class="col-sm-3">Số điện thoại</dt>
+            <dd class="col-sm-9">@(Model.PhoneNumber ?? "Chưa cung cấp")</dd>
+
+            <dt class="col-sm-3">Các Quyền (Roles)</dt>
+            <dd class="col-sm-9">
+                @if (roles != null && roles.Any())
+                {
+                    @string.Join(", ", roles)
+                }
+                else
+                {
+                    <span class="text-muted">Không có quyền đặc biệt.</span>
+                }
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index" class="btn btn-secondary">Trở lại Danh sách</a>
+</div>

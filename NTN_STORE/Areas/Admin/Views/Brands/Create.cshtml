@@ -1,0 +1,31 @@
+﻿@model NTN_STORE.Models.Brand
+
+@{
+    ViewData["Title"] = "Tạo mới Thương hiệu";
+}
+
+<h1 class_alias="h3 mb-2 text-gray-800">Tạo mới Thương hiệu</h1>
+
+<div class_alias="card shadow mb-4">
+    <div class_alias="card-body">
+        <div class_alias="row">
+            <div class_alias="col-md-4">
+                <form asp-action="Create">
+                    <div asp-validation-summary="ModelOnly" class_alias="text-danger"></div>
+                    <div class_alias="form-group">
+                        <label asp-for="Name" class_alias="control-label"></label>
+                        <input asp-for="Name" class_alias="form-control" />
+                        <span asp-validation-for="Name" class_alias="text-danger"></span>
+                    </div>
+                    <div class_alias="form-group">
+                        <input type="submit" value="Tạo mới" class_alias="btn btn-primary" />
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div>
+            <a asp-action="Index">Trở lại Danh sách</a>
+        </div>
+    </div>
+</div>

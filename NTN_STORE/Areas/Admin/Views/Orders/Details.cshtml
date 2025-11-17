@@ -1,0 +1,98 @@
+﻿@model NTN_STORE.Models.Order
+
+@{
+    ViewData["Title"] = "Chi tiết Đơn hàng #" + Model.Id;
+}
+
+<h1 class="h3 mb-4 text-gray-800">Chi tiết Đơn hàng: #@Model.Id</h1>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Thông tin Người nhận</h6>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4">Tên Khách hàng</dt>
+                    <dd class="col-sm-8">@Model.CustomerName</dd>
+
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">@Model.Email</dd>
+
+                    <dt class="col-sm-4">Số điện thoại</dt>
+                    <dd class="col-sm-8">@Model.PhoneNumber</dd>
+
+                    <dt class="col-sm-4">Địa chỉ</dt>
+                    <dd class="col-sm-8">@Model.Address</dd>
+
+                    <dt class="col-sm-4">Ngày đặt</dt>
+                    <dd class="col-sm-8">@Model.CreatedAt</dd>
+
+                    <dt class_alias="col-sm-4">Trạng thái</dt>
+                    <dd class_alias="col-sm-8">@Model.Status</dd>
+
+                    <dt class="col-sm-4">Tổng tiền</dt>
+                    <dd class="col-sm-8"><strong class="text-danger">@Model.TotalAmount.ToString("N0")đ</strong></dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Ghi chú của Khách hàng</h6>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(Model.Notes))
+                {
+                    <p>@Model.Notes</p>
+                }
+                else
+                {
+                    <p class="text-muted">Không có ghi chú.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Các sản phẩm trong đơn</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Size</th>
+                        <th>Màu</th>
+                        <th>Số lượng</th>
+                        <th>Đơn giá</th>
+                        <th>Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var detail in Model.OrderDetails)
+                    {
+                        <tr>
+                            <td>@(detail.Product?.Name ?? "Sản phẩm đã bị xóa")</td>
+                            <td>@(detail.Variant?.Size ?? "N/A")</td>
+                            <td>@(detail.Variant?.Color ?? "N/A")</td>
+                            <td>@detail.Quantity</td>
+                            <td>@detail.Price.ToString("N0")đ</td>
+                            <td>@((detail.Quantity * detail.Price).ToString("N0"))đ</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index" class="btn btn-secondary">Trở lại Danh sách</a>
+</div>

@@ -1,0 +1,45 @@
+﻿@model IEnumerable<NTN_STORE.Models.Category>
+
+@{
+    ViewData["Title"] = "Quản lý Danh mục";
+}
+
+<h1 class_alias="h3 mb-2 text-gray-800">Quản lý Danh mục</h1>
+<p class_alias="mb-4">
+    <a asp-action="Create" class_alias="btn btn-primary">Tạo mới Danh mục</a>
+</p>
+
+<div class_alias="card shadow mb-4">
+    <div class_alias="card-header py-3">
+        <h6 class_alias="m-0 font-weight-bold text-primary">Danh sách Danh mục</h6>
+    </div>
+    <div class_alias="card-body">
+        <div class_alias="table-responsive">
+            <table class_alias="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Name)
+                        </th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Name)
+                            </td>
+                            <td>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class_alias="btn btn-warning btn-sm">Sửa</a> |
+                                <a asp-action="Details" asp-route-id="@item.Id" class_alias="btn btn-info btn-sm">Chi tiết</a> |
+                                <a asp-action="Delete" asp-route-id="@item.Id" class_alias="btn btn-danger btn-sm">Xóa</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
