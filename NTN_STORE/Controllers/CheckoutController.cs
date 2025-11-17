@@ -9,7 +9,8 @@ using System.Linq;
 
 namespace NTN_STORE.Controllers
 {
-    [Authorize] // Bắt buộc đăng nhập
+    [Area("Admin")]
+    [Authorize(Roles = "Admin")]// Bắt buộc đăng nhập
     public class CheckoutController : Controller
     {
         private readonly NTNStoreContext _context;

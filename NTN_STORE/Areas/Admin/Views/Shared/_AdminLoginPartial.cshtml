@@ -1,14 +1,17 @@
 ﻿@using Microsoft.AspNetCore.Identity
+
+@* Inject 2 dịch vụ này *@
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
+@* THÊM KHỐI KIỂM TRA NÀY *@
 @if (SignInManager.IsSignedIn(User))
 {
     <li class="nav-item dropdown no-arrow">
         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <span class="mr-2 d-none d-lg-inline text-gray-600 small">
-                @* Hiển thị Email của Admin *@
+                @* Chỉ lấy tên KHI đã đăng nhập *@
                 @UserManager.GetUserName(User)
             </span>
             <img class="img-profile rounded-circle"

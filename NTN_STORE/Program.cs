@@ -17,6 +17,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => {
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequiredLength = 6;
 })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<NTNStoreContext>();
 builder.Services.AddRazorPages();
 builder.Services.AddDistributedMemoryCache(); // Bắt buộc phải có, dùng bộ nhớ làm nơi lưu Session
@@ -27,7 +28,20 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 var app = builder.Build();
-
+// Tự động chạy Seed Data khi khởi động
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        await NTN_STORE.Data.SeedData.Initialize(services);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Một lỗi đã xảy ra khi seed CSDL.");
+    }
+}
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

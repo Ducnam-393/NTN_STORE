@@ -83,6 +83,9 @@ namespace NTN_STORE.Models
                 .WithMany()
                 .HasForeignKey(ci => ci.VariantId)
                 .OnDelete(DeleteBehavior.Restrict); // <-- Sửa 2
+            modelBuilder.Entity<Order>()
+                .Property(o => o.TotalAmount)
+                .HasPrecision(18, 2);
         }
     }
 }

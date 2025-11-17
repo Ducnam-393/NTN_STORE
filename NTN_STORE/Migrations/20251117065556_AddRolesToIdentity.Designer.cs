@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NTN_STORE.Models;
 
@@ -11,9 +12,11 @@ using NTN_STORE.Models;
 namespace NTN_STORE.Migrations
 {
     [DbContext(typeof(NTNStoreContext))]
-    partial class NTNStoreContextModelSnapshot : ModelSnapshot
+    [Migration("20251117065556_AddRolesToIdentity")]
+    partial class AddRolesToIdentity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -357,7 +360,6 @@ namespace NTN_STORE.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TotalAmount")
-                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("UserId")

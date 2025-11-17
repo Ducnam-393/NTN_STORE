@@ -1,0 +1,65 @@
+﻿@model IEnumerable<NTN_STORE.Models.Product>
+
+@{
+    ViewData["Title"] = "Quản lý Sản phẩm";
+}
+
+<h1 class="h3 mb-2 text-gray-800">Danh sách Sản phẩm</h1>
+<p class="mb-4">Quản lý tất cả sản phẩm, thêm, sửa, xóa và cập nhật kho hàng.</p>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <a href="#" class="btn btn-primary">Thêm sản phẩm mới</a>
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Tên sản phẩm</th>
+                        <th>Danh mục</th>
+                        <th>Thương hiệu</th>
+                        <th>Giá bán</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Name</td>
+                            <td>@item.Category.Name</td>
+                            <td>@item.Brand.Name</td>
+                            <td>@item.Price.ToString("N0") ₫</td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge badge-success">Đang bán</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-secondary">Ngừng bán</span>
+                                }
+                            </td>
+                            <td>
+                                <a href="#" class="btn btn-warning btn-sm">Sửa</a>
+                                <a href="#" class="btn btn-danger btn-sm">Xóa</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="~/admin/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <script src="~/admin/vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/admin/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+
+    <script src="~/admin/js/demo/datatables-demo.js"></script>
+}

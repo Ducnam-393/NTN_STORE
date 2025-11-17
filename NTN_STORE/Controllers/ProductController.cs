@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NTN_STORE.Models;
 using NTN_STORE.Models.ViewModels;
@@ -6,6 +7,8 @@ using System;
 
 namespace NTN_STORE.Controllers
 {
+    [Area("Admin")]
+    [Authorize(Roles = "Admin")]
     public class ProductController : Controller
     {
         private readonly NTNStoreContext _context;
