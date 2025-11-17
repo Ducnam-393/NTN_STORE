@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NTN_STORE.Data;
 using NTN_STORE.Models;
 using NTN_STORE.Models.ViewModels;
 using System;
@@ -9,9 +8,9 @@ namespace NTN_STORE.Controllers
 {
     public class ProductController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly NTNStoreContext _context;
 
-        public ProductController(AppDbContext context)
+        public ProductController(NTNStoreContext context)
         {
             _context = context;
         }

@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity; // Thêm thư viện này
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace NTN_STORE.Models
 {
-    public class NTNStoreContext : DbContext
+    public class NTNStoreContext : IdentityDbContext<IdentityUser>
     {
         public NTNStoreContext(DbContextOptions<NTNStoreContext> options) : base(options)
         {
@@ -22,6 +24,7 @@ namespace NTN_STORE.Models
         public DbSet<StoreLocation> Stores { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Promotion> Promotions { get; set; }
+        public DbSet<CartItem> CartItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -69,6 +72,17 @@ namespace NTN_STORE.Models
                 .WithMany()
                 .HasForeignKey(od => od.VariantId)
                 .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<CartItem>()
+                .HasOne(ci => ci.Product)
+                .WithMany()
+                .HasForeignKey(ci => ci.ProductId)
+                .OnDelete(DeleteBehavior.Restrict); // <-- Sửa 1
+
+            modelBuilder.Entity<CartItem>()
+                .HasOne(ci => ci.Variant)
+                .WithMany()
+                .HasForeignKey(ci => ci.VariantId)
+                .OnDelete(DeleteBehavior.Restrict); // <-- Sửa 2
         }
     }
 }

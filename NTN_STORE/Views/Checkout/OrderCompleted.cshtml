@@ -1,0 +1,33 @@
+﻿@{
+    ViewData["Title"] = "Hoàn tất đơn hàng";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <nav class="breadcrumb bg-light mb-30">
+                <a class="breadcrumb-item text-dark" asp-controller="Home" asp-action="Index">Trang chủ</a>
+                <span class="breadcrumb-item active">Hoàn tất đơn hàng</span>
+            </nav>
+        </div>
+    </div>
+</div>
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 text-center">
+            <div class="alert alert-success p-5">
+                <h1 class="display-4"><i class="fa fa-check-circle"></i></h1>
+                <h2 class="mb-4">Cảm ơn bạn! Đã nhận được đơn hàng.</h2>
+                <p class="lead">
+                    Mã đơn hàng của bạn là: <strong>@ViewBag.OrderCode</strong>
+                </p>
+                <p>
+                    Chúng tôi sẽ xử lý đơn hàng và liên hệ với bạn trong thời gian sớm nhất.
+                </p>
+                <hr classD="my-4">
+                <a asp-controller="Product" asp-action="Index" class="btn btn-primary btn-lg">Tiếp tục mua sắm</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,19 +1,33 @@
-﻿namespace NTN_STORE.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace NTN_STORE.Models
 {
     public class Order
     {
         public int Id { get; set; }
+        public string OrderCode { get; set; } // Mã đơn hàng
 
+        // Thông tin người nhận
+        [Required]
         public string CustomerName { get; set; }
-        public string PhoneNumber { get; set; }
+        [Required]
         public string Address { get; set; }
+        [Required]
+        public string PhoneNumber { get; set; }
+        [Required]
+        public string Email { get; set; }
 
-        public string PaymentMethod { get; set; } // COD, Banking
+        public string? Notes { get; set; } // Ghi chú (có thể null)
 
-        public string Status { get; set; } = "Pending";
-
+        public decimal TotalAmount { get; set; } // Tổng tiền
+        public string Status { get; set; } // Ví dụ: "Pending", "Processing", "Completed"
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
+        // Khóa ngoại tới người dùng
+        public string? UserId { get; set; }
+        // public virtual IdentityUser User { get; set; } // Nếu bạn dùng Identity
+
+        // Quan hệ 1-Nhiều
         public ICollection<OrderDetail> OrderDetails { get; set; }
     }
 }

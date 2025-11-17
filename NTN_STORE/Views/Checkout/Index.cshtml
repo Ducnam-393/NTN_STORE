@@ -1,0 +1,104 @@
+﻿@model NTN_STORE.Models.ViewModels.CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Thanh toán";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <nav class="breadcrumb bg-light mb-30">
+                <a class="breadcrumb-item text-dark" asp-controller="Home" asp-action="Index">Trang chủ</a>
+                <a class="breadcrumb-item text-dark" asp-controller="Cart" asp-action="Index">Giỏ hàng</a>
+                <span class="breadcrumb-item active">Thanh toán</span>
+            </nav>
+        </div>
+    </div>
+</div>
+<div class="container-fluid">
+    <form asp-action="Index" method="post" class="row px-xl-5">
+
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="ModelOnly" class="text-danger col-12 mb-3"></div>
+
+        <div class="col-lg-8">
+            <h5 class="section-title position-relative text-uppercase mb-3"><span class="bg-secondary pr-3">Địa chỉ giao hàng</span></h5>
+            <div class="bg-light p-30 mb-5">
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label>Họ và tên</label>
+                        <input asp-for="ShippingDetails.CustomerName" class="form-control" type="text" placeholder="Nguyễn Văn A">
+                        <span asp-validation-for="ShippingDetails.CustomerName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>E-mail</label>
+                        <input asp-for="ShippingDetails.Email" class="form-control" type="email" placeholder="example@email.com">
+                        <span asp-validation-for="ShippingDetails.Email" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Số điện thoại</label>
+                        <input asp-for="ShippingDetails.PhoneNumber" class="form-control" type="tel" placeholder="+123 456 789">
+                        <span asp-validation-for="ShippingDetails.PhoneNumber" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Địa chỉ</label>
+                        <input asp-for="ShippingDetails.Address" class="form-control" type="text" placeholder="123 Đường ABC, Phường X, Quận Y">
+                        <span asp-validation-for="ShippingDetails.Address" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-12 form-group">
+                        <label>Ghi chú (tùy chọn)</label>
+                        <textarea asp-for="ShippingDetails.Notes" class="form-control" rows="3" placeholder="Ghi chú thêm về đơn hàng..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <h5 class="section-title position-relative text-uppercase mb-3"><span class="bg-secondary pr-3">Tóm tắt đơn hàng</span></h5>
+            <div class="bg-light p-30 mb-5">
+                <div class="border-bottom">
+                    <h6 class="mb-3">Sản phẩm</h6>
+                    @foreach (var item in Model.Cart.CartItems)
+                    {
+                        <div class="d-flex justify-content-between">
+                            <p>@item.Product.Name (@item.Quantity x)</p>
+                            <p>@((item.Product.Price * item.Quantity).ToString("N0")) ₫</p>
+                        </div>
+                    }
+                </div>
+                <div class="border-bottom pt-3 pb-2">
+                    <div class="d-flex justify-content-between mb-3">
+                        <h6>Tạm tính</h6>
+                        <h6>@Model.Cart.Subtotal.ToString("N0") ₫</h6>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <h6 class="font-weight-medium">Phí vận chuyển</h6>
+                        <h6 class="font-weight-medium">@Model.Cart.Shipping.ToString("N0") ₫</h6>
+                    </div>
+                </div>
+                <div class="pt-2">
+                    <div class="d-flex justify-content-between mt-2">
+                        <h5>Tổng cộng</h5>
+                        <h5>@Model.Cart.Total.ToString("N0") ₫</h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-5">
+                <h5 class="section-title position-relative text-uppercase mb-3"><span class="bg-secondary pr-3">Thanh toán</span></h5>
+                <div class="bg-light p-30">
+                    <div class="form-group">
+                        <div class="custom-control custom-radio">
+                            <input type="radio" class="custom-control-input" name="payment" id="cod" checked>
+                            <label class="custom-control-label" for="cod">Thanh toán khi nhận hàng (COD)</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-block btn-primary font-weight-bold py-3">Đặt hàng</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

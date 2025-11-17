@@ -1,4 +1,9 @@
-﻿<!-- Topbar Start -->
+﻿@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    bool isHomePage = (controller == "Home" && action == "Index");
+}
+<!-- Topbar Start -->
 <div class="container-fluid">
     <div class="row bg-secondary py-1 px-xl-5">
         <div class="col-lg-6 d-none d-lg-block">
@@ -12,12 +17,10 @@
         <div class="col-lg-6 text-center text-lg-right">
             <div class="d-inline-flex align-items-center">
                 <div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-light dropdown-toggle" data-toggle="dropdown">
-                        Tài khoản
-                    </button>
+                    <button type="button" class="btn btn-sm btn-light dropdown-toggle" data-toggle="dropdown">Tài khoản</button>
                     <div class="dropdown-menu dropdown-menu-right">
-                        <a class="dropdown-item" href="#">Đăng nhập</a>
-                        <a class="dropdown-item" href="#">Đăng ký</a>
+                        <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Register">Đăng ký</a>
+                        <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Login">Đăng nhập</a>
                     </div>
                 </div>
             </div>
@@ -100,11 +103,15 @@
 
                 <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
                     <div class="navbar-nav mr-auto py-0">
-                        <a asp-controller="Home" asp-action="Index" class="nav-item nav-link active">Trang chủ</a>
-                        <a asp-controller="Product" asp-action="Index" class="nav-item nav-link">Sản phẩm</a>
-                        <a asp-controller="Cart" asp-action="Index" class="nav-item nav-link">Giỏ hàng</a>
-                        <a asp-controller="Checkout" asp-action="Index" class="nav-item nav-link">Thanh toán</a>
-                        <a asp-controller="Contact" asp-action="Index" class="nav-item nav-link">Liên hệ</a>
+                        <a asp-controller="Home" asp-action="Index" class="nav-item nav-link @(isHomePage ? "active" : "")">Trang chủ</a>
+
+                        <a asp-controller="Product" asp-action="Index" class="nav-item nav-link @(controller == "Product" ? "active" : "")">Sản phẩm</a>
+
+                        <a asp-controller="Cart" asp-action="Index" class="nav-item nav-link @(controller == "Cart" ? "active" : "")">Giỏ hàng</a>
+
+                        <a asp-controller="Checkout" asp-action="Index" class="nav-item nav-link @(controller == "Checkout" ? "active" : "")">Thanh toán</a>
+
+                        <a asp-controller="Home" asp-action="Contact" class="nav-item nav-link @(controller == "Home" && action == "Contact" ? "active" : "")">Liên hệ</a>
                     </div>
 
                     <!-- Icons -->

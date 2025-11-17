@@ -47,12 +47,12 @@
         @{
             var categories = new[]
             {
-                new { Img = "~/img/cat-sneaker.jpg", Name = "Sneaker", Count = 120 },
-                new { Img = "~/img/cat-running.jpg", Name = "Giày chạy bộ", Count = 80 },
+                new { Img = "~/img/cat-sneaker.png" , Name = "Sneaker", Count = 120 },
+                new { Img = "~/img/cat-running.png", Name = "Giày chạy bộ", Count = 80 },
                 new { Img = "~/img/cat-sport.jpg", Name = "Giày thể thao", Count = 150 },
                 new { Img = "~/img/cat-basketball.jpg", Name = "Giày bóng rổ", Count = 60 },
                 new { Img = "~/img/cat-football.jpg", Name = "Giày đá bóng", Count = 70 },
-                new { Img = "~/img/cat-boot.jpg", Name = "Boot thời trang", Count = 40 },
+                new { Img = "~/img/cat-boot.png", Name = "Boot thời trang", Count = 40 },
                 new { Img = "~/img/cat-sandal.jpg", Name = "Sandal", Count = 50 },
                 new { Img = "~/img/cat-slide.jpg", Name = "Dép / Slides", Count = 30 }
                 };
@@ -64,7 +64,7 @@
                 <a class="text-decoration-none" href="#">
                     <div class="cat-item d-flex align-items-center mb-4">
                         <div class="overflow-hidden" style="width: 100px; height: 100px;">
-                            <img class="img-fluid" src="@c.Img" />
+                            <img class="img-fluid" src="@Url.Content(c.Img)" />
                         </div>
                         <div class="flex-fill pl-3">
                             <h6>@c.Name</h6>
@@ -126,7 +126,7 @@
     <div class="row px-xl-5">
         <div class="col-md-6">
             <div class="product-offer mb-30" style="height: 300px;">
-                <img class="img-fluid" src="~/img/shoes-offer-big-1.jpg" alt="">
+                <img class="img-fluid" src="~/img/shoes-offer-big-1.png" alt="">
                 <div class="offer-text">
                     <h6 class="text-white text-uppercase">Giảm 30%</h6>
                     <h3 class="text-white mb-3">Giày chạy bộ</h3>
@@ -188,11 +188,11 @@
         <div class="col">
             <div class="owl-carousel vendor-carousel">
 
-                <div class="bg-light p-4"><img src="~/img/brand-nike.png" alt="Nike"></div>
-                <div class="bg-light p-4"><img src="~/img/brand-adidas.png" alt="Adidas"></div>
-                <div class="bg-light p-4"><img src="~/img/brand-puma.png" alt="Puma"></div>
+                <div class="bg-light p-4"><img src="~/img/brand-nike.jpg" alt="Nike"></div>
+                <div class="bg-light p-4"><img src="~/img/brand-adidas.jpg" alt="Adidas"></div>
+                <div class="bg-light p-4"><img src="~/img/brand-puma.jpg" alt="Puma"></div>
                 <div class="bg-light p-4"><img src="~/img/brand-mlb.png" alt="MLB"></div>
-                <div class="bg-light p-4"><img src="~/img/brand-vans.png" alt="Vans"></div>
+                <div class="bg-light p-4"><img src="~/img/brand-vans.jpg" alt="Vans"></div>
                 <div class="bg-light p-4"><img src="~/img/brand-converse.png" alt="Converse"></div>
 
             </div>

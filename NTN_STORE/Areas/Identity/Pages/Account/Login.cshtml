@@ -1,0 +1,74 @@
+﻿@page
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<div class="container-fluid">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <nav class="breadcrumb bg-light mb-30">
+                <a class="breadcrumb-item text-dark" asp-controller="Home" asp-action="Index">Trang chủ</a>
+                <span class="breadcrumb-item active">Đăng nhập</span>
+            </nav>
+        </div>
+    </div>
+</div>
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-5 col-md-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5">
+
+                    <h3 class="text-center text-uppercase mb-4">@ViewData["Title"]</h3>
+
+                    <section>
+                        <form id="account" method="post">
+                            <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+                            <div class="form-group mb-3">
+                                <label asp-for="Input.Email" class="form-label font-weight-medium">Email</label>
+                                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                                <span asp-validation-for="Input.Email" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                <label asp-for="Input.Password" class="form-label font-weight-medium">Mật khẩu</label>
+                                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                                <span asp-validation-for="Input.Password" class="text-danger"></span>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="custom-control custom-checkbox">
+                                    <input asp-for="Input.RememberMe" type="checkbox" class="custom-control-input" id="rememberMeCheck">
+                                    <label class="custom-control-label" for="rememberMeCheck">
+                                        @Html.DisplayNameFor(m => m.Input.RememberMe)
+                                    </label>
+                                </div>
+                                <a id="forgot-password" asp-page="./ForgotPassword" class="text-primary">Quên mật khẩu?</a>
+                            </div>
+
+                            <div>
+                                <button id="login-submit" type="submit" class="btn btn-primary btn-block py-2 font-weight-bold">Đăng nhập</button>
+                            </div>
+
+                            <hr class="my-4" />
+
+                            <div class="text-center">
+                                <p>
+                                    Chưa có tài khoản?
+                                    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-primary font-weight-bold">Đăng ký ngay</a>
+                                </p>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
