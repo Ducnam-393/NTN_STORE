@@ -1,7 +1,7 @@
 ﻿@model NTN_STORE.Models.ViewModels.ProductFormViewModel
 
 @{
-    ViewData["Title"] = "Thêm sản phẩm mới";
+    ViewData["Title"] = "Cập nhật sản phẩm";
 }
 
 <h1 class="h3 mb-4 text-gray-800">@ViewData["Title"]</h1>
@@ -10,11 +10,27 @@
     <div class="col-lg-8">
         <div class="card shadow mb-4">
             <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Thông tin sản phẩm</h6>
+                <h6 class="m-0 font-weight-bold text-primary">Chỉnh sửa thông tin: @Model.Product.Name</h6>
             </div>
             <div class="card-body">
-                <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <form asp-action="Edit" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
+
+                    <input type="hidden" asp-for="Product.Id" />
+                    @if (Model.Product.Images != null && Model.Product.Images.Any())
+                    {
+                        <div class="form-group">
+                            <label>Ảnh hiện tại:</label>
+                            <div class="row">
+                                @foreach (var img in Model.Product.Images)
+                                {
+                                    <div class="col-md-3 mb-3">
+                                        <img src="@img.ImageUrl" class="img-thumbnail" style="max-height: 150px;" />
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                     <div class="form-group">
@@ -36,7 +52,7 @@
                             <span asp-validation-for="Product.Price" class="text-danger"></span>
                         </div>
                         <div class="col-md-6 form-group">
-                            <label asp-for="Product.OriginalPrice" class="control-label">Giá gốc (nếu giảm giá)</label>
+                            <label asp-for="Product.OriginalPrice" class="control-label">Giá gốc</label>
                             <input asp-for="Product.OriginalPrice" class="form-control" type="number" />
                             <span asp-validation-for="Product.OriginalPrice" class="text-danger"></span>
                         </div>
@@ -66,25 +82,19 @@
                             <label class="custom-control-label" for="isActiveSwitch">Đang hoạt động (bày bán)</label>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <form asp-action="Create" method="post" enctype="multipart/form-data">
-                            @Html.AntiForgeryToken()
-                            <div class="form-group">
-                                <label class="control-label">Ảnh sản phẩm</label>
-                                <div class="custom-file">
-                                    <input asp-for="ImageFile" class="custom-file-input" id="customFile">
-                                    <label class="custom-file-label" for="customFile">Chọn file...</label>
-                                </div>
-                                <span asp-validation-for="ImageFile" class="text-danger"></span>
-                            </div>
-
-                        </form>
+                    <div class="form-group">
+                        <label class="control-label">Thêm/Thay đổi ảnh</label>
+                        <div class="custom-file">
+                            <input asp-for="ImageFile" class="custom-file-input" id="customFile">
+                            <label class="custom-file-label" for="customFile">Chọn ảnh mới...</label>
+                        </div>
                     </div>
+
                     <hr />
 
                     <div class="form-group">
-                        <button type="submit" class="btn btn-primary">Lưu sản phẩm</button>
-                        <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+                        <button type="submit" class="btn btn-primary">Cập nhật</button>
+                        <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
                     </div>
                 </form>
             </div>
@@ -96,4 +106,11 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        $(".custom-file-input").on("change", function() {
+            var fileName = $(this).val().split("\\").pop();
+            $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+        });
+    </script>
 }

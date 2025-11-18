@@ -92,7 +92,18 @@
         </div>
     </div>
 </div>
-
+<form asp-action="UpdateStatus" method="post">
+    <input type="hidden" name="id" value="@Model.Id" />
+    <div class="input-group">
+        <select name="status" class="form-control">
+            <option value="Pending" selected="@(Model.Status == "Pending")">Chờ xử lý</option>
+            <option value="Shipping" selected="@(Model.Status == "Shipping")">Đang giao</option>
+            <option value="Completed" selected="@(Model.Status == "Completed")">Hoàn thành</option>
+            <option value="Cancelled" selected="@(Model.Status == "Cancelled")">Đã hủy</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Cập nhật</button>
+    </div>
+</form>
 <div>
     <a asp-action="Index" class="btn btn-secondary">Trở lại Danh sách</a>
 </div>

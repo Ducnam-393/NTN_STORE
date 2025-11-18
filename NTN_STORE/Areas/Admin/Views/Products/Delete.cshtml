@@ -1,0 +1,46 @@
+﻿@model NTN_STORE.Models.Product
+
+@{
+    ViewData["Title"] = "Xóa sản phẩm";
+}
+
+<h1 class="h3 mb-4 text-gray-800">Xóa sản phẩm</h1>
+
+<div class="card shadow mb-4 border-left-danger">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-danger">Bạn có chắc chắn muốn xóa sản phẩm này không?</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-12">
+                <dl class="row">
+                    <dt class="col-sm-3">Tên sản phẩm:</dt>
+                    <dd class="col-sm-9">@Model.Name</dd>
+
+                    <dt class="col-sm-3">Giá bán:</dt>
+                    <dd class="col-sm-9">@Model.Price.ToString("N0") ₫</dd>
+
+                    <dt class="col-sm-3">Danh mục:</dt>
+                    <dd class="col-sm-9">@Model.Category?.Name</dd>
+
+                    <dt class="col-sm-3">Thương hiệu:</dt>
+                    <dd class="col-sm-9">@Model.Brand?.Name</dd>
+
+                    <dt class="col-sm-3">Mô tả:</dt>
+                    <dd class="col-sm-9">@Model.Description</dd>
+
+                    <dt class="col-sm-3">Trạng thái:</dt>
+                    <dd class="col-sm-9">
+                        @(Model.IsActive ? "Đang bán" : "Ngừng bán")
+                    </dd>
+                </dl>
+
+                <form asp-action="Delete" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    <button type="submit" class="btn btn-danger">Xác nhận Xóa</button>
+                    <a asp-action="Index" class="btn btn-secondary">Hủy bỏ</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

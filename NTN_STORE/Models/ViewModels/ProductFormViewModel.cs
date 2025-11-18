@@ -12,5 +12,6 @@ namespace NTN_STORE.Models.ViewModels
         // 2. Danh sách để hiển thị <select> (dropdown)
         public IEnumerable<SelectListItem> Categories { get; set; }
         public IEnumerable<SelectListItem> Brands { get; set; }
+        public IFormFile ImageFile { get; set; }
     }
 }
