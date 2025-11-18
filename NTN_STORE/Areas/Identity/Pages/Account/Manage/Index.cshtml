@@ -1,0 +1,58 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Thông tin cá nhân";
+    ViewData["ActivePage"] = ManageNavPages.Index;
+}
+
+<div class="container-fluid bg-dark mb-30">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <nav class="breadcrumb bg-transparent mb-0">
+                <a class="breadcrumb-item" asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a>
+                <span class="breadcrumb-item active">@ViewData["Title"]</span>
+            </nav>
+        </div>
+    </div>
+</div>
+<div class="container-fluid pt-5 pb-3">
+    <div class="row px-xl-5">
+
+        <div class="col-md-3">
+            <partial name="_ManageNav" />
+        </div>
+
+        <div class="col-md-9">
+
+            @* <h4>@ViewData["Title"]</h4> *@ 
+            
+            <partial name="_StatusMessage" for="StatusMessage" />
+
+            <div class="row">
+                <div class="col-md-8">
+                    <form id="profile-form" method="post" class="bg-light p-30">
+                        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Username" class="form-label"></label>
+                            <input asp-for="Username" class="form-control" disabled />
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label asp-for="Input.PhoneNumber" class="form-label"></label>
+                            <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Nhập số điện thoại của bạn..." />
+                            <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+                        </div>
+
+                        <button id="update-profile-button" type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

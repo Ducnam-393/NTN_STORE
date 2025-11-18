@@ -26,6 +26,7 @@ namespace NTN_STORE.Areas.Admin.Controllers
                                         .Include(p => p.Category)
                                         .Include(p => p.Brand)
                                         .ToListAsync();
+
             return View(products);
         }
 

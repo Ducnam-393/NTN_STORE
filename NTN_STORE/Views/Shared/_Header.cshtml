@@ -1,4 +1,7 @@
-﻿@{
+﻿@using Microsoft.EntityFrameworkCore
+@inject NTN_STORE.Models.NTNStoreContext _context
+@{
+    var categories = _context.Categories.Include(c => c.Products).ToList();
     var controller = ViewContext.RouteData.Values["controller"]?.ToString();
     var action = ViewContext.RouteData.Values["action"]?.ToString();
     bool isHomePage = (controller == "Home" && action == "Index");
@@ -9,20 +12,16 @@
         <div class="col-lg-6 d-none d-lg-block">
             <div class="d-inline-flex align-items-center h-100">
                 <a class="text-body mr-3" href="#">Về chúng tôi</a>
-                <a class="text-body mr-3" href="#">Liên hệ</a>
+
+                <a class="text-body mr-3" asp-area="" asp-controller="Home" asp-action="Contact">Liên hệ</a>
+
                 <a class="text-body mr-3" href="#">Hỗ trợ</a>
                 <a class="text-body mr-3" href="#">FAQs</a>
             </div>
         </div>
         <div class="col-lg-6 text-center text-lg-right">
             <div class="d-inline-flex align-items-center">
-                <div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-light dropdown-toggle" data-toggle="dropdown">Tài khoản</button>
-                    <div class="dropdown-menu dropdown-menu-right">
-                        <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Register">Đăng ký</a>
-                        <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Login">Đăng nhập</a>
-                    </div>
-                </div>
+                <partial name="_LoginPartial" />
             </div>
 
             <div class="d-inline-flex align-items-center d-block d-lg-none">
@@ -30,7 +29,8 @@
                     <i class="fas fa-heart text-dark"></i>
                     <span class="badge text-dark border border-dark rounded-circle">0</span>
                 </a>
-                <a href="#" class="btn px-0 ml-2">
+
+                <a asp-area="" asp-controller="Cart" asp-action="Index" class="btn px-0 ml-2">
                     <i class="fas fa-shopping-cart text-dark"></i>
                     <span class="badge text-dark border border-dark rounded-circle">0</span>
                 </a>
@@ -38,23 +38,22 @@
         </div>
     </div>
 
-    <!-- Logo + Search -->
     <div class="row align-items-center bg-light py-3 px-xl-5 d-none d-lg-flex">
         <div class="col-lg-4">
-            <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
+            <a asp-area="" asp-controller="Home" asp-action="Index" class="text-decoration-none">
                 <span class="h1 text-uppercase text-primary bg-dark px-2">NTN</span>
                 <span class="h1 text-uppercase text-dark bg-primary px-2 ml-n1">Store</span>
             </a>
         </div>
 
         <div class="col-lg-4 col-6 text-left">
-            <form>
+            <form asp-area="" asp-controller="Product" asp-action="Index" method="get">
                 <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Tìm giày thể thao...">
+                    <input type="text" class="form-control" name="search" placeholder="Tìm giày thể thao...">
                     <div class="input-group-append">
-                        <span class="input-group-text bg-transparent text-primary">
+                        <button type="submit" class="input-group-text bg-transparent text-primary">
                             <i class="fa fa-search"></i>
-                        </span>
+                        </button>
                     </div>
                 </div>
             </form>
@@ -62,7 +61,7 @@
 
         <div class="col-lg-4 col-6 text-right">
             <p class="m-0">Hotline</p>
-            <h5 class="m-0">+84 987 654 321</h5>
+            <h5 class="m-0">09888886666</h5>
         </div>
     </div>
 </div>
@@ -70,7 +69,6 @@
 <!-- Navbar Start -->
 <div class="container-fluid bg-dark mb-30">
     <div class="row px-xl-5">
-        <!-- Left menu -->
         <div class="col-lg-3 d-none d-lg-block">
             <a class="btn d-flex align-items-center justify-content-between bg-primary w-100"
                data-toggle="collapse" href="#navbar-vertical" style="height: 65px; padding: 0 30px;">
@@ -79,21 +77,17 @@
             </a>
 
             <nav id="navbar-vertical"
-                 class="collapse position-absolute navbar navbar-vertical navbar-light align-items-start p-0 bg-light"
+                 class="collapse @(isHomePage ? "show" : "") position-absolute navbar navbar-vertical navbar-light align-items-start p-0 bg-light"
                  style="width: calc(100% - 30px); z-index: 999;">
                 <div class="navbar-nav w-100">
-                    <a class="nav-item nav-link" href="#">Sneaker</a>
-                    <a class="nav-item nav-link" href="#">Giày chạy bộ</a>
-                    <a class="nav-item nav-link" href="#">Giày thể thao</a>
-                    <a class="nav-item nav-link" href="#">Giày bóng rổ</a>
-                    <a class="nav-item nav-link" href="#">Giày đá bóng</a>
-                    <a class="nav-item nav-link" href="#">Boot</a>
-                    <a class="nav-item nav-link" href="#">Dép / Slides</a>
+                    @foreach (var cat in categories)
+                    {
+                        <a asp-area="" asp-controller="Product" asp-action="Index" asp-route-categoryId="@cat.Id" class="nav-item nav-link">@cat.Name</a>
+                    }
                 </div>
             </nav>
         </div>
 
-        <!-- Center -->
         <div class="col-lg-9">
             <nav class="navbar navbar-expand-lg bg-dark navbar-dark py-3">
                 <button type="button" class="navbar-toggler" data-toggle="collapse"
@@ -103,24 +97,20 @@
 
                 <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
                     <div class="navbar-nav mr-auto py-0">
-                        <a asp-controller="Home" asp-action="Index" class="nav-item nav-link @(isHomePage ? "active" : "")">Trang chủ</a>
-
-                        <a asp-controller="Product" asp-action="Index" class="nav-item nav-link @(controller == "Product" ? "active" : "")">Sản phẩm</a>
-
-                        <a asp-controller="Cart" asp-action="Index" class="nav-item nav-link @(controller == "Cart" ? "active" : "")">Giỏ hàng</a>
-
-                        <a asp-controller="Checkout" asp-action="Index" class="nav-item nav-link @(controller == "Checkout" ? "active" : "")">Thanh toán</a>
-
-                        <a asp-controller="Home" asp-action="Contact" class="nav-item nav-link @(controller == "Home" && action == "Contact" ? "active" : "")">Liên hệ</a>
+                        <a asp-area="" asp-controller="Home" asp-action="Index" class="nav-item nav-link @(isHomePage ? "active" : "")">Trang chủ</a>
+                        <a asp-area="" asp-controller="Product" asp-action="Index" class="nav-item nav-link @(controller == "Product" ? "active" : "")">Sản phẩm</a>
+                        <a asp-area="" asp-controller="Cart" asp-action="Index" class="nav-item nav-link @(controller == "Cart" ? "active" : "")">Giỏ hàng</a>
+                        <a asp-area="" asp-controller="Checkout" asp-action="Index" class="nav-item nav-link @(controller == "Checkout" ? "active" : "")">Thanh toán</a>
+                        <a asp-area="" asp-controller="Home" asp-action="Contact" class="nav-item nav-link @(controller == "Home" && action == "Contact" ? "active" : "")">Liên hệ</a>
                     </div>
 
-                    <!-- Icons -->
                     <div class="navbar-nav ml-auto py-0 d-none d-lg-block">
                         <a href="#" class="btn px-0">
                             <i class="fas fa-heart text-primary"></i>
                             <span class="badge text-secondary border border-secondary rounded-circle">0</span>
                         </a>
-                        <a href="#" class="btn px-0 ml-3">
+
+                        <a asp-area="" asp-controller="Cart" asp-action="Index" class="btn px-0 ml-3">
                             <i class="fas fa-shopping-cart text-primary"></i>
                             <span class="badge text-secondary border border-secondary rounded-circle">0</span>
                         </a>

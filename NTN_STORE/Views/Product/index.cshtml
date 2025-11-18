@@ -160,34 +160,58 @@
                 }
 
                 <div class="col-12">
-                    @{
-                        int totalItems = ViewBag.TotalItems;
-                        int currentPage = ViewBag.Page;
-                        int pageSize = ViewBag.PageSize;
-                        int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-                    }
+                    <nav>
+                        <ul class="pagination justify-content-center">
+                            @{
+                                // Code an toàn: Nếu ViewBag null thì lấy giá trị mặc định là 1
+                                int currentPage = ViewBag.Page as int? ?? 1;
+                                int totalItems = ViewBag.TotalItems as int? ?? 0;
+                                int pageSize = ViewBag.PageSize as int? ?? 9;
+                                int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+                            }
 
-                    @if (totalPages > 1)
-                    {
-                        <nav>
-                            <ul class="pagination justify-content-center">
-                                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                                    <a class="page-link" href="@Url.Action("Index", new { page = currentPage - 1, categoryId = currentCategory, brandId = currentBrand, minPrice = minPrice, maxPrice = maxPrice, search = searchTerm })">Trước</a>
+                            @if (currentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-page="@(currentPage - 1)"
+                                       asp-route-categoryId="@ViewBag.CurrentCategory"
+                                       asp-route-brandId="@ViewBag.CurrentBrand"
+                                       asp-route-search="@ViewBag.Search">Trước</a>
                                 </li>
+                            }
+                            else
+                            {
+                                <li class="page-item disabled"><a class="page-link" href="#">Trước</a></li>
+                            }
 
-                                @for (int i = 1; i <= totalPages; i++)
-                                {
-                                    <li class="page-item @(currentPage == i ? "active" : "")">
-                                        <a class="page-link" href="@Url.Action("Index", new { page = i, categoryId = currentCategory, brandId = currentBrand, minPrice = minPrice, maxPrice = maxPrice, search = searchTerm })">@i</a>
-                                    </li>
-                                }
-
-                                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                                    <a class="page-link" href="@Url.Action("Index", new { page = currentPage + 1, categoryId = currentCategory, brandId = currentBrand, minPrice = minPrice, maxPrice = maxPrice, search = searchTerm })">Sau</a>
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                <li class="page-item @(currentPage == i ? "active" : "")">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-page="@i"
+                                       asp-route-categoryId="@ViewBag.CurrentCategory"
+                                       asp-route-brandId="@ViewBag.CurrentBrand"
+                                       asp-route-search="@ViewBag.Search">@i</a>
                                 </li>
-                            </ul>
-                        </nav>
-                    }
+                            }
+
+                            @if (currentPage < totalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" asp-action="Index"
+                                       asp-route-page="@(currentPage + 1)"
+                                       asp-route-categoryId="@ViewBag.CurrentCategory"
+                                       asp-route-brandId="@ViewBag.CurrentBrand"
+                                       asp-route-search="@ViewBag.Search">Sau</a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="page-item disabled"><a class="page-link" href="#">Sau</a></li>
+                            }
+                        </ul>
+                    </nav>
                 </div>
             </div>
         </div>

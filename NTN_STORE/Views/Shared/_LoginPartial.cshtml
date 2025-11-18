@@ -1,30 +1,40 @@
 ﻿@using Microsoft.AspNetCore.Identity
-
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
-@if (SignInManager.IsSignedIn(User))
-{
-    <div class="btn-group">
-        <button type="button" class="btn btn-sm btn-light dropdown-toggle" data-toggle="dropdown">
-            Chào, @UserManager.GetUserName(User)!
-        </button>
-        <div class="dropdown-menu dropdown-menu-right">
-            <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Tài khoản của tôi</a>
+@* Dùng style "btn-group" từ template của bạn *@
+<div class="btn-group">
+    <button type="button" class="btn btn-sm btn-light dropdown-toggle" data-toggle="dropdown">Tài khoản</button>
 
-            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                <button type="submit" class="dropdown-item">Đăng xuất</button>
+    @if (SignInManager.IsSignedIn(User))
+    {
+        @* KHI ĐÃ ĐĂNG NHẬP *@
+        <div class="dropdown-menu dropdown-menu-right">
+
+            <span class="dropdown-item-text" style="font-weight:600;">Chào, @UserManager.GetUserName(User)!</span>
+            <div class="dropdown-divider"></div>
+
+            <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
+                Quản lý tài khoản
+            </a>
+
+            <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/ChangePassword">
+                Đổi mật khẩu
+            </a>
+
+            <form class_="dropdown-item p-0" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                <button type="submit" class="btn btn-link text-dark text-decoration-none w-100 text-left" style="padding: .25rem 1.5rem;">
+                    Đăng xuất
+                </button>
             </form>
         </div>
-    </div>
-}
-else
-{
-    <div class="btn-group">
-        <button type="button" class="btn btn-sm btn-light dropdown-toggle" data-toggle="dropdown">Tài khoản</button>
+    }
+    else
+    {
+        @* KHI CHƯA ĐĂNG NHẬP *@
         <div class="dropdown-menu dropdown-menu-right">
-            <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Register">Đăng ký</a>
             <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Login">Đăng nhập</a>
+            <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Register">Đăng ký</a>
         </div>
-    </div>
-}
+    }
+</div>

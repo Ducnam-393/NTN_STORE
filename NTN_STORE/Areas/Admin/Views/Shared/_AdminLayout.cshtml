@@ -9,11 +9,11 @@
 
     <title>@ViewData["Title"] - NTN Store Admin</title>
 
-    <link href="~/admin/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="~/Admin/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
           rel="stylesheet">
 
-    <link href="~/admin/css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="~/Admin/css/sb-admin-2.min.css" rel="stylesheet">
 </head>
 
 <body id="page-top">
@@ -24,9 +24,9 @@
 
             <a class="sidebar-brand d-flex align-items-center justify-content-center" asp-area="Admin" asp-controller="Home" asp-action="Index">
                 <div class="sidebar-brand-icon rotate-n-15">
-                    <i class="fas fa-store"></i>
+                    <i class="fas fa-laugh-wink"></i>
                 </div>
-                <div class="sidebar-brand-text mx-3">NTN Store <sup>Admin</sup></div>
+                <div class="sidebar-brand-text mx-3">NTN Admin</div>
             </a>
 
             <hr class="sidebar-divider my-0">
@@ -45,27 +45,39 @@
             </div>
 
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseManage"
-                   aria-expanded="true" aria-controls="collapseManage">
-                    <i class="fas fa-fw fa-box-open"></i>
-                    <span>Quản lý Kho</span>
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseProducts"
+                   aria-expanded="true" aria-controls="collapseProducts">
+                    <i class="fas fa-fw fa-box"></i>
+                    <span>Quản lý Sản phẩm</span>
                 </a>
-                <div id="collapseManage" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                <div id="collapseProducts" class="collapse" aria-labelledby="headingUtilities"
+                     data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Quản lý:</h6>
-                        <a class="collapse-item" asp-area="Admin" asp-controller="Products" asp-action="Index">Sản phẩm</a>
-
-                        <a class="collapse-item" asp-area="Admin" asp-controller="Categories" asp-action="Index">Danh mục</a>
-
-                        <a class="collapse-item" asp-area="Admin" asp-controller="Brands" asp-action="Index">Thương hiệu</a>
+                        <h6 class="collapse-header">Chức năng:</h6>
+                        <a class="collapse-item" asp-area="Admin" asp-controller="Products" asp-action="Index">Danh sách Sản phẩm</a>
+                        <a class="collapse-item" asp-area="Admin" asp-controller="Products" asp-action="Create">Thêm Sản phẩm</a>
                     </div>
                 </div>
             </li>
 
             <li class="nav-item">
                 <a class="nav-link" asp-area="Admin" asp-controller="Orders" asp-action="Index">
-                    <i class="fas fa-fw fa-receipt"></i>
+                    <i class="fas fa-fw fa-file-invoice-dollar"></i>
                     <span>Quản lý Đơn hàng</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" asp-area="Admin" asp-controller="Categories" asp-action="Index">
+                    <i class="fas fa-fw fa-tasks"></i>
+                    <span>Quản lý Danh mục</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" asp-area="Admin" asp-controller="Brands" asp-action="Index">
+                    <i class="fas fa-fw fa-copyright"></i>
+                    <span>Quản lý Thương hiệu</span>
                 </a>
             </li>
 
@@ -151,12 +163,12 @@
         </div>
     </div>
 
-    <script src="~/admin/vendor/jquery/jquery.min.js"></script>
-    <script src="~/admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/Admin/vendor/jquery/jquery.min.js"></script>
+    <script src="~/Admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 
-    <script src="~/admin/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="~/Admin/vendor/jquery-easing/jquery.easing.min.js"></script>
 
-    <script src="~/admin/js/sb-admin-2.min.js"></script>
+    <script src="~/Admin/js/sb-admin-2.min.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 

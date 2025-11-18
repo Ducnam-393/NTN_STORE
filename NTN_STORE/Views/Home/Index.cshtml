@@ -1,9 +1,9 @@
-﻿@{
+﻿@model NTN_STORE.Models.ViewModels.HomeViewModel
+@{
     ViewData["Title"] = "NTN Store - Giày thể thao chính hãng";
     Layout = "_Layout";
 }
 
-<!-- Featured Start -->
 <div class="container-fluid pt-5">
     <div class="row px-xl-5 pb-3">
         <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
@@ -12,21 +12,18 @@
                 <h5 class="font-weight-semi-bold m-0">Giày chính hãng</h5>
             </div>
         </div>
-
         <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
             <div class="d-flex align-items-center bg-light mb-4" style="padding: 30px;">
                 <h1 class="fa fa-shipping-fast text-primary m-0 mr-2"></h1>
                 <h5 class="font-weight-semi-bold m-0">Giao hàng nhanh</h5>
             </div>
         </div>
-
         <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
             <div class="d-flex align-items-center bg-light mb-4" style="padding: 30px;">
                 <h1 class="fas fa-exchange-alt text-primary m-0 mr-3"></h1>
                 <h5 class="font-weight-semi-bold m-0">Đổi trả 7 ngày</h5>
             </div>
         </div>
-
         <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
             <div class="d-flex align-items-center bg-light mb-4" style="padding: 30px;">
                 <h1 class="fa fa-phone-volume text-primary m-0 mr-3"></h1>
@@ -35,40 +32,23 @@
         </div>
     </div>
 </div>
-<!-- Featured End -->
-<!-- Categories Start -->
 <div class="container-fluid pt-5">
     <h2 class="section-title position-relative text-uppercase mx-xl-5 mb-4">
         <span class="bg-secondary pr-3">Danh mục giày</span>
     </h2>
-
     <div class="row px-xl-5 pb-3">
 
-        @{
-            var categories = new[]
-            {
-                new { Img = "~/img/cat-sneaker.png" , Name = "Sneaker", Count = 120 },
-                new { Img = "~/img/cat-running.png", Name = "Giày chạy bộ", Count = 80 },
-                new { Img = "~/img/cat-sport.jpg", Name = "Giày thể thao", Count = 150 },
-                new { Img = "~/img/cat-basketball.jpg", Name = "Giày bóng rổ", Count = 60 },
-                new { Img = "~/img/cat-football.jpg", Name = "Giày đá bóng", Count = 70 },
-                new { Img = "~/img/cat-boot.png", Name = "Boot thời trang", Count = 40 },
-                new { Img = "~/img/cat-sandal.jpg", Name = "Sandal", Count = 50 },
-                new { Img = "~/img/cat-slide.jpg", Name = "Dép / Slides", Count = 30 }
-                };
-        }
-
-        @foreach (var c in categories)
+        @foreach (var c in Model.Categories)
         {
             <div class="col-lg-3 col-md-4 col-sm-6 pb-1">
-                <a class="text-decoration-none" href="#">
+                <a class="text-decoration-none" asp-controller="Product" asp-action="Index" asp-route-categoryId="@c.Id">
                     <div class="cat-item d-flex align-items-center mb-4">
                         <div class="overflow-hidden" style="width: 100px; height: 100px;">
-                            <img class="img-fluid" src="@Url.Content(c.Img)" />
+                            <img class="img-fluid" src="@Url.Content(c.ImageUrl ?? "~/img/cat-sneaker.png")" alt="@c.Name" />
                         </div>
                         <div class="flex-fill pl-3">
                             <h6>@c.Name</h6>
-                            <small class="text-body">@c.Count sản phẩm</small>
+                            <small class="text-body">@c.Products.Count sản phẩm</small>
                         </div>
                     </div>
                 </a>
@@ -77,51 +57,19 @@
 
     </div>
 </div>
-<!-- Categories End -->
-<!-- Products Start (Giày bán chạy) -->
 <div class="container-fluid pt-5 pb-3">
     <h2 class="section-title position-relative text-uppercase mx-xl-5 mb-4">
         <span class="bg-secondary pr-3">Giày bán chạy</span>
     </h2>
-
     <div class="row px-xl-5">
 
-        <!-- Sẽ load từ DB bằng ProductController -->
-        <div class="col-lg-3 col-md-4 col-sm-6 pb-1">
-            <div class="product-item bg-light mb-4">
-                <div class="product-img position-relative overflow-hidden">
-                    <img class="img-fluid w-100" src="~/img/shoe-1.jpg" alt="">
-                    <div class="product-action">
-                        <a class="btn btn-outline-dark btn-square" href="#"><i class="fa fa-shopping-cart"></i></a>
-                        <a class="btn btn-outline-dark btn-square" href="#"><i class="far fa-heart"></i></a>
-                        <a class="btn btn-outline-dark btn-square" href="#"><i class="fa fa-sync-alt"></i></a>
-                        <a class="btn btn-outline-dark btn-square" href="#"><i class="fa fa-search"></i></a>
-                    </div>
-                </div>
-
-                <div class="text-center py-4">
-                    <a class="h6 text-decoration-none text-truncate" href="#">Giày sneaker nam 2025</a>
-                    <div class="d-flex align-items-center justify-content-center mt-2">
-                        <h5>1.250.000đ</h5><h6 class="text-muted ml-2"><del>1.500.000đ</del></h6>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-center mb-1">
-                        <small class="fa fa-star text-primary mr-1"></small>
-                        <small class="fa fa-star text-primary mr-1"></small>
-                        <small class="fa fa-star text-primary mr-1"></small>
-                        <small class="fa fa-star text-primary mr-1"></small>
-                        <small class="far fa-star text-primary mr-1"></small>
-                        <small>(120)</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bạn có thể copy block trên để thêm nhiều sản phẩm -->
+        @foreach (var product in Model.FeaturedProducts)
+        {
+            @await Html.PartialAsync("_ProductCard", product)
+        }
 
     </div>
 </div>
-<!-- Products End -->
-<!-- Offer Start -->
 <div class="container-fluid pt-5 pb-3">
     <div class="row px-xl-5">
         <div class="col-md-6">
@@ -130,73 +78,50 @@
                 <div class="offer-text">
                     <h6 class="text-white text-uppercase">Giảm 30%</h6>
                     <h3 class="text-white mb-3">Giày chạy bộ</h3>
-                    <a href="#" class="btn btn-primary">Xem ngay</a>
+                    <a asp-controller="Product" asp-action="Index" asp-route-search="Giày chạy bộ" class="btn btn-primary">Xem ngay</a>
                 </div>
             </div>
         </div>
-
         <div class="col-md-6">
             <div class="product-offer mb-30" style="height: 300px;">
                 <img class="img-fluid" src="~/img/shoes-offer-big-2.jpg" alt="">
                 <div class="offer-text">
                     <h6 class="text-white text-uppercase">Siêu sale</h6>
                     <h3 class="text-white mb-3">Sneaker hot trend</h3>
-                    <a href="#" class="btn btn-primary">Mua ngay</a>
+                    <a asp-controller="Product" asp-action="Index" asp-route-search="Sneaker" class="btn btn-primary">Mua ngay</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<!-- Offer End -->
-<!-- Recent Products Start -->
 <div class="container-fluid pt-5 pb-3">
     <h2 class="section-title position-relative text-uppercase mx-xl-5 mb-4">
         <span class="bg-secondary pr-3">Giày mới về</span>
     </h2>
-
     <div class="row px-xl-5">
 
-        <!-- SP mẫu – sau sẽ load từ DB -->
-        <div class="col-lg-3 col-md-4 col-sm-6 pb-1">
-            <div class="product-item bg-light mb-4">
-                <div class="product-img position-relative overflow-hidden">
-                    <img class="img-fluid w-100" src="~/img/new-shoe-1.jpg" alt="">
-                    <div class="product-action">
-                        <a class="btn btn-outline-dark btn-square" href="#"><i class="fa fa-shopping-cart"></i></a>
-                        <a class="btn btn-outline-dark btn-square" href="#"><i class="far fa-heart"></i></a>
-                        <a class="btn btn-outline-dark btn-square" href="#"><i class="fa fa-sync-alt"></i></a>
-                        <a class="btn btn-outline-dark btn-square" href="#"><i class="fa fa-search"></i></a>
-                    </div>
-                </div>
+        @foreach (var product in Model.RecentProducts)
+        {
+            @await Html.PartialAsync("_ProductCard", product)
+        }
 
-                <div class="text-center py-4">
-                    <a class="h6 text-decoration-none text-truncate" href="#">Sneaker form mới 2025</a>
-                    <div class="d-flex align-items-center justify-content-center mt-2">
-                        <h5>1.150.000đ</h5><h6 class="text-muted ml-2"><del>1.300.000đ</del></h6>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Copy block trên để thêm sản phẩm mới khác -->
     </div>
 </div>
-<!-- Recent Products End -->
-<!-- Vendor Start (Brands nổi tiếng) -->
 <div class="container-fluid py-5">
     <div class="row px-xl-5">
         <div class="col">
             <div class="owl-carousel vendor-carousel">
 
-                <div class="bg-light p-4"><img src="~/img/brand-nike.jpg" alt="Nike"></div>
-                <div class="bg-light p-4"><img src="~/img/brand-adidas.jpg" alt="Adidas"></div>
-                <div class="bg-light p-4"><img src="~/img/brand-puma.jpg" alt="Puma"></div>
-                <div class="bg-light p-4"><img src="~/img/brand-mlb.png" alt="MLB"></div>
-                <div class="bg-light p-4"><img src="~/img/brand-vans.jpg" alt="Vans"></div>
-                <div class="bg-light p-4"><img src="~/img/brand-converse.png" alt="Converse"></div>
+                @foreach (var brand in Model.Brands)
+                {
+                    <a asp-controller="Product" asp-action="Index" asp-route-brandId="@brand.Id">
+                        <div class="bg-light p-4">
+                            <img src="@Url.Content(brand.ImageUrl ?? "~/img/brand-nike.jpg")" alt="@brand.Name">
+                        </div>
+                    </a>
+                }
 
             </div>
         </div>
     </div>
 </div>
-<!-- Vendor End -->

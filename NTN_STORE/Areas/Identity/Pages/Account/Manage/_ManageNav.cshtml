@@ -1,0 +1,29 @@
+﻿@inject SignInManager<IdentityUser> SignInManager
+@{
+    var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+}
+
+@* Dùng 'list-group' (Bootstrap 4) thay vì 'nav-pills' (Bootstrap 5) *@
+<div class="list-group">
+
+    <a asp-page="./Index" class="list-group-item list-group-item-action @ManageNavPages.IndexNavClass(ViewContext)">
+        Hồ sơ
+    </a>
+
+    <a asp-page="./ChangePassword" id="change-password" class="list-group-item list-group-item-action @ManageNavPages.ChangePasswordNavClass(ViewContext)">
+        Đổi mật khẩu
+    </a>
+
+    @* Các trang này chưa được tạo, nên tôi tạm thời ẩn đi
+    Nếu sau này bạn chạy scaffold để tạo chúng, bạn có thể bỏ comment
+    
+    <a asp-page="./Email" class="list-group-item list-group-item-action @ManageNavPages.EmailNavClass(ViewContext)">Email</a>
+    
+    @if (hasExternalLogins)
+    {
+        <a asp-page="./ExternalLogins" id="external-login" class="list-group-item list-group-item-action @ManageNavPages.ExternalLoginsNavClass(ViewContext)">Đăng nhập bên ngoài</a>
+    }
+    <a asp-page="./TwoFactorAuthentication" class="list-group-item list-group-item-action @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)">Xác thực hai yếu tố</a>
+    <a asp-page="./PersonalData" class="list-group-item list-group-item-action @ManageNavPages.PersonalDataNavClass(ViewContext)">Dữ liệu cá nhân</a>
+    *@
+</div>
