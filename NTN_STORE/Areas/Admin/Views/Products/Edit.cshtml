@@ -13,7 +13,7 @@
                 <h6 class="m-0 font-weight-bold text-primary">Chỉnh sửa thông tin: @Model.Product.Name</h6>
             </div>
             <div class="card-body">
-                <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                <form asp-action="Edit" asp-route-id="@Model.Product.Id" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
 
                     <input type="hidden" asp-for="Product.Id" />

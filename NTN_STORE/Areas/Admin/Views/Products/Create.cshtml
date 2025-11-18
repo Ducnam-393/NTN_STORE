@@ -15,78 +15,64 @@
             <div class="card-body">
                 <form asp-action="Create" method="post" enctype="multipart/form-data">
                     @Html.AntiForgeryToken()
+
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
                     <div class="form-group">
-                        <label asp-for="Product.Name" class="control-label">Tên sản phẩm</label>
+                        <label asp-for="Product.Name"></label>
                         <input asp-for="Product.Name" class="form-control" />
                         <span asp-validation-for="Product.Name" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
-                        <label asp-for="Product.Description" class="control-label">Mô tả</label>
-                        <textarea asp-for="Product.Description" class="form-control" rows="5"></textarea>
+                        <label asp-for="Product.Description"></label>
+                        <textarea asp-for="Product.Description" class="form-control"></textarea>
                         <span asp-validation-for="Product.Description" class="text-danger"></span>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 form-group">
-                            <label asp-for="Product.Price" class="control-label">Giá bán</label>
+                            <label asp-for="Product.Price"></label>
                             <input asp-for="Product.Price" class="form-control" type="number" />
-                            <span asp-validation-for="Product.Price" class="text-danger"></span>
                         </div>
+
                         <div class="col-md-6 form-group">
-                            <label asp-for="Product.OriginalPrice" class="control-label">Giá gốc (nếu giảm giá)</label>
+                            <label asp-for="Product.OriginalPrice"></label>
                             <input asp-for="Product.OriginalPrice" class="form-control" type="number" />
-                            <span asp-validation-for="Product.OriginalPrice" class="text-danger"></span>
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 form-group">
-                            <label asp-for="Product.CategoryId" class="control-label">Danh mục</label>
-                            <select asp-for="Product.CategoryId" class="form-control" asp-items="@Model.Categories">
+                            <label asp-for="Product.CategoryId"></label>
+                            <select asp-for="Product.CategoryId" asp-items="@Model.Categories" class="form-control">
                                 <option value="">-- Chọn danh mục --</option>
                             </select>
-                            <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
                         </div>
+
                         <div class="col-md-6 form-group">
-                            <label asp-for="Product.BrandId" class="control-label">Thương hiệu</label>
-                            <select asp-for="Product.BrandId" class="form-control" asp-items="@Model.Brands">
+                            <label asp-for="Product.BrandId"></label>
+                            <select asp-for="Product.BrandId" asp-items="@Model.Brands" class="form-control">
                                 <option value="">-- Chọn thương hiệu --</option>
                             </select>
-                            <span asp-validation-for="Product.BrandId" class="text-danger"></span>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="control-label">Trạng thái</label>
-                        <div class="custom-control custom-switch">
-                            <input asp-for="Product.IsActive" type="checkbox" class="custom-control-input" id="isActiveSwitch">
-                            <label class="custom-control-label" for="isActiveSwitch">Đang hoạt động (bày bán)</label>
+                        <label>Ảnh sản phẩm</label>
+                        <div class="custom-file">
+                            <input asp-for="ImageFile" class="custom-file-input" id="customFile">
+                            <label class="custom-file-label" for="customFile">Chọn file...</label>
                         </div>
+                        <span asp-validation-for="ImageFile" class="text-danger"></span>
                     </div>
-                    <div class="card-body">
-                        <form asp-action="Create" method="post" enctype="multipart/form-data">
-                            @Html.AntiForgeryToken()
-                            <div class="form-group">
-                                <label class="control-label">Ảnh sản phẩm</label>
-                                <div class="custom-file">
-                                    <input asp-for="ImageFile" class="custom-file-input" id="customFile">
-                                    <label class="custom-file-label" for="customFile">Chọn file...</label>
-                                </div>
-                                <span asp-validation-for="ImageFile" class="text-danger"></span>
-                            </div>
 
-                        </form>
-                    </div>
-                    <hr />
-
-                    <div class="form-group">
+                    <div class="form-group mt-3">
                         <button type="submit" class="btn btn-primary">Lưu sản phẩm</button>
                         <a asp-action="Index" class="btn btn-secondary">Hủy</a>
                     </div>
                 </form>
+
             </div>
         </div>
     </div>

@@ -1,15 +1,9 @@
-﻿using Microsoft.AspNetCore.Hosting; // Cần để lưu ảnh
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using NTN_STORE.Models;
 using NTN_STORE.Models.ViewModels;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 
 namespace NTN_STORE.Areas.Admin.Controllers
 {
@@ -17,165 +11,235 @@ namespace NTN_STORE.Areas.Admin.Controllers
     public class ProductsController : Controller
     {
         private readonly NTNStoreContext _context;
-        private readonly IWebHostEnvironment _webHostEnvironment; // Inject môi trường
+        private readonly IWebHostEnvironment _env;
 
-        public ProductsController(NTNStoreContext context, IWebHostEnvironment webHostEnvironment)
+        public ProductsController(NTNStoreContext context, IWebHostEnvironment env)
         {
             _context = context;
-            _webHostEnvironment = webHostEnvironment;
+            _env = env;
         }
 
-        // GET: Admin/Products
+        // =================== INDEX ===================
         public async Task<IActionResult> Index()
         {
             var products = await _context.Products
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
-                .OrderByDescending(p => p.Id) // Sắp xếp mới nhất lên đầu
+                .Include(p => p.Images)
+                .OrderByDescending(p => p.Id)
                 .ToListAsync();
+
             return View(products);
         }
 
-        // GET: Admin/Products/Create
+        // =================== CREATE GET ===================
         public async Task<IActionResult> Create()
         {
-            var viewModel = new ProductFormViewModel
+            var vm = new ProductFormViewModel
             {
                 Product = new Product { IsActive = true },
-                Categories = await GetCategoriesSelectList(),
-                Brands = await GetBrandsSelectList()
+                Categories = await LoadCategories(),
+                Brands = await LoadBrands()
             };
-            return View(viewModel);
+
+            return View(vm);
         }
 
-        // POST: Admin/Products/Create
+        // =================== CREATE POST ===================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(ProductFormViewModel viewModel)
+        public async Task<IActionResult> Create(ProductFormViewModel vm)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                // Xử lý Upload ảnh
-                if (viewModel.ImageFile != null)
-                {
-                    // 1. Tạo tên file unique
-                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(viewModel.ImageFile.FileName);
-                    // 2. Xác định đường dẫn lưu: wwwroot/img/products
-                    string uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "products");
-
-                    // Tạo thư mục nếu chưa có
-                    if (!Directory.Exists(uploadPath)) Directory.CreateDirectory(uploadPath);
-
-                    // 3. Copy file
-                    using (var fileStream = new FileStream(Path.Combine(uploadPath, fileName), FileMode.Create))
-                    {
-                        await viewModel.ImageFile.CopyToAsync(fileStream);
-                    }
-
-                    // 4. Gán đường dẫn ảnh vào ProductImage
-                    if (viewModel.Product.Images == null) viewModel.Product.Images = new List<ProductImage>();
-                    viewModel.Product.Images.Add(new ProductImage
-                    {
-                        ImageUrl = "/img/products/" + fileName,
-                        Product = viewModel.Product
-                    });
-                }
-
-                _context.Add(viewModel.Product);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                vm.Categories = await LoadCategories();
+                vm.Brands = await LoadBrands();
+                return View(vm);
             }
 
-            // Nếu lỗi validation, load lại danh sách chọn
-            viewModel.Categories = await GetCategoriesSelectList();
-            viewModel.Brands = await GetBrandsSelectList();
-            return View(viewModel);
+            // Lưu product
+            _context.Products.Add(vm.Product);
+            await _context.SaveChangesAsync();
+
+            // Lưu ảnh (nếu có)
+            if (vm.ImageFile != null)
+            {
+                string url = await SaveImage(vm.ImageFile);
+
+                _context.ProductImages.Add(new ProductImage
+                {
+                    ProductId = vm.Product.Id,
+                    ImageUrl = url
+                });
+
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
-        // GET: Admin/Products/Edit/5
+        // =================== EDIT GET ===================
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
 
             var product = await _context.Products
-                .Include(p => p.Images) // Load ảnh cũ
+                .Include(p => p.Images)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null) return NotFound();
 
-            var viewModel = new ProductFormViewModel
+            var vm = new ProductFormViewModel
             {
                 Product = product,
-                Categories = await GetCategoriesSelectList(),
-                Brands = await GetBrandsSelectList()
+                Categories = await LoadCategories(),
+                Brands = await LoadBrands()
             };
-            return View(viewModel);
+
+            return View(vm);
         }
 
-        // POST: Admin/Products/Edit/5
+        // =================== EDIT POST ===================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, ProductFormViewModel viewModel)
+        public async Task<IActionResult> Edit(ProductFormViewModel vm)
         {
-            if (id != viewModel.Product.Id) return NotFound();
-
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    // Xử lý upload ảnh mới khi Edit
-                    if (viewModel.ImageFile != null)
-                    {
-                        string fileName = Guid.NewGuid().ToString() + Path.GetExtension(viewModel.ImageFile.FileName);
-                        string uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "img", "products");
-
-                        if (!Directory.Exists(uploadPath)) Directory.CreateDirectory(uploadPath);
-
-                        using (var fileStream = new FileStream(Path.Combine(uploadPath, fileName), FileMode.Create))
-                        {
-                            await viewModel.ImageFile.CopyToAsync(fileStream);
-                        }
-
-                        // Thêm ảnh mới
-                        var newImage = new ProductImage { ImageUrl = "/img/products/" + fileName, ProductId = id };
-                        _context.Add(newImage); // Lưu trực tiếp ảnh mới vào bảng ProductImage
-                    }
-
-                    _context.Update(viewModel.Product);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ProductExists(viewModel.Product.Id)) return NotFound();
-                    else throw;
-                }
-                return RedirectToAction(nameof(Index));
+                vm.Categories = await LoadCategories();
+                vm.Brands = await LoadBrands();
+                return View(vm);
             }
 
-            viewModel.Categories = await GetCategoriesSelectList();
-            viewModel.Brands = await GetBrandsSelectList();
-            return View(viewModel);
+            var product = await _context.Products
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.Id == vm.Product.Id);
+
+            if (product == null) return NotFound();
+
+            // Gán dữ liệu mới
+            product.Name = vm.Product.Name;
+            product.Description = vm.Product.Description;
+            product.Price = vm.Product.Price;
+            product.OriginalPrice = vm.Product.OriginalPrice;
+            product.CategoryId = vm.Product.CategoryId;
+            product.BrandId = vm.Product.BrandId;
+            product.IsActive = vm.Product.IsActive;
+
+            // Nếu có ảnh mới → xóa ảnh cũ + lưu ảnh mới
+            if (vm.ImageFile != null)
+            {
+                // Xóa file ảnh cũ
+                foreach (var img in product.Images)
+                {
+                    DeleteImageFile(img.ImageUrl);
+                }
+
+                // Xóa DB ảnh cũ
+                _context.ProductImages.RemoveRange(product.Images);
+                await _context.SaveChangesAsync();
+
+                // Thêm ảnh mới
+                string url = await SaveImage(vm.ImageFile);
+
+                _context.ProductImages.Add(new ProductImage
+                {
+                    ProductId = product.Id,
+                    ImageUrl = url
+                });
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
 
-        // Các hàm hỗ trợ
-        private bool ProductExists(int id) => _context.Products.Any(e => e.Id == id);
-
-        private async Task<IEnumerable<SelectListItem>> GetCategoriesSelectList()
+        // =================== DELETE GET ===================
+        public async Task<IActionResult> Delete(int? id)
         {
-            return (await _context.Categories.ToListAsync()).Select(c => new SelectListItem
-            {
-                Text = c.Name,
-                Value = c.Id.ToString()
-            });
+            if (id == null) return NotFound();
+
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (product == null) return NotFound();
+
+            return View(product);
         }
 
-        private async Task<IEnumerable<SelectListItem>> GetBrandsSelectList()
+        // =================== DELETE POST ===================
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            return (await _context.Brands.ToListAsync()).Select(b => new SelectListItem
+            var product = await _context.Products
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (product == null) return NotFound();
+
+            // Xóa file ảnh
+            foreach (var img in product.Images)
             {
-                Text = b.Name,
-                Value = b.Id.ToString()
-            });
+                DeleteImageFile(img.ImageUrl);
+            }
+
+            // Xóa ảnh trong DB
+            _context.ProductImages.RemoveRange(product.Images);
+
+            // Xóa product
+            _context.Products.Remove(product);
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // ==========================================================
+        // =============== HÀM PHỤ TRỢ =============================
+        // ==========================================================
+
+        private async Task<IEnumerable<SelectListItem>> LoadCategories()
+        {
+            return await _context.Categories
+                .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
+                .ToListAsync();
+        }
+
+        private async Task<IEnumerable<SelectListItem>> LoadBrands()
+        {
+            return await _context.Brands
+                .Select(b => new SelectListItem { Value = b.Id.ToString(), Text = b.Name })
+                .ToListAsync();
+        }
+
+        private async Task<string> SaveImage(IFormFile file)
+        {
+            string folder = Path.Combine(_env.WebRootPath, "img", "products");
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            string fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            string filePath = Path.Combine(folder, fileName);
+
+            using (var fs = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(fs);
+            }
+
+            return "/img/products/" + fileName;
+        }
+
+        private void DeleteImageFile(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return;
+
+            string filePath = Path.Combine(_env.WebRootPath, url.TrimStart('/'));
+            if (System.IO.File.Exists(filePath))
+                System.IO.File.Delete(filePath);
         }
     }
 }

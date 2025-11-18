@@ -17,13 +17,13 @@ namespace NTN_STORE.Models
         public decimal? OriginalPrice { get; set; }
 
         public int CategoryId { get; set; }
-        public Category Category { get; set; }
+        public Category ? Category { get; set; }
 
         public int BrandId { get; set; }
-        public Brand Brand { get; set; }
+        public Brand ? Brand { get; set; }
 
-        public ICollection<ProductImage> Images { get; set; }
-        public ICollection<ProductVariant> Variants { get; set; }
+        public ICollection<ProductImage> ? Images { get; set; }
+        public ICollection<ProductVariant> ? Variants { get; set; }
 
         public bool IsFeatured { get; set; } = false;
         public bool IsActive { get; set; } = true;

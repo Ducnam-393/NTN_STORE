@@ -120,9 +120,18 @@
                             <div class="product-item bg-light mb-4">
                                 <div class="product-img position-relative overflow-hidden">
                                     @{
-                                        string imgUrl = item.Images?.FirstOrDefault()?.ImageUrl ?? "/img/default-shoe.jpg";
+                                        string imgUrl = item.Images?.FirstOrDefault()?.ImageUrl;
+                                        if (!string.IsNullOrEmpty(imgUrl))
+                                        {
+                                            imgUrl = Url.Content(imgUrl); // chuyển đường dẫn tương đối
+                                        }
+                                        else
+                                        {
+                                            imgUrl = Url.Content("~/img/default-shoe.jpg");
+                                        }
                                     }
                                     <img class="img-fluid w-100" src="@imgUrl" alt="@item.Name" style="height: 300px; object-fit: cover;">
+
 
                                     <div class="product-action">
                                         <a class="btn btn-outline-dark btn-square" href="#"><i class="fa fa-shopping-cart"></i></a>

@@ -27,6 +27,7 @@ namespace NTN_STORE.Controllers
             int pageSize = 12)
         {
             var products = _context.Products
+                .Include(p => p.Images)
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
                 .AsQueryable();
@@ -70,7 +71,6 @@ namespace NTN_STORE.Controllers
 
             ViewBag.Categories = await _context.Categories.ToListAsync();
             ViewBag.Brands = await _context.Brands.ToListAsync();
-
             return View(data);
         }
 
@@ -78,6 +78,7 @@ namespace NTN_STORE.Controllers
         public IActionResult Detail(int id)
         {
             var product = _context.Products
+                .Include(p => p.Images)
                 .Include(p => p.Brand)
                 .Include(p => p.Category)
                 .FirstOrDefault(p => p.Id == id);
