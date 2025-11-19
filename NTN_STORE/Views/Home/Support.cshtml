@@ -1,0 +1,62 @@
+﻿@{
+    ViewData["Title"] = "Trung Tâm Hỗ Trợ";
+}
+
+<div class="container-fluid bg-secondary mb-5">
+    <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 200px">
+        <h1 class="font-weight-semi-bold text-uppercase mb-3">Trung Tâm Hỗ Trợ</h1>
+        <div class="d-inline-flex">
+            <p class="m-0"><a asp-controller="Home" asp-action="Index">Trang chủ</a></p>
+            <p class="m-0 px-2">-</p>
+            <p class="m-0">Hỗ trợ</p>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid pt-5">
+    <div class="row px-xl-5 pb-3">
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
+            <div class="d-flex align-items-center border mb-4" style="padding: 30px;">
+                <h1 class="fa fa-user text-primary m-0 mr-3"></h1>
+                <div>
+                    <h5 class="font-weight-semi-bold m-0">Tài khoản</h5>
+                    <small><a href="#" class="text-muted">Quên mật khẩu?</a></small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
+            <div class="d-flex align-items-center border mb-4" style="padding: 30px;">
+                <h1 class="fa fa-box-open text-primary m-0 mr-3"></h1>
+                <div>
+                    <h5 class="font-weight-semi-bold m-0">Đơn hàng</h5>
+                    <small><a href="#" class="text-muted">Tra cứu vận đơn</a></small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
+            <div class="d-flex align-items-center border mb-4" style="padding: 30px;">
+                <h1 class="fa fa-credit-card text-primary m-0 mr-3"></h1>
+                <div>
+                    <h5 class="font-weight-semi-bold m-0">Thanh toán</h5>
+                    <small><a href="#" class="text-muted">Phương thức & Phí</a></small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
+            <div class="d-flex align-items-center border mb-4" style="padding: 30px;">
+                <h1 class="fa fa-headset text-primary m-0 mr-3"></h1>
+                <div>
+                    <h5 class="font-weight-semi-bold m-0">Tư vấn viên</h5>
+                    <small class="text-muted">Hotline: 0988 888 888</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row px-xl-5">
+        <div class="col-12 text-center mb-5">
+            <h4 class="font-weight-semi-bold mb-4">Bạn cần hỗ trợ thêm?</h4>
+            <a asp-controller="Home" asp-action="Contact" class="btn btn-primary py-2 px-4">Gửi tin nhắn cho chúng tôi</a>
+        </div>
+    </div>
+</div>

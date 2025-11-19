@@ -64,5 +64,37 @@ namespace NTN_STORE.Controllers
             }
             return View(model);
         }
+        public IActionResult Returns()
+        {
+            return View();
+        }
+
+        // 2. Action cho trang Bảo hành
+        public IActionResult Warranty()
+        {
+            return View();
+        }
+
+        // 3. Action cho trang Vận chuyển
+        public IActionResult Shipping()
+        {
+            return View();
+        }
+        public IActionResult About()
+        {
+            return View();
+        }
+
+        // 2. Action cho trang Hỗ trợ chung (Help Center)
+        public IActionResult Support()
+        {
+            return View();
+        }
+
+        // 3. Action cho trang Câu hỏi thường gặp (FAQ)
+        public IActionResult FAQ()
+        {
+            return View();
+        }
     }
 }

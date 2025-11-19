@@ -1,0 +1,85 @@
+﻿@{
+    ViewData["Title"] = "Câu Hỏi Thường Gặp (FAQ)";
+}
+
+<div class="container-fluid bg-secondary mb-5">
+    <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 200px">
+        <h1 class="font-weight-semi-bold text-uppercase mb-3">Câu Hỏi Thường Gặp</h1>
+        <div class="d-inline-flex">
+            <p class="m-0"><a asp-controller="Home" asp-action="Index">Trang chủ</a></p>
+            <p class="m-0 px-2">-</p>
+            <p class="m-0">FAQ</p>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid py-5">
+    <div class="row px-xl-5">
+        <div class="col-lg-10 offset-lg-1">
+            <div id="accordion">
+
+                <div class="card">
+                    <div class="card-header" id="headingOne">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                1. Tôi có thể kiểm tra hàng trước khi thanh toán không?
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+                        <div class="card-body">
+                            Có. NTN Store luôn khuyến khích khách hàng kiểm tra sản phẩm (mẫu mã, size, chất lượng) trước khi thanh toán cho nhân viên giao hàng.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header" id="headingTwo">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link collapsed text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                2. Thời gian giao hàng là bao lâu?
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+                        <div class="card-body">
+                            - Nội thành Hà Nội: 1-2 ngày.<br>
+                            - Các tỉnh thành khác: 3-4 ngày làm việc.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header" id="headingThree">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link collapsed text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                3. Làm sao để chọn đúng size giày?
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+                        <div class="card-body">
+                            Bạn có thể tham khảo bảng size trong trang chi tiết của từng sản phẩm. Hoặc liên hệ trực tiếp qua Fanpage/Hotline để được nhân viên tư vấn size chuẩn nhất dựa trên chiều dài bàn chân của bạn.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header" id="headingFour">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link collapsed text-dark font-weight-bold" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                4. Cửa hàng có hỗ trợ trả góp không?
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordion">
+                        <div class="card-body">
+                            Hiện tại chúng tôi chưa hỗ trợ trả góp trực tiếp. Tuy nhiên bạn có thể thanh toán qua thẻ tín dụng nếu có nhu cầu trả sau.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
