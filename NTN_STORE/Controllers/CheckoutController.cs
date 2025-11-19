@@ -77,6 +77,12 @@ namespace NTN_STORE.Controllers
                 ModelState.AddModelError("", "Giỏ hàng của bạn bị trống.");
             }
             ModelState.Remove("Cart");
+            ModelState.Remove("ShippingDetails.UserId");
+            ModelState.Remove("ShippingDetails.OrderCode");
+            ModelState.Remove("ShippingDetails.TotalAmount");
+            ModelState.Remove("ShippingDetails.Status");
+            ModelState.Remove("ShippingDetails.CreatedAt");
+            ModelState.Remove("ShippingDetails.OrderDetails");
             // Gắn lại CartViewModel vào model để nếu lỗi thì vẫn hiển thị tóm tắt
             model.Cart = new CartViewModel { CartItems = cartItems };
 
