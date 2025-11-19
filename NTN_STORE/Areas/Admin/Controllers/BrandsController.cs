@@ -52,7 +52,7 @@ namespace NTN_STORE.Areas.Admin.Controllers
         // POST: Admin/Brands/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name")] Brand brand)
+        public async Task<IActionResult> Create([Bind("Id,Name,Description")] Brand brand)
         {
             if (ModelState.IsValid)
             {
@@ -82,7 +82,7 @@ namespace NTN_STORE.Areas.Admin.Controllers
         // POST: Admin/Brands/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Brand brand)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Description")] Brand brand)
         {
             if (id != brand.Id)
             {

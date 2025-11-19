@@ -6,12 +6,14 @@ namespace NTN_STORE.Models.ViewModels
 {
     public class ProductFormViewModel
     {
-        // 1. Dữ liệu sản phẩm để bind vào form
+        // Dữ liệu sản phẩm
         public Product Product { get; set; }
 
-        // 2. Danh sách để hiển thị <select> (dropdown)
-        public IEnumerable<SelectListItem> Categories { get; set; }
-        public IEnumerable<SelectListItem> Brands { get; set; }
-        public IFormFile ImageFile { get; set; }
+        // Thêm dấu ? để cho phép null (không bắt buộc validation)
+        public IEnumerable<SelectListItem>? Categories { get; set; }
+        public IEnumerable<SelectListItem>? Brands { get; set; }
+
+        // Ảnh có thể null (khi edit không chọn ảnh mới, hoặc create không bắt buộc)
+        public IFormFile? ImageFile { get; set; }
     }
 }

@@ -4,37 +4,44 @@
     ViewData["Title"] = "Quản lý Thương hiệu";
 }
 
-<h1 class_alias="h3 mb-2 text-gray-800">Quản lý Thương hiệu</h1>
-<p class_alias="mb-4">
-    <a asp-action="Create" class_alias="btn btn-primary">Tạo mới Thương hiệu</a>
-</p>
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Thương hiệu đối tác</h1>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-action="Index" asp-controller="Home">Dashboard</a></li>
+        <li class="breadcrumb-item active">Thương hiệu</li>
+    </ol>
+</div>
 
-<div class_alias="card shadow mb-4">
-    <div class_alias="card-header py-3">
-        <h6 class_alias="m-0 font-weight-bold text-primary">Danh sách Thương hiệu</h6>
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Danh sách Thương hiệu</h6>
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus fa-sm text-white-50"></i> Thêm mới
+        </a>
     </div>
-    <div class_alias="card-body">
-        <div class_alias="table-responsive">
-            <table class_alias="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTableBrand" width="100%" cellspacing="0">
                 <thead>
                     <tr>
-                        <th>
-                            @Html.DisplayNameFor(model => model.Name)
-                        </th>
-                        <th>Hành động</th>
+                        <th>Tên thương hiệu</th>
+                        <th>Mô tả</th>
+                        <th style="width: 150px;">Chức năng</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model)
                     {
                         <tr>
+                            <td>@item.Name</td>
+                            <td>@item.Description</td>
                             <td>
-                                @Html.DisplayFor(modelItem => item.Name)
-                            </td>
-                            <td>
-                                <a asp-action="Edit" asp-route-id="@item.Id" class_alias="btn btn-warning btn-sm">Sửa</a> |
-                                <a asp-action="Details" asp-route-id="@item.Id" class_alias="btn btn-info btn-sm">Chi tiết</a> |
-                                <a asp-action="Delete" asp-route-id="@item.Id" class_alias="btn btn-danger btn-sm">Xóa</a>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-info btn-sm" title="Sửa">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm" title="Xóa" onclick="return confirm('Xóa thương hiệu này?');">
+                                    <i class="fas fa-trash"></i>
+                                </a>
                             </td>
                         </tr>
                     }
@@ -43,3 +50,20 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/Admin/vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/Admin/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#dataTableBrand').DataTable({
+                "language": {
+                    "search": "Tìm nhanh:",
+                    "paginate": { "next": "Sau", "previous": "Trước" },
+                    "info": "Hiển thị _START_ đến _END_ của _TOTAL_ thương hiệu",
+                    "lengthMenu": "Xem _MENU_ dòng"
+                }
+            });
+        });
+    </script>
+}

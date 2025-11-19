@@ -76,7 +76,7 @@ namespace NTN_STORE.Controllers
             {
                 ModelState.AddModelError("", "Giỏ hàng của bạn bị trống.");
             }
-
+            ModelState.Remove("Cart");
             // Gắn lại CartViewModel vào model để nếu lỗi thì vẫn hiển thị tóm tắt
             model.Cart = new CartViewModel { CartItems = cartItems };
 
