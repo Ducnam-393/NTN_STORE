@@ -1,104 +1,87 @@
 ﻿@model NTN_STORE.Models.ViewModels.ProductFormViewModel
-
 @{
-    ViewData["Title"] = "Cập nhật sản phẩm";
+    ViewData["Title"] = "Chỉnh sửa sản phẩm";
 }
 
 <h1 class="h3 mb-4 text-gray-800">@ViewData["Title"]</h1>
+<div class="card shadow mb-4">
+    <div class="card-body">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Product.Id" />
 
-<div class="row">
-    <div class="col-lg-8">
-        <div class="card shadow mb-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Chỉnh sửa thông tin: @Model.Product.Name</h6>
+            @* --- Các trường Name, Price, Category... GIỮ NGUYÊN NHƯ CREATE --- *@
+            <div class="form-group">
+                <label asp-for="Product.Name"></label>
+                <input asp-for="Product.Name" class="form-control" />
             </div>
-            <div class="card-body">
-                <form asp-action="Edit" asp-route-id="@Model.Product.Id" method="post" enctype="multipart/form-data">
-                    @Html.AntiForgeryToken()
+            <div class="row">
+                <div class="col-md-6">
+                    <label asp-for="Product.Price"></label>
+                    <input asp-for="Product.Price" class="form-control" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Product.CategoryId"></label>
+                    <select asp-for="Product.CategoryId" asp-items="@Model.Categories" class="form-control"></select>
+                </div>
+            </div>
+            @* ----------------------------------------------------------------- *@
 
-                    <input type="hidden" asp-for="Product.Id" />
-                    @if (Model.Product.Images != null && Model.Product.Images.Any())
+            <hr class="my-4" />
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="font-weight-bold text-primary">Danh sách Size/Màu</h6>
+                <button type="button" class="btn btn-sm btn-success" onclick="addVariantRow()">
+                    <i class="fas fa-plus"></i> Thêm biến thể
+                </button>
+            </div>
+
+            <table class="table table-bordered" id="variantsTable">
+                <thead>
+                    <tr>
+                        <th>Size</th>
+                        <th>Màu sắc</th>
+                        <th>Số lượng kho</th>
+                        <th style="width: 50px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < Model.Variants.Count; i++)
                     {
-                        <div class="form-group">
-                            <label>Ảnh hiện tại:</label>
-                            <div class="row">
-                                @foreach (var img in Model.Product.Images)
-                                {
-                                    <div class="col-md-3 mb-3">
-                                        <img src="@img.ImageUrl" class="img-thumbnail" style="max-height: 150px;" />
-                                    </div>
-                                }
-                            </div>
-                        </div>
+                        <tr>
+                            <input type="hidden" name="Variants[@i].Id" value="@Model.Variants[i].Id" />
+                            <td>
+                                <input name="Variants[@i].Size" value="@Model.Variants[i].Size" class="form-control" placeholder="VD: 40" required />
+                            </td>
+                            <td>
+                                <input name="Variants[@i].Color" value="@Model.Variants[i].Color" class="form-control" placeholder="VD: Đen" required />
+                            </td>
+                            <td>
+                                <input name="Variants[@i].Stock" value="@Model.Variants[i].Stock" type="number" class="form-control" />
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-circle btn-sm" onclick="removeRow(this)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
                     }
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                </tbody>
+            </table>
 
-                    <div class="form-group">
-                        <label asp-for="Product.Name" class="control-label">Tên sản phẩm</label>
-                        <input asp-for="Product.Name" class="form-control" />
-                        <span asp-validation-for="Product.Name" class="text-danger"></span>
+            <div class="form-group mt-3">
+                <label>Thay đổi ảnh (Để trống nếu giữ nguyên)</label>
+                <input asp-for="ImageFile" class="form-control-file" />
+                @if (Model.Product.Images != null && Model.Product.Images.Count > 0)
+                {
+                    <div class="mt-2">
+                        <img src="@Model.Product.Images.First().ImageUrl" width="100" class="img-thumbnail" />
                     </div>
-
-                    <div class="form-group">
-                        <label asp-for="Product.Description" class="control-label">Mô tả</label>
-                        <textarea asp-for="Product.Description" class="form-control" rows="5"></textarea>
-                        <span asp-validation-for="Product.Description" class="text-danger"></span>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 form-group">
-                            <label asp-for="Product.Price" class="control-label">Giá bán</label>
-                            <input asp-for="Product.Price" class="form-control" type="number" />
-                            <span asp-validation-for="Product.Price" class="text-danger"></span>
-                        </div>
-                        <div class="col-md-6 form-group">
-                            <label asp-for="Product.OriginalPrice" class="control-label">Giá gốc</label>
-                            <input asp-for="Product.OriginalPrice" class="form-control" type="number" />
-                            <span asp-validation-for="Product.OriginalPrice" class="text-danger"></span>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 form-group">
-                            <label asp-for="Product.CategoryId" class="control-label">Danh mục</label>
-                            <select asp-for="Product.CategoryId" class="form-control" asp-items="@Model.Categories">
-                                <option value="">-- Chọn danh mục --</option>
-                            </select>
-                            <span asp-validation-for="Product.CategoryId" class="text-danger"></span>
-                        </div>
-                        <div class="col-md-6 form-group">
-                            <label asp-for="Product.BrandId" class="control-label">Thương hiệu</label>
-                            <select asp-for="Product.BrandId" class="form-control" asp-items="@Model.Brands">
-                                <option value="">-- Chọn thương hiệu --</option>
-                            </select>
-                            <span asp-validation-for="Product.BrandId" class="text-danger"></span>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="control-label">Trạng thái</label>
-                        <div class="custom-control custom-switch">
-                            <input asp-for="Product.IsActive" type="checkbox" class="custom-control-input" id="isActiveSwitch">
-                            <label class="custom-control-label" for="isActiveSwitch">Đang hoạt động (bày bán)</label>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="control-label">Thêm/Thay đổi ảnh</label>
-                        <div class="custom-file">
-                            <input asp-for="ImageFile" class="custom-file-input" id="customFile">
-                            <label class="custom-file-label" for="customFile">Chọn ảnh mới...</label>
-                        </div>
-                    </div>
-
-                    <hr />
-
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary">Cập nhật</button>
-                        <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
-                    </div>
-                </form>
+                }
             </div>
-        </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Lưu thay đổi</button>
+            <a asp-action="Index" class="btn btn-secondary mt-3">Hủy</a>
+        </form>
     </div>
 </div>
 
@@ -108,9 +91,38 @@
     }
 
     <script>
-        $(".custom-file-input").on("change", function() {
-            var fileName = $(this).val().split("\\").pop();
-            $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
-        });
+        // Hàm thêm dòng mới bằng JS
+        function addVariantRow() {
+            var tableBody = document.getElementById("variantsTable").getElementsByTagName('tbody')[0];
+            var rowCount = tableBody.rows.length; // Lấy số dòng hiện tại để làm index
+            var newRow = tableBody.insertRow();
+
+            var cell1 = newRow.insertCell(0);
+            var cell2 = newRow.insertCell(1);
+            var cell3 = newRow.insertCell(2);
+            var cell4 = newRow.insertCell(3);
+
+            // Chú ý: name="Variants[index].Property" là quy tắc binding của MVC
+            // Ta dùng biến rowCount luôn tăng dần làm index.
+            // Lưu ý nhỏ: Nếu xóa dòng giữa chừng, index có thể bị lệch, MVC vẫn bind được nếu dùng kĩ thuật non-sequential,
+            // nhưng cách đơn giản nhất là dùng index liên tục hoặc dùng JS library.
+            // Ở đây ta dùng thủ thuật: Lấy timestamp làm index giả để đảm bảo duy nhất (Non-sequential indices).
+
+            var index = new Date().getTime();
+
+            var htmlIndex = '<input type="hidden" name="Variants.Index" value="' + index + '" />';
+            // Dòng mới có ID = 0
+            var htmlId = '<input type="hidden" name="Variants[' + index + '].Id" value="0" />';
+
+            cell1.innerHTML = htmlIndex + htmlId + '<input name="Variants[' + index + '].Size" class="form-control" required />';
+            cell2.innerHTML = '<input name="Variants[' + index + '].Color" class="form-control" required />';
+            cell3.innerHTML = '<input name="Variants[' + index + '].Stock" type="number" value="100" class="form-control" />';
+            cell4.innerHTML = '<button type="button" class="btn btn-danger btn-circle btn-sm" onclick="removeRow(this)"><i class="fas fa-trash"></i></button>';
+        }
+
+        function removeRow(button) {
+            var row = button.closest('tr');
+            row.remove();
+        }
     </script>
 }

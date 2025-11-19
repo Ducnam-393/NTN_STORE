@@ -48,35 +48,53 @@ namespace NTN_STORE.Controllers
 
         // POST: /Cart/AddToCart
         [HttpPost]
-        public async Task<IActionResult> AddToCart(int productId, int variantId, int quantity = 1)
+        [Authorize] // Đảm bảo user đã đăng nhập
+        public async Task<IActionResult> AddToCart(int productId, int variantId, int quantity)
         {
-            var userId = GetUserId();
+            // 1. KIỂM TRA HỢP LỆ (VALIDATION)
+            if (quantity <= 0) quantity = 1;
 
-            // Kiểm tra xem sản phẩm + biến thể này đã có trong giỏ hàng của user chưa
+            // Kiểm tra xem Variant có tồn tại thực sự trong DB không?
+            var variantExists = await _context.ProductVariants.AnyAsync(v => v.Id == variantId);
+
+            if (!variantExists)
+            {
+                // Nếu variantId = 0 hoặc ID lạ -> Báo lỗi hoặc quay lại trang cũ
+                TempData["Error"] = "Vui lòng chọn Size/Màu hợp lệ trước khi thêm vào giỏ!";
+                return RedirectToAction("Detail", "Product", new { id = productId });
+            }
+
+            var userId = _userManager.GetUserId(User);
+
+            // 2. XỬ LÝ THÊM VÀO GIỎ
             var cartItem = await _context.CartItems
                 .FirstOrDefaultAsync(c => c.UserId == userId && c.ProductId == productId && c.VariantId == variantId);
 
             if (cartItem != null)
             {
-                // Đã có, tăng số lượng
+                // Nếu đã có -> Cộng dồn số lượng
                 cartItem.Quantity += quantity;
+                _context.CartItems.Update(cartItem);
             }
             else
             {
-                // Chưa có, tạo mới
-                cartItem = new CartItem
+                // Nếu chưa có -> Tạo mới
+                var newCartItem = new CartItem
                 {
                     UserId = userId,
                     ProductId = productId,
-                    VariantId = variantId,
+                    VariantId = variantId, // Đảm bảo ID này đã được kiểm tra ở bước 1
                     Quantity = quantity
                 };
-                _context.CartItems.Add(cartItem);
+                _context.CartItems.Add(newCartItem);
             }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            TempData["Success"] = "Đã thêm vào giỏ hàng!";
+            return RedirectToAction("Index");
         }
+
 
         // POST: /Cart/RemoveItem
         [HttpPost]

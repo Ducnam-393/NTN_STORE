@@ -66,11 +66,51 @@
                         </div>
                         <span asp-validation-for="ImageFile" class="text-danger"></span>
                     </div>
+                    <hr />
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Quản lý Size & Màu sắc</h6>
+                        <button type="button" class="btn btn-sm btn-success" onclick="addVariantRow()">
+                            <i class="fas fa-plus"></i> Thêm dòng
+                        </button>
+                    </div>
+
+                    <table class="table table-bordered" id="variantsTable">
+                        <thead>
+                            <tr>
+                                <th>Size</th>
+                                <th>Màu sắc</th>
+                                <th>Số lượng</th>
+                                <th>Xóa</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @* Hiển thị dòng mặc định đầu tiên *@
+                            @for (int i = 0; i < Model.Variants.Count; i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <input name="Variants[@i].Size" value="@Model.Variants[i].Size" class="form-control" required />
+                                    </td>
+                                    <td>
+                                        <input name="Variants[@i].Color" value="@Model.Variants[i].Color" class="form-control" required />
+                                    </td>
+                                    <td>
+                                        <input name="Variants[@i].Stock" value="@Model.Variants[i].Stock" type="number" class="form-control" />
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">X</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <hr />
 
                     <div class="form-group mt-3">
                         <button type="submit" class="btn btn-primary">Lưu sản phẩm</button>
                         <a asp-action="Index" class="btn btn-secondary">Hủy</a>
                     </div>
+
                 </form>
 
             </div>

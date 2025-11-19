@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
-using NTN_STORE.Models;
+﻿using NTN_STORE.Models; 
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace NTN_STORE.Models.ViewModels
 {
@@ -15,5 +17,6 @@ namespace NTN_STORE.Models.ViewModels
 
         // Ảnh có thể null (khi edit không chọn ảnh mới, hoặc create không bắt buộc)
         public IFormFile? ImageFile { get; set; }
+        public List<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
     }
 }

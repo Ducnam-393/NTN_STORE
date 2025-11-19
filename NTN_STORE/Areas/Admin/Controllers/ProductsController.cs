@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using NTN_STORE.Models;
 using NTN_STORE.Models.ViewModels;
 
@@ -38,6 +39,7 @@ namespace NTN_STORE.Areas.Admin.Controllers
             var vm = new ProductFormViewModel
             {
                 Product = new Product { IsActive = true },
+                Variants = new List<ProductVariant> { new ProductVariant { Stock = 100 } },
                 Categories = await LoadCategories(),
                 Brands = await LoadBrands()
             };
@@ -50,6 +52,9 @@ namespace NTN_STORE.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ProductFormViewModel vm)
         {
+            // 1. Bỏ qua validate Variants tự động (để tránh lỗi Product null hoặc dòng trống)
+            ModelState.Remove("Variants");
+
             if (!ModelState.IsValid)
             {
                 vm.Categories = await LoadCategories();
@@ -57,23 +62,39 @@ namespace NTN_STORE.Areas.Admin.Controllers
                 return View(vm);
             }
 
-            // Lưu product
+            // 2. Lưu Product trước để lấy ID
+            vm.Product.CreatedAt = DateTime.Now;
             _context.Products.Add(vm.Product);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(); // Lúc này vm.Product.Id đã có giá trị
 
-            // Lưu ảnh (nếu có)
+            // 3. Xử lý danh sách Variants thủ công
+            if (vm.Variants != null && vm.Variants.Any())
+            {
+                foreach (var variant in vm.Variants)
+                {
+                    // Chỉ lưu những dòng có dữ liệu hợp lệ
+                    if (!string.IsNullOrWhiteSpace(variant.Size) && !string.IsNullOrWhiteSpace(variant.Color))
+                    {
+                        variant.Id = 0; // Đảm bảo là thêm mới
+                        variant.ProductId = vm.Product.Id; // Gán ID sản phẩm vừa tạo
+                        _context.ProductVariants.Add(variant);
+                    }
+                }
+            }
+
+            // 4. Lưu ảnh (nếu có)
             if (vm.ImageFile != null)
             {
                 string url = await SaveImage(vm.ImageFile);
-
                 _context.ProductImages.Add(new ProductImage
                 {
                     ProductId = vm.Product.Id,
                     ImageUrl = url
                 });
-
-                await _context.SaveChangesAsync();
             }
+
+            // Lưu lần cuối cho Variants và Ảnh
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }
@@ -85,6 +106,7 @@ namespace NTN_STORE.Areas.Admin.Controllers
 
             var product = await _context.Products
                 .Include(p => p.Images)
+                .Include(p => p.Variants)
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null) return NotFound();
@@ -92,6 +114,7 @@ namespace NTN_STORE.Areas.Admin.Controllers
             var vm = new ProductFormViewModel
             {
                 Product = product,
+                Variants = product.Variants.ToList(),
                 Categories = await LoadCategories(),
                 Brands = await LoadBrands()
             };
@@ -104,6 +127,9 @@ namespace NTN_STORE.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(ProductFormViewModel vm)
         {
+            // 1. Bỏ qua validate Variants tự động
+            ModelState.Remove("Variants");
+
             if (!ModelState.IsValid)
             {
                 vm.Categories = await LoadCategories();
@@ -111,46 +137,90 @@ namespace NTN_STORE.Areas.Admin.Controllers
                 return View(vm);
             }
 
-            var product = await _context.Products
+            // Lấy sản phẩm cũ từ DB (bao gồm variants để so sánh)
+            var productInDb = await _context.Products
                 .Include(p => p.Images)
+                .Include(p => p.Variants)
                 .FirstOrDefaultAsync(p => p.Id == vm.Product.Id);
 
-            if (product == null) return NotFound();
+            if (productInDb == null) return NotFound();
 
-            // Gán dữ liệu mới
-            product.Name = vm.Product.Name;
-            product.Description = vm.Product.Description;
-            product.Price = vm.Product.Price;
-            product.OriginalPrice = vm.Product.OriginalPrice;
-            product.CategoryId = vm.Product.CategoryId;
-            product.BrandId = vm.Product.BrandId;
-            product.IsActive = vm.Product.IsActive;
+            // 2. Cập nhật thông tin Product
+            productInDb.Name = vm.Product.Name;
+            productInDb.Description = vm.Product.Description;
+            productInDb.Price = vm.Product.Price;
+            productInDb.OriginalPrice = vm.Product.OriginalPrice;
+            productInDb.CategoryId = vm.Product.CategoryId;
+            productInDb.BrandId = vm.Product.BrandId;
+            productInDb.IsActive = vm.Product.IsActive;
 
-            // Nếu có ảnh mới → xóa ảnh cũ + lưu ảnh mới
+            // 3. Xử lý Variants (Logic: Xóa cũ -> Thêm/Sửa)
+            if (vm.Variants != null)
+            {
+                // A. Lấy danh sách ID các variant được gửi lên form
+                var incomingIds = vm.Variants.Where(v => v.Id > 0).Select(v => v.Id).ToList();
+
+                // B. Xóa các variant trong DB mà KHÔNG có trong danh sách gửi lên (nghĩa là user đã xóa dòng đó)
+                var variantsToDelete = productInDb.Variants
+                    .Where(v => !incomingIds.Contains(v.Id))
+                    .ToList();
+
+                if (variantsToDelete.Any())
+                    _context.ProductVariants.RemoveRange(variantsToDelete);
+
+                // C. Thêm mới hoặc Cập nhật
+                foreach (var v in vm.Variants)
+                {
+                    // Bỏ qua dòng trống
+                    if (string.IsNullOrWhiteSpace(v.Size) || string.IsNullOrWhiteSpace(v.Color)) continue;
+
+                    if (v.Id == 0)
+                    {
+                        // Thêm mới variant
+                        var newVariant = new ProductVariant
+                        {
+                            ProductId = productInDb.Id,
+                            Size = v.Size,
+                            Color = v.Color,
+                            Stock = v.Stock
+                        };
+                        _context.ProductVariants.Add(newVariant);
+                    }
+                    else
+                    {
+                        // Cập nhật variant cũ
+                        var existingVariant = productInDb.Variants.FirstOrDefault(x => x.Id == v.Id);
+                        if (existingVariant != null)
+                        {
+                            existingVariant.Size = v.Size;
+                            existingVariant.Color = v.Color;
+                            existingVariant.Stock = v.Stock;
+                            _context.Entry(existingVariant).State = EntityState.Modified;
+                        }
+                    }
+                }
+            }
+
+            // 4. Xử lý ảnh (Thay ảnh mới nếu có)
             if (vm.ImageFile != null)
             {
-                // Xóa file ảnh cũ
-                foreach (var img in product.Images)
+                // Xóa ảnh cũ
+                foreach (var img in productInDb.Images)
                 {
                     DeleteImageFile(img.ImageUrl);
                 }
-
-                // Xóa DB ảnh cũ
-                _context.ProductImages.RemoveRange(product.Images);
-                await _context.SaveChangesAsync();
+                _context.ProductImages.RemoveRange(productInDb.Images);
 
                 // Thêm ảnh mới
                 string url = await SaveImage(vm.ImageFile);
-
                 _context.ProductImages.Add(new ProductImage
                 {
-                    ProductId = product.Id,
+                    ProductId = productInDb.Id,
                     ImageUrl = url
                 });
             }
 
             await _context.SaveChangesAsync();
-
             return RedirectToAction(nameof(Index));
         }
 
