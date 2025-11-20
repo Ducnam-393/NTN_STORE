@@ -26,7 +26,7 @@ namespace NTN_STORE.Models
 
         // Khóa ngoại tới người dùng
         public string? UserId { get; set; }
-        public virtual IdentityUser User { get; set; } 
+        public virtual IdentityUser ? User { get; set; } 
 
         // Quan hệ 1-Nhiều
         public ICollection<OrderDetail> OrderDetails { get; set; }

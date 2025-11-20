@@ -1,5 +1,1 @@
-{
-  "sdk": {
-    "version": "8.0.309"
-  }
-}
+<div asp-validation-summary="ModelOnly" class="text-danger col-12 mb-3"></div>

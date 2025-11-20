@@ -18,6 +18,7 @@
 
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
+                    @* --- Thông tin chung --- *@
                     <div class="form-group">
                         <label asp-for="Product.Name"></label>
                         <input asp-for="Product.Name" class="form-control" />
@@ -66,7 +67,10 @@
                         </div>
                         <span asp-validation-for="ImageFile" class="text-danger"></span>
                     </div>
+
                     <hr />
+
+                    @* --- Phần Variants (Quan trọng) --- *@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="m-0 font-weight-bold text-primary">Quản lý Size & Màu sắc</h6>
                         <button type="button" class="btn btn-sm btn-success" onclick="addVariantRow()">
@@ -84,15 +88,17 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @* Hiển thị dòng mặc định đầu tiên *@
                             @for (int i = 0; i < Model.Variants.Count; i++)
                             {
                                 <tr>
+                                    @* QUAN TRỌNG: Thêm Variants.Index để MVC nhận diện đúng dòng khi post về *@
+                                    <input type="hidden" name="Variants.Index" value="@i" />
+
                                     <td>
-                                        <input name="Variants[@i].Size" value="@Model.Variants[i].Size" class="form-control" required />
+                                        <input name="Variants[@i].Size" value="@Model.Variants[i].Size" class="form-control" required placeholder="VD: 40" />
                                     </td>
                                     <td>
-                                        <input name="Variants[@i].Color" value="@Model.Variants[i].Color" class="form-control" required />
+                                        <input name="Variants[@i].Color" value="@Model.Variants[i].Color" class="form-control" required placeholder="VD: Đen" />
                                     </td>
                                     <td>
                                         <input name="Variants[@i].Stock" value="@Model.Variants[i].Stock" type="number" class="form-control" />
@@ -122,4 +128,39 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        // Script cho Create giống hệt Edit
+        function addVariantRow() {
+            var tableBody = document.getElementById("variantsTable").getElementsByTagName('tbody')[0];
+            var newRow = tableBody.insertRow();
+
+            // Tạo index ngẫu nhiên dựa trên thời gian để không bị trùng
+            var index = new Date().getTime();
+
+            var cell1 = newRow.insertCell(0);
+            var cell2 = newRow.insertCell(1);
+            var cell3 = newRow.insertCell(2);
+            var cell4 = newRow.insertCell(3);
+
+            // HTML cho Index (Bắt buộc có)
+            var htmlIndex = '<input type="hidden" name="Variants.Index" value="' + index + '" />';
+
+            cell1.innerHTML = htmlIndex + '<input name="Variants[' + index + '].Size" class="form-control" required placeholder="VD: 41" />';
+            cell2.innerHTML = '<input name="Variants[' + index + '].Color" class="form-control" required placeholder="VD: Trắng" />';
+            cell3.innerHTML = '<input name="Variants[' + index + '].Stock" type="number" value="100" class="form-control" />';
+            cell4.innerHTML = '<button type="button" class="btn btn-danger btn-sm" onclick="removeRow(this)">X</button>';
+        }
+
+        function removeRow(button) {
+            var row = button.closest('tr');
+            row.remove();
+        }
+
+        // Custom input file label update (nếu cần)
+        $(".custom-file-input").on("change", function() {
+            var fileName = $(this).val().split("\\").pop();
+            $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+        });
+    </script>
 }

@@ -10,24 +10,47 @@
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="Product.Id" />
 
-            @* --- Các trường Name, Price, Category... GIỮ NGUYÊN NHƯ CREATE --- *@
             <div class="form-group">
                 <label asp-for="Product.Name"></label>
                 <input asp-for="Product.Name" class="form-control" />
+                <span asp-validation-for="Product.Name" class="text-danger"></span>
             </div>
+
+            <div class="form-group">
+                <label asp-for="Product.Description"></label>
+                <textarea asp-for="Product.Description" class="form-control"></textarea>
+                <span asp-validation-for="Product.Description" class="text-danger"></span>
+            </div>
+
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-6 form-group">
                     <label asp-for="Product.Price"></label>
-                    <input asp-for="Product.Price" class="form-control" />
+                    <input asp-for="Product.Price" class="form-control" type="number" />
                 </div>
-                <div class="col-md-6">
-                    <label asp-for="Product.CategoryId"></label>
-                    <select asp-for="Product.CategoryId" asp-items="@Model.Categories" class="form-control"></select>
+                <div class="col-md-6 form-group">
+                    <label asp-for="Product.OriginalPrice"></label>
+                    <input asp-for="Product.OriginalPrice" class="form-control" type="number" />
                 </div>
             </div>
-            @* ----------------------------------------------------------------- *@
+
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label asp-for="Product.CategoryId"></label>
+                    <select asp-for="Product.CategoryId" asp-items="@Model.Categories" class="form-control">
+                        <option value="">-- Chọn danh mục --</option>
+                    </select>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label asp-for="Product.BrandId"></label>
+                    <select asp-for="Product.BrandId" asp-items="@Model.Brands" class="form-control">
+                        <option value="">-- Chọn thương hiệu --</option>
+                    </select>
+                </div>
+            </div>
 
             <hr class="my-4" />
+
+            @* --- Phần Variants --- *@
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="font-weight-bold text-primary">Danh sách Size/Màu</h6>
                 <button type="button" class="btn btn-sm btn-success" onclick="addVariantRow()">
@@ -48,7 +71,10 @@
                     @for (int i = 0; i < Model.Variants.Count; i++)
                     {
                         <tr>
+                            @* QUAN TRỌNG: Thêm Variants.Index *@
+                            <input type="hidden" name="Variants.Index" value="@i" />
                             <input type="hidden" name="Variants[@i].Id" value="@Model.Variants[i].Id" />
+
                             <td>
                                 <input name="Variants[@i].Size" value="@Model.Variants[i].Size" class="form-control" placeholder="VD: 40" required />
                             </td>
@@ -70,10 +96,14 @@
 
             <div class="form-group mt-3">
                 <label>Thay đổi ảnh (Để trống nếu giữ nguyên)</label>
-                <input asp-for="ImageFile" class="form-control-file" />
+                <div class="custom-file">
+                    <input asp-for="ImageFile" class="custom-file-input" id="customFileEdit">
+                    <label class="custom-file-label" for="customFileEdit">Chọn file...</label>
+                </div>
                 @if (Model.Product.Images != null && Model.Product.Images.Count > 0)
                 {
                     <div class="mt-2">
+                        <label>Ảnh hiện tại:</label><br />
                         <img src="@Model.Product.Images.First().ImageUrl" width="100" class="img-thumbnail" />
                     </div>
                 }
@@ -91,31 +121,24 @@
     }
 
     <script>
-        // Hàm thêm dòng mới bằng JS
         function addVariantRow() {
             var tableBody = document.getElementById("variantsTable").getElementsByTagName('tbody')[0];
-            var rowCount = tableBody.rows.length; // Lấy số dòng hiện tại để làm index
             var newRow = tableBody.insertRow();
+
+            // Index ngẫu nhiên
+            var index = new Date().getTime();
 
             var cell1 = newRow.insertCell(0);
             var cell2 = newRow.insertCell(1);
             var cell3 = newRow.insertCell(2);
             var cell4 = newRow.insertCell(3);
 
-            // Chú ý: name="Variants[index].Property" là quy tắc binding của MVC
-            // Ta dùng biến rowCount luôn tăng dần làm index.
-            // Lưu ý nhỏ: Nếu xóa dòng giữa chừng, index có thể bị lệch, MVC vẫn bind được nếu dùng kĩ thuật non-sequential,
-            // nhưng cách đơn giản nhất là dùng index liên tục hoặc dùng JS library.
-            // Ở đây ta dùng thủ thuật: Lấy timestamp làm index giả để đảm bảo duy nhất (Non-sequential indices).
-
-            var index = new Date().getTime();
-
+            // Input hidden cho Variants.Index và Variants[...].Id = 0 (đánh dấu là mới)
             var htmlIndex = '<input type="hidden" name="Variants.Index" value="' + index + '" />';
-            // Dòng mới có ID = 0
             var htmlId = '<input type="hidden" name="Variants[' + index + '].Id" value="0" />';
 
-            cell1.innerHTML = htmlIndex + htmlId + '<input name="Variants[' + index + '].Size" class="form-control" required />';
-            cell2.innerHTML = '<input name="Variants[' + index + '].Color" class="form-control" required />';
+            cell1.innerHTML = htmlIndex + htmlId + '<input name="Variants[' + index + '].Size" class="form-control" required placeholder="Size" />';
+            cell2.innerHTML = '<input name="Variants[' + index + '].Color" class="form-control" required placeholder="Màu" />';
             cell3.innerHTML = '<input name="Variants[' + index + '].Stock" type="number" value="100" class="form-control" />';
             cell4.innerHTML = '<button type="button" class="btn btn-danger btn-circle btn-sm" onclick="removeRow(this)"><i class="fas fa-trash"></i></button>';
         }
@@ -124,5 +147,11 @@
             var row = button.closest('tr');
             row.remove();
         }
+
+        // Update tên file khi chọn ảnh
+         $(".custom-file-input").on("change", function() {
+            var fileName = $(this).val().split("\\").pop();
+            $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+        });
     </script>
 }

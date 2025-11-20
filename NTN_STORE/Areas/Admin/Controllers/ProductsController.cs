@@ -48,12 +48,16 @@ namespace NTN_STORE.Areas.Admin.Controllers
         }
 
         // =================== CREATE POST ===================
+        // =================== CREATE POST ===================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ProductFormViewModel vm)
         {
-            // 1. Bỏ qua validate Variants tự động (để tránh lỗi Product null hoặc dòng trống)
-            ModelState.Remove("Variants");
+            var variantErrors = ModelState.Keys.Where(k => k.StartsWith("Variants")).ToList();
+            foreach (var key in variantErrors)
+            {
+                ModelState.Remove(key);
+            }
 
             if (!ModelState.IsValid)
             {
@@ -65,18 +69,18 @@ namespace NTN_STORE.Areas.Admin.Controllers
             // 2. Lưu Product trước để lấy ID
             vm.Product.CreatedAt = DateTime.Now;
             _context.Products.Add(vm.Product);
-            await _context.SaveChangesAsync(); // Lúc này vm.Product.Id đã có giá trị
+            await _context.SaveChangesAsync();
 
             // 3. Xử lý danh sách Variants thủ công
             if (vm.Variants != null && vm.Variants.Any())
             {
                 foreach (var variant in vm.Variants)
                 {
-                    // Chỉ lưu những dòng có dữ liệu hợp lệ
+                    // Chỉ lưu những dòng có dữ liệu (Size và Color không rỗng)
                     if (!string.IsNullOrWhiteSpace(variant.Size) && !string.IsNullOrWhiteSpace(variant.Color))
                     {
                         variant.Id = 0; // Đảm bảo là thêm mới
-                        variant.ProductId = vm.Product.Id; // Gán ID sản phẩm vừa tạo
+                        variant.ProductId = vm.Product.Id;
                         _context.ProductVariants.Add(variant);
                     }
                 }
@@ -93,7 +97,6 @@ namespace NTN_STORE.Areas.Admin.Controllers
                 });
             }
 
-            // Lưu lần cuối cho Variants và Ảnh
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
@@ -127,8 +130,12 @@ namespace NTN_STORE.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(ProductFormViewModel vm)
         {
-            // 1. Bỏ qua validate Variants tự động
-            ModelState.Remove("Variants");
+            // 1. SỬA LỖI: Xóa toàn bộ lỗi validation liên quan đến Variants
+            var variantErrors = ModelState.Keys.Where(k => k.StartsWith("Variants")).ToList();
+            foreach (var key in variantErrors)
+            {
+                ModelState.Remove(key);
+            }
 
             if (!ModelState.IsValid)
             {
@@ -137,7 +144,6 @@ namespace NTN_STORE.Areas.Admin.Controllers
                 return View(vm);
             }
 
-            // Lấy sản phẩm cũ từ DB (bao gồm variants để so sánh)
             var productInDb = await _context.Products
                 .Include(p => p.Images)
                 .Include(p => p.Variants)
@@ -154,13 +160,13 @@ namespace NTN_STORE.Areas.Admin.Controllers
             productInDb.BrandId = vm.Product.BrandId;
             productInDb.IsActive = vm.Product.IsActive;
 
-            // 3. Xử lý Variants (Logic: Xóa cũ -> Thêm/Sửa)
+            // 3. Xử lý Variants
             if (vm.Variants != null)
             {
-                // A. Lấy danh sách ID các variant được gửi lên form
+                // A. Lấy danh sách ID gửi lên
                 var incomingIds = vm.Variants.Where(v => v.Id > 0).Select(v => v.Id).ToList();
 
-                // B. Xóa các variant trong DB mà KHÔNG có trong danh sách gửi lên (nghĩa là user đã xóa dòng đó)
+                // B. Xóa variant cũ không còn tồn tại
                 var variantsToDelete = productInDb.Variants
                     .Where(v => !incomingIds.Contains(v.Id))
                     .ToList();
@@ -176,7 +182,6 @@ namespace NTN_STORE.Areas.Admin.Controllers
 
                     if (v.Id == 0)
                     {
-                        // Thêm mới variant
                         var newVariant = new ProductVariant
                         {
                             ProductId = productInDb.Id,
@@ -188,7 +193,6 @@ namespace NTN_STORE.Areas.Admin.Controllers
                     }
                     else
                     {
-                        // Cập nhật variant cũ
                         var existingVariant = productInDb.Variants.FirstOrDefault(x => x.Id == v.Id);
                         if (existingVariant != null)
                         {
@@ -201,17 +205,15 @@ namespace NTN_STORE.Areas.Admin.Controllers
                 }
             }
 
-            // 4. Xử lý ảnh (Thay ảnh mới nếu có)
+            // 4. Xử lý ảnh
             if (vm.ImageFile != null)
             {
-                // Xóa ảnh cũ
                 foreach (var img in productInDb.Images)
                 {
                     DeleteImageFile(img.ImageUrl);
                 }
                 _context.ProductImages.RemoveRange(productInDb.Images);
 
-                // Thêm ảnh mới
                 string url = await SaveImage(vm.ImageFile);
                 _context.ProductImages.Add(new ProductImage
                 {
