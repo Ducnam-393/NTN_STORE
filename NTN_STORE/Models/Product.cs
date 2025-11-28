@@ -24,7 +24,7 @@ namespace NTN_STORE.Models
 
         public ICollection<ProductImage> ? Images { get; set; }
         public ICollection<ProductVariant> ? Variants { get; set; }
-
+        public ICollection<Review>? Reviews { get; set; }
         public bool IsFeatured { get; set; } = false;
         public bool IsActive { get; set; } = true;
 

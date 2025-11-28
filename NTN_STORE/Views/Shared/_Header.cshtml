@@ -5,6 +5,7 @@
     var controller = ViewContext.RouteData.Values["controller"]?.ToString();
     var action = ViewContext.RouteData.Values["action"]?.ToString();
     bool isHomePage = (controller == "Home" && action == "Index");
+    //var wishlishcount = _context.WishlistItems.Include(c => c.Id).Count();
 }
 <!-- Topbar Start -->
 <div class="container-fluid">
@@ -105,14 +106,14 @@
                     </div>
 
                     <div class="navbar-nav ml-auto py-0 d-none d-lg-block">
-                        <a href="#" class="btn px-0">
+                        <a asp-area="" asp-controller="Wishlist" asp-action="Index" class="btn px-0">
                             <i class="fas fa-heart text-primary"></i>
-                            <span class="badge text-secondary border border-secondary rounded-circle">0</span>
+                            @await Component.InvokeAsync("WishlistBadge")
                         </a>
 
                         <a asp-area="" asp-controller="Cart" asp-action="Index" class="btn px-0 ml-3">
                             <i class="fas fa-shopping-cart text-primary"></i>
-                            <span class="badge text-secondary border border-secondary rounded-circle">0</span>
+                            @await Component.InvokeAsync("CartBadge")
                         </a>
                     </div>
                 </div>

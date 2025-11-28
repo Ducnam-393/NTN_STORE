@@ -1,0 +1,84 @@
+﻿@model List<NTN_STORE.Models.WishlistItem>
+
+@{
+    ViewData["Title"] = "Sản phẩm yêu thích";
+    Layout = "_Layout";
+}
+
+<div class="container-fluid">
+    <div class="row px-xl-5">
+        <div class="col-12">
+            <nav class="breadcrumb bg-light mb-30">
+                <a class="breadcrumb-item text-dark" asp-controller="Home" asp-action="Index">Trang chủ</a>
+                <span class="breadcrumb-item active">Sản phẩm yêu thích</span>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <h2 class="section-title position-relative text-uppercase mx-xl-5 mb-4">
+        <span class="bg-secondary pr-3">Danh sách yêu thích (@Model.Count)</span>
+    </h2>
+
+    <div class="row px-xl-5">
+        @if (Model != null && Model.Count > 0)
+        {
+            @foreach (var item in Model)
+            {
+                // Logic lấy ảnh giống như trong ProductCard
+                var imageUrl = item.Product.Images?.FirstOrDefault()?.ImageUrl ?? "~/img/default-shoe.png";
+
+                <div class="col-lg-3 col-md-4 col-sm-6 pb-1">
+                    <div class="product-item bg-light mb-4 position-relative">
+
+                        <a asp-action="Remove" asp-route-id="@item.ProductId"
+                           class="btn btn-sm btn-danger position-absolute"
+                           style="top: 10px; right: 10px; z-index: 10; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; opacity: 0.9;"
+                           title="Xóa khỏi danh sách"
+                           onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
+                            <i class="fa fa-times"></i>
+                        </a>
+
+                        <div class="product-img position-relative overflow-hidden">
+                            <img class="img-fluid w-100" src="@Url.Content(imageUrl)" alt="@item.Product.Name" style="height: 300px; object-fit: cover;">
+
+                            <div class="product-action">
+                                <a class="btn btn-outline-dark btn-square" asp-controller="Product" asp-action="Detail" asp-route-id="@item.ProductId">
+                                    <i class="fa fa-search"></i>
+                                </a>
+                                <a class="btn btn-outline-dark btn-square" asp-controller="Cart" asp-action="Add" asp-route-id="@item.ProductId">
+                                    <i class="fa fa-shopping-cart"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="text-center py-4">
+                            <a class="h6 text-decoration-none text-truncate d-block px-3" asp-controller="Product" asp-action="Detail" asp-route-id="@item.ProductId">
+                                @item.Product.Name
+                            </a>
+                            <div class="d-flex align-items-center justify-content-center mt-2">
+                                <h5>@item.Product.Price.ToString("N0")đ</h5>
+                                @if (item.Product.OriginalPrice.HasValue && item.Product.OriginalPrice > item.Product.Price)
+                                {
+                                    <h6 class="text-muted ml-2"><del>@item.Product.OriginalPrice.Value.ToString("N0")đ</del></h6>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center py-5 bg-light mx-3">
+                <i class="far fa-heart fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted font-weight-semi-bold">Danh sách yêu thích trống!</h4>
+                <p class="mb-4">Hãy thả tim cho những đôi giày bạn thích để lưu lại đây nhé.</p>
+                <a asp-controller="Product" asp-action="Index" class="btn btn-primary py-2 px-4 rounded-0">
+                    Tiếp tục mua sắm
+                </a>
+            </div>
+        }
+    </div>
+</div>

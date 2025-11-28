@@ -159,7 +159,7 @@ namespace NTN_STORE.Areas.Admin.Controllers
             productInDb.CategoryId = vm.Product.CategoryId;
             productInDb.BrandId = vm.Product.BrandId;
             productInDb.IsActive = vm.Product.IsActive;
-
+            productInDb.IsFeatured = vm.Product.IsFeatured;
             // 3. Xử lý Variants
             if (vm.Variants != null)
             {

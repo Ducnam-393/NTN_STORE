@@ -30,10 +30,13 @@ namespace NTN_STORE.Areas.Admin.Controllers
         {
             if (id == null) return NotFound();
 
-            var order = await _context.Orders
-                .Include(o => o.OrderDetails)
-                    .ThenInclude(od => od.Product)
-                .FirstOrDefaultAsync(m => m.Id == id);
+           var order = await _context.Orders
+        .Include(o => o.User) // Lấy thông tin người dùng
+        .Include(o => o.OrderDetails)
+            .ThenInclude(od => od.Product) // Lấy thông tin sản phẩm
+        .Include(o => o.OrderDetails)
+            .ThenInclude(od => od.Variant) // <--- THÊM DÒNG NÀY (QUAN TRỌNG)
+        .FirstOrDefaultAsync(m => m.Id == id);
 
             if (order == null) return NotFound();
 

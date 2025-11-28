@@ -132,22 +132,7 @@
             }
 
             // Xử lý nút +/-
-            $('.quantity button').on('click', function () {
-                var button = $(this);
-                var form = button.closest('form.quantity-form');
-                var input = form.find('input[name="quantity"]');
-                var oldValue = parseFloat(input.val());
-                var newVal;
-
-                if (button.hasClass('btn-plus')) {
-                    newVal = oldValue + 1;
-                } else {
-                    newVal = (oldValue > 0) ? oldValue - 1 : 0; // Sẽ bị xóa bởi controller nếu = 0
-                }
-
-                input.val(newVal);
-                submitForm(form[0]); // Submit form
-            });
+          
 
             // Xử lý khi gõ xong (hoặc nhấn Enter)
              $('form.quantity-form input[name="quantity"]').on('change', function(e) {

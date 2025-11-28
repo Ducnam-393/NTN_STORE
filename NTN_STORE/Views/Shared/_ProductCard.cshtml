@@ -15,11 +15,11 @@
                     <i class="fa fa-search"></i>
                 </a>
 
-                <a class="btn btn-outline-dark btn-square" asp-controller="Cart" asp-action="Add" asp-route-id="@Model.Id">
+                <a class="btn btn-outline-dark btn-square" asp-controller="Product" asp-action="Detail" asp-route-id="@Model.Id">
                     <i class="fa fa-shopping-cart"></i>
                 </a>
 
-                <a class="btn btn-outline-dark btn-square" href="#">
+                <a class="btn btn-outline-dark btn-square" asp-area="" asp-controller="Wishlist" asp-action="Add" asp-route-id="@Model.Id">
                     <i class="far fa-heart"></i>
                 </a>
             </div>
