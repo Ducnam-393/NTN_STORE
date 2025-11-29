@@ -1,0 +1,57 @@
+﻿@model NTN_STORE.Models.ViewModels.CartViewModel
+
+<div class="mini-cart-header">
+    <h5 class="fw-bold mb-0">Giỏ hàng (@(Model.CartItems?.Count ?? 0))</h5>
+    <button type="button" class="btn-close text-reset" onclick="closeMiniCart()"></button>
+</div>
+
+<div class="mini-cart-body">
+    @if (Model.CartItems != null && Model.CartItems.Any())
+    {
+        <ul class="list-group list-group-flush">
+            @foreach (var item in Model.CartItems)
+            {
+                <li class="list-group-item d-flex py-3 ps-0 pe-2 border-bottom">
+                    <div class="me-3 position-relative">
+                        <img src="@(item.Product.Images?.FirstOrDefault()?.ImageUrl ?? "/img/no-image.jpg")"
+                             style="width: 70px; height: 70px; object-fit: cover; border-radius: 5px;">
+                        <a href="javascript:void(0)" onclick="removeFromMiniCart(@item.Id)"
+                           class="btn-remove-mini text-danger position-absolute top-0 start-0 bg-white rounded-circle shadow-sm"
+                           style="width: 20px; height: 20px; line-height: 20px; text-align: center; font-size: 10px; transform: translate(-30%, -30%);">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1 text-truncate" style="max-width: 180px;">
+                            <a href="/Product/Detail/@item.ProductId" class="text-dark text-decoration-none">@item.Product.Name</a>
+                        </h6>
+                        <div class="small text-muted mb-1">@item.Variant?.Color / @item.Variant?.Size</div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-danger">@item.Product.Price.ToString("N0")₫</span>
+                            <span class="small text-muted">x @item.Quantity</span>
+                        </div>
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-shopping-cart fa-3x text-muted mb-3 opacity-50"></i>
+            <p class="text-muted">Giỏ hàng trống</p>
+            <a href="/Product" class="btn btn-sm btn-warning text-white" onclick="closeMiniCart()">Mua sắm ngay</a>
+        </div>
+    }
+</div>
+
+<div class="mini-cart-footer">
+    <div class="d-flex justify-content-between fw-bold mb-3 fs-5">
+        <span>Tổng tiền:</span>
+        <span class="text-danger">@Model.SubTotal.ToString("N0")₫</span>
+    </div>
+    <div class="d-grid gap-2">
+        <a href="/Cart" class="btn btn-dark">Xem giỏ hàng</a>
+        <a href="/Checkout" class="btn btn-warning text-white fw-bold">Thanh toán</a>
+    </div>
+</div>

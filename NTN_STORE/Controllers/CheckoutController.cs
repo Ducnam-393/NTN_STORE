@@ -26,56 +26,119 @@ namespace NTN_STORE.Controllers
             return _userManager.GetUserId(User);
         }
 
-        // GET: /Checkout
-        public async Task<IActionResult> Index()
+        // 1. Action GET (Khi bấm nút MUA HÀNG từ Giỏ)
+        [HttpGet]
+        public async Task<IActionResult> Index(List<int> selectedIds)
         {
-            var userId = GetUserId();
-            var cartItems = await _context.CartItems
-                .Where(c => c.UserId == userId)
-                .Include(c => c.Product)
-                .Include(c => c.Variant)
-                .ToListAsync();
+            var userId = _userManager.GetUserId(User);
 
-            if (!cartItems.Any())
+            // Nếu không có ID nào được chọn (trường hợp truy cập trực tiếp link), thử lấy từ Session cũ
+            if (selectedIds == null || !selectedIds.Any())
             {
-                // Nếu giỏ hàng trống, đá về trang giỏ hàng
-                return RedirectToAction("Index", "Cart");
+                var savedIds = HttpContext.Session.GetString("CheckoutItems");
+                if (!string.IsNullOrEmpty(savedIds))
+                {
+                    selectedIds = savedIds.Split(',').Select(int.Parse).ToList();
+                }
+                else
+                {
+                    // Nếu vẫn không có -> Đá về giỏ hàng
+                    TempData["Error"] = "Vui lòng chọn sản phẩm để thanh toán.";
+                    return RedirectToAction("Index", "Cart");
+                }
             }
 
-            var cartViewModel = new CartViewModel
+            // Lưu danh sách ID vào Session để dùng cho bước POST sau này
+            HttpContext.Session.SetString("CheckoutItems", string.Join(",", selectedIds));
+
+            // Lấy Cart Items từ DB và LỌC theo selectedIds
+            var cartItems = await _context.CartItems
+                .Include(c => c.Product).ThenInclude(p => p.Images)
+                .Include(c => c.Variant)
+                .Where(c => c.UserId == userId && selectedIds.Contains(c.Id)) // QUAN TRỌNG: Chỉ lấy item được chọn
+                .ToListAsync();
+
+            if (!cartItems.Any()) return RedirectToAction("Index", "Cart");
+
+            // Tính toán tiền nong
+            var cartVM = new CartViewModel { CartItems = cartItems };
+
+            // Logic Coupon (Áp dụng cho Subtotal của các món ĐÃ CHỌN)
+            var couponCode = HttpContext.Session.GetString("CouponCode");
+            if (!string.IsNullOrEmpty(couponCode))
             {
-                CartItems = cartItems
-                // Các tính toán Subtotal, Total sẽ tự động trong ViewModel
+                var coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.Code == couponCode && c.IsActive);
+                if (coupon != null && coupon.ExpiryDate >= DateTime.Now && (coupon.UsageLimit == 0 || coupon.UsedCount < coupon.UsageLimit))
+                {
+                    cartVM.AppliedCoupon = coupon.Code;
+                    if (coupon.DiscountPercent > 0)
+                        cartVM.DiscountAmount = cartVM.SubTotal * coupon.DiscountPercent / 100;
+                    else
+                        cartVM.DiscountAmount = coupon.DiscountAmount;
+
+                    if (cartVM.DiscountAmount > cartVM.SubTotal) cartVM.DiscountAmount = cartVM.SubTotal;
+                }
+            }
+
+            var checkoutVM = new CheckoutViewModel
+            {
+                Cart = cartVM,
+                ShippingDetails = new Order()
             };
 
-            var checkoutViewModel = new CheckoutViewModel
-            {
-                Cart = cartViewModel,
-                ShippingDetails = new Order() // Khởi tạo đối tượng Order để bind vào form
-            };
-
-            // Lấy email của user đang đăng nhập gán sẵn vào form
+            // Điền sẵn thông tin user
             var currentUser = await _userManager.GetUserAsync(User);
-            checkoutViewModel.ShippingDetails.Email = currentUser.Email;
+            if (currentUser != null) checkoutVM.ShippingDetails.Email = currentUser.Email;
 
-            return View(checkoutViewModel);
+            return View(checkoutVM);
         }
 
-        // POST: /Checkout
+        // 2. Action POST (Khi bấm ĐẶT HÀNG)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(CheckoutViewModel model)
         {
-            var userId = GetUserId();
+            var userId = _userManager.GetUserId(User);
+
+            // Lấy lại danh sách ID từ Session
+            var sessionIds = HttpContext.Session.GetString("CheckoutItems");
+            if (string.IsNullOrEmpty(sessionIds)) return RedirectToAction("Index", "Cart");
+
+            var selectedIds = sessionIds.Split(',').Select(int.Parse).ToList();
+
+            // Lấy lại giỏ hàng và LỌC
             var cartItems = await _context.CartItems
-                .Where(c => c.UserId == userId)
                 .Include(c => c.Product)
+                .Where(c => c.UserId == userId && selectedIds.Contains(c.Id)) // QUAN TRỌNG
                 .ToListAsync();
 
-            if (!cartItems.Any())
+            if (!cartItems.Any()) return RedirectToAction("Index", "Cart");
+
+            // Tính toán lại (Logic y hệt phần GET)
+            decimal subTotal = cartItems.Sum(x => x.Product.Price * x.Quantity);
+            decimal shippingFee = (subTotal > 1500000 || model.ShippingDetails.Address.Contains("Hà Nội")) ? 0 : 30000;
+
+            decimal discountAmount = 0;
+            string appliedCouponCode = null;
+            Coupon coupon = null;
+
+            var sessionCoupon = HttpContext.Session.GetString("CouponCode");
+            if (!string.IsNullOrEmpty(sessionCoupon))
             {
-                ModelState.AddModelError("", "Giỏ hàng của bạn bị trống.");
+                coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.Code == sessionCoupon && c.IsActive);
+                if (coupon != null && coupon.ExpiryDate >= DateTime.Now && (coupon.UsageLimit == 0 || coupon.UsedCount < coupon.UsageLimit))
+                {
+                    appliedCouponCode = coupon.Code;
+                    if (coupon.DiscountPercent > 0) discountAmount = subTotal * coupon.DiscountPercent / 100;
+                    else discountAmount = coupon.DiscountAmount;
+                    if (discountAmount > subTotal) discountAmount = subTotal;
+                }
             }
+
+            decimal totalAmount = subTotal + shippingFee - discountAmount;
+            if (totalAmount < 0) totalAmount = 0;
+
+            // Bỏ qua validate
             ModelState.Remove("Cart");
             ModelState.Remove("ShippingDetails.UserId");
             ModelState.Remove("ShippingDetails.OrderCode");
@@ -83,51 +146,65 @@ namespace NTN_STORE.Controllers
             ModelState.Remove("ShippingDetails.Status");
             ModelState.Remove("ShippingDetails.CreatedAt");
             ModelState.Remove("ShippingDetails.OrderDetails");
-            // Gắn lại CartViewModel vào model để nếu lỗi thì vẫn hiển thị tóm tắt
-            model.Cart = new CartViewModel { CartItems = cartItems };
+            ModelState.Remove("ShippingDetails.User");
 
             if (ModelState.IsValid)
             {
-                // Mọi thứ hợp lệ, tiến hành tạo Order
-
-                // 1. Tạo đối tượng Order
-                var order = model.ShippingDetails; // Lấy thông tin địa chỉ từ Form
+                // Tạo đơn hàng
+                var order = model.ShippingDetails;
                 order.UserId = userId;
                 order.CreatedAt = DateTime.Now;
-                order.Status = "Pending"; // Trạng thái chờ xử lý
-                order.TotalAmount = model.Cart.Total; // Tổng tiền từ ViewModel
-                order.OrderCode = $"NTN-{DateTime.Now:yyyyMMddHHmmss}"; // Mã đơn hàng tạm
+                order.Status = "Pending";
+                order.OrderCode = $"NTN-{DateTime.Now:yyyyMMddHHmmss}-{new Random().Next(1000, 9999)}";
+                order.TotalAmount = totalAmount;
+                order.CouponCode = appliedCouponCode;
+                order.DiscountValue = discountAmount;
 
                 _context.Orders.Add(order);
-                await _context.SaveChangesAsync(); // Lưu để lấy OrderId
+                await _context.SaveChangesAsync();
 
-                // 2. Chuyển CartItems thành OrderDetails
+                // Lưu chi tiết
                 foreach (var item in cartItems)
                 {
-                    var orderDetail = new OrderDetail
+                    _context.OrderDetails.Add(new OrderDetail
                     {
                         OrderId = order.Id,
                         ProductId = item.ProductId,
                         VariantId = item.VariantId,
                         Quantity = item.Quantity,
-                        Price = item.Product.Price // Lấy giá tại thời điểm đặt hàng
-                    };
-                    _context.OrderDetails.Add(orderDetail);
+                        Price = item.Product.Price
+                    });
                 }
 
-                // 3. Xóa giỏ hàng
+                // Trừ lượt dùng Coupon
+                if (coupon != null)
+                {
+                    coupon.UsedCount++;
+                    _context.Coupons.Update(coupon);
+                }
+
+                // Xóa các món ĐÃ CHỌN khỏi giỏ (Món chưa chọn giữ nguyên)
                 _context.CartItems.RemoveRange(cartItems);
 
-                // 4. Lưu tất cả thay đổi
+                // Clear Session
+                HttpContext.Session.Remove("CheckoutItems");
+                HttpContext.Session.Remove("CouponCode");
+
                 await _context.SaveChangesAsync();
 
-                // 5. Chuyển hướng đến trang hoàn tất
                 return RedirectToAction(nameof(OrderCompleted), new { id = order.Id });
             }
 
-            // Nếu ModelState không hợp lệ, quay lại trang checkout và báo lỗi
+            // Nếu lỗi, trả về View với dữ liệu tính toán
+            model.Cart = new CartViewModel
+            {
+                CartItems = cartItems,
+                DiscountAmount = discountAmount,
+                AppliedCoupon = appliedCouponCode
+            };
             return View(model);
         }
+
 
         // GET: /Checkout/OrderCompleted/5
         public IActionResult OrderCompleted(int id)

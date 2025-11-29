@@ -4,9 +4,9 @@ namespace NTN_STORE.Models.ViewModels
 {
     public class HomeViewModel
     {
-        public List<Category> Categories { get; set; }
-        public List<Product> FeaturedProducts { get; set; }
-        public List<Product> RecentProducts { get; set; }
-        public List<Brand> Brands { get; set; }
+        public IEnumerable<Product> RecentProducts { get; set; } // Sản phẩm mới
+        public IEnumerable<Product> BestSellers { get; set; }    // Bán chạy
+        public IEnumerable<Brand> Brands { get; set; }
+        public IEnumerable<BlogPost> BlogPosts { get; set; }     // Tin tức
     }
 }

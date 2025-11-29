@@ -2,103 +2,360 @@
 
 @{
     ViewData["Title"] = "Thanh toán";
-    Layout = "_Layout";
+    // Giả lập phí ship để hiển thị view (Logic chính xác nằm ở Controller)
+    decimal shippingFee = (Model.Cart.SubTotal > 500000) ? 0 : 30000;
+    decimal finalTotal = Model.Cart.SubTotal + shippingFee - Model.Cart.DiscountAmount;
+    if (finalTotal < 0) finalTotal = 0;
 }
 
-<div class="container-fluid">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <nav class="breadcrumb bg-light mb-30">
-                <a class="breadcrumb-item text-dark" asp-controller="Home" asp-action="Index">Trang chủ</a>
-                <a class="breadcrumb-item text-dark" asp-controller="Cart" asp-action="Index">Giỏ hàng</a>
-                <span class="breadcrumb-item active">Thanh toán</span>
-            </nav>
-        </div>
-    </div>
-</div>
-<div class="container-fluid">
-    <form asp-controller="Checkout" asp-action="Index" method="post" class="row px-xl-5">
+<style>
+    .checkout-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
 
+    .form-label {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #555;
+    }
+
+    .form-control {
+        padding: 10px 15px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+
+        .form-control:focus {
+            border-color: #f58220;
+            box-shadow: 0 0 0 0.2rem rgba(245, 130, 32, 0.25);
+        }
+
+    /* Order Box Styles */
+    .order-box {
+        background: #f9f9f9;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 25px;
+        position: sticky;
+        top: 20px;
+    }
+
+    .order-product-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+    }
+
+    .order-summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+        color: #666;
+    }
+
+    .total-row {
+        border-top: 2px solid #ddd;
+        margin-top: 10px;
+        padding-top: 15px;
+        font-size: 1.3rem;
+        color: #d0021b;
+        font-weight: 800;
+    }
+
+    /* Payment Radio */
+    .payment-option {
+        border: 1px solid #eee;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 10px;
+        background: white;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        .payment-option:hover {
+            border-color: #f58220;
+        }
+
+    .payment-input:checked + .payment-label .payment-option {
+        border-color: #f58220;
+        background-color: #fffbf8;
+    }
+
+    .btn-place-order {
+        background: #333;
+        color: white;
+        width: 100%;
+        padding: 15px;
+        font-weight: 700;
+        text-transform: uppercase;
+        border-radius: 5px;
+        transition: 0.3s;
+        border: none;
+    }
+
+        .btn-place-order:hover {
+            background: #f58220;
+        }
+</style>
+
+<div class="container py-5 checkout-container">
+    <form asp-controller="Checkout" asp-action="Index" method="post">
         @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
 
-        <div asp-validation-summary="ModelOnly" class="text-danger col-12 mb-3"></div>
+        <div class="row g-5">
+            <div class="col-lg-7">
+                <h4 class="fw-bold mb-4"><i class="fas fa-shipping-fast text-warning me-2"></i>Thông tin giao hàng</h4>
 
-        <div class="col-lg-8">
-            <h5 class="section-title position-relative text-uppercase mb-3"><span class="bg-secondary pr-3">Địa chỉ giao hàng</span></h5>
-            <div class="bg-light p-30 mb-5">
-                <div class="row">
-                    <div class="col-md-6 form-group">
-                        <label>Họ và tên</label>
-                        <input asp-for="ShippingDetails.CustomerName" class="form-control" type="text" placeholder="Nguyễn Văn A">
-                        <span asp-validation-for="ShippingDetails.CustomerName" class="text-danger"></span>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Họ và tên người nhận</label>
+                        <input asp-for="ShippingDetails.CustomerName" class="form-control" placeholder="VD: Nguyễn Văn A">
+                        <span asp-validation-for="ShippingDetails.CustomerName" class="text-danger small"></span>
                     </div>
-                    <div class="col-md-6 form-group">
-                        <label>E-mail</label>
-                        <input asp-for="ShippingDetails.Email" class="form-control" type="email" placeholder="example@email.com">
-                        <span asp-validation-for="ShippingDetails.Email" class="text-danger"></span>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <input asp-for="ShippingDetails.Email" class="form-control" placeholder="email@example.com">
+                        <span asp-validation-for="ShippingDetails.Email" class="text-danger small"></span>
                     </div>
-                    <div class="col-md-6 form-group">
-                        <label>Số điện thoại</label>
-                        <input asp-for="ShippingDetails.PhoneNumber" class="form-control" type="tel" placeholder="+123 456 789">
-                        <span asp-validation-for="ShippingDetails.PhoneNumber" class="text-danger"></span>
+                    <div class="col-md-6">
+                        <label class="form-label">Số điện thoại</label>
+                        <input asp-for="ShippingDetails.PhoneNumber" class="form-control" placeholder="09xx xxx xxx">
+                        <span asp-validation-for="ShippingDetails.PhoneNumber" class="text-danger small"></span>
                     </div>
-                    <div class="col-md-6 form-group">
-                        <label>Địa chỉ</label>
-                        <input asp-for="ShippingDetails.Address" class="form-control" type="text" placeholder="123 Đường ABC, Phường X, Quận Y">
-                        <span asp-validation-for="ShippingDetails.Address" class="text-danger"></span>
+
+                    <div class="col-12">
+                        <label class="form-label">Địa chỉ nhận hàng <span class="text-danger">*</span></label>
+
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-4">
+                                <select id="province" class="form-select" required>
+                                    <option value="">-- Tỉnh/Thành --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select id="district" class="form-select" disabled required>
+                                    <option value="">-- Quận/Huyện --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <select id="ward" class="form-select" disabled required>
+                                    <option value="">-- Phường/Xã --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <input type="text" id="addressDetail" class="form-control" placeholder="Số nhà, tên đường..." required>
+
+                        <input type="hidden" asp-for="ShippingDetails.Address" id="fullAddressInput" />
+                        <span asp-validation-for="ShippingDetails.Address" class="text-danger small"></span>
                     </div>
-                    <div class="col-md-12 form-group">
-                        <label>Ghi chú (tùy chọn)</label>
-                        <textarea asp-for="ShippingDetails.Notes" class="form-control" rows="3" placeholder="Ghi chú thêm về đơn hàng..."></textarea>
+
+                    <div class="col-12">
+                        <label class="form-label">Ghi chú đơn hàng (Tùy chọn)</label>
+                        <textarea asp-for="ShippingDetails.Notes" class="form-control" rows="3" placeholder="VD: Giao hàng vào giờ hành chính, gọi trước khi giao..."></textarea>
+                    </div>
+                </div>
+
+                <h4 class="fw-bold mt-5 mb-3"><i class="fas fa-wallet text-warning me-2"></i>Phương thức thanh toán</h4>
+                <div class="payment-methods">
+                    <div class="form-check p-0">
+                        <input class="form-check-input payment-input d-none" type="radio" name="paymentMethod" id="cod" value="COD" checked>
+                        <label class="form-check-label w-100 payment-label" for="cod">
+                            <div class="payment-option d-flex align-items-center">
+                                <i class="fas fa-money-bill-wave fa-2x text-success me-3"></i>
+                                <div>
+                                    <div class="fw-bold">Thanh toán khi nhận hàng (COD)</div>
+                                    <small class="text-muted">Bạn chỉ phải thanh toán khi đã nhận được hàng.</small>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="form-check p-0">
+                        <input class="form-check-input payment-input d-none" type="radio" name="paymentMethod" id="online" value="ONLINE" disabled>
+                        <label class="form-check-label w-100 payment-label" for="online">
+                            <div class="payment-option d-flex align-items-center" style="opacity: 0.6; cursor: not-allowed;">
+                                <i class="fas fa-credit-card fa-2x text-primary me-3"></i>
+                                <div>
+                                    <div class="fw-bold">Thanh toán Online (VNPay / Momo)</div>
+                                    <small class="text-muted">Đang bảo trì hệ thống.</small>
+                                </div>
+                            </div>
+                        </label>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-lg-4">
-            <h5 class="section-title position-relative text-uppercase mb-3"><span class="bg-secondary pr-3">Tóm tắt đơn hàng</span></h5>
-            <div class="bg-light p-30 mb-5">
-                <div class="border-bottom">
-                    <h6 class="mb-3">Sản phẩm</h6>
-                    @foreach (var item in Model.Cart.CartItems)
+            <div class="col-lg-5">
+                <div class="order-box shadow-sm">
+                    <h5 class="fw-bold mb-4 border-bottom pb-3">Đơn hàng của bạn</h5>
+
+                    <div style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+                        @foreach (var item in Model.Cart.CartItems)
+                        {
+                            <div class="order-product-item">
+                                <div class="d-flex">
+                                    <div class="position-relative me-3">
+                                        <img src="@Url.Content(item.Product.Images?.FirstOrDefault()?.ImageUrl ?? "/img/no-image.jpg")"
+                                             style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd;">
+                                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-secondary">
+                                            @item.Quantity
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-truncate" style="max-width: 160px;">@item.Product.Name</div>
+                                        <small class="text-muted">@item.Variant?.Color / @item.Variant?.Size</small>
+                                    </div>
+                                </div>
+                                <div class="fw-bold">@((item.Product.Price * item.Quantity).ToString("N0"))₫</div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="order-summary-row">
+                        <span>Tạm tính</span>
+                        <span class="fw-bold" data-subtotal="@Model.Cart.SubTotal">@Model.Cart.SubTotal.ToString("N0")₫</span>
+                    </div>
+
+                    <div class="order-summary-row">
+                        <span>Phí vận chuyển</span>
+                        <span id="shippingFeeDisplay">Đang tính...</span>
+                    </div>
+
+                    @if (Model.Cart.DiscountAmount > 0)
                     {
-                        <div class="d-flex justify-content-between">
-                            <p>@item.Product.Name (@item.Quantity x)</p>
-                            <p>@((item.Product.Price * item.Quantity).ToString("N0")) ₫</p>
+                        <div class="order-summary-row text-success">
+                            <span><i class="fas fa-ticket-alt me-1"></i>Giảm giá</span>
+                            <span id="discountDisplay" data-value="@Model.Cart.DiscountAmount">-@Model.Cart.DiscountAmount.ToString("N0")₫</span>
                         </div>
                     }
-                </div>
-                <div class="border-bottom pt-3 pb-2">
-                    <div class="d-flex justify-content-between mb-3">
-                        <h6>Tạm tính</h6>
-                        <h6>@Model.Cart.Subtotal.ToString("N0") ₫</h6>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <h6 class="font-weight-medium">Phí vận chuyển</h6>
-                        <h6 class="font-weight-medium">@Model.Cart.Shipping.ToString("N0") ₫</h6>
-                    </div>
-                </div>
-                <div class="pt-2">
-                    <div class="d-flex justify-content-between mt-2">
-                        <h5>Tổng cộng</h5>
-                        <h5>@Model.Cart.Total.ToString("N0") ₫</h5>
-                    </div>
-                </div>
-            </div>
+                    else
+                    {
+                        <span id="discountDisplay" data-value="0" style="display:none;">0</span>
+                    }
 
-            <div class="mb-5">
-                <h5 class="section-title position-relative text-uppercase mb-3"><span class="bg-secondary pr-3">Thanh toán</span></h5>
-                <div class="bg-light p-30">
-                    <div class="form-group">
-                        <div class="custom-control custom-radio">
-                            <input type="radio" class="custom-control-input" name="payment" id="cod" checked>
-                            <label class="custom-control-label" for="cod">Thanh toán khi nhận hàng (COD)</label>
-                        </div>
+                    <div class="order-summary-row total-row d-flex justify-content-between align-items-center">
+                        <span class="text-dark h5 mb-0">Tổng thanh toán</span>
+                        <span id="totalDisplay">...</span>
                     </div>
 
-                    <button type="submit" class="btn btn-block btn-primary font-weight-bold py-3">Đặt hàng</button>
+                    <button type="submit" class="btn-place-order mt-4">
+                        ĐẶT HÀNG NGAY <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+
+                    <div class="text-center mt-3 small text-muted">
+                        <i class="fas fa-shield-alt me-1"></i> Thông tin của bạn được bảo mật tuyệt đối
+                    </div>
                 </div>
             </div>
         </div>
     </form>
 </div>
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // --- 1. API ĐỊA CHỈ (Giữ nguyên logic cũ) ---
+            const apiBase = "https://esgoo.net/api-tinhthanh";
+
+            $.getJSON(`${apiBase}/1/0.htm`, function (data) {
+                if (data.error === 0) {
+                    $.each(data.data, function (key, val) {
+                        $("#province").append(`<option value="${val.id}" data-name="${val.full_name}">${val.full_name}</option>`);
+                    });
+                }
+            });
+
+            $("#province").change(function () {
+                let provinceId = $(this).val();
+                $("#district").html('<option value="">-- Quận/Huyện --</option>').prop("disabled", true);
+                $("#ward").html('<option value="">-- Phường/Xã --</option>').prop("disabled", true);
+
+                if (provinceId) {
+                    $.getJSON(`${apiBase}/2/${provinceId}.htm`, function (data) {
+                        if (data.error === 0) {
+                            $.each(data.data, function (key, val) {
+                                $("#district").append(`<option value="${val.id}" data-name="${val.full_name}">${val.full_name}</option>`);
+                            });
+                            $("#district").prop("disabled", false);
+                        }
+                    });
+                }
+                // GỌI HÀM TÍNH SHIP KHI ĐỔI TỈNH
+                calculateShipping();
+                updateFullAddress();
+            });
+
+            $("#district").change(function () {
+                let districtId = $(this).val();
+                $("#ward").html('<option value="">-- Phường/Xã --</option>').prop("disabled", true);
+                if (districtId) {
+                    $.getJSON(`${apiBase}/3/${districtId}.htm`, function (data) {
+                        if (data.error === 0) {
+                            $.each(data.data, function (key, val) {
+                                $("#ward").append(`<option value="${val.id}" data-name="${val.full_name}">${val.full_name}</option>`);
+                            });
+                            $("#ward").prop("disabled", false);
+                        }
+                    });
+                }
+                updateFullAddress();
+            });
+
+            $("#ward, #addressDetail").change(function () {
+                updateFullAddress();
+            });
+
+            function updateFullAddress() {
+                let provinceText = $("#province option:selected").data("name") || "";
+                let districtText = $("#district option:selected").data("name") || "";
+                let wardText = $("#ward option:selected").data("name") || "";
+                let detailText = $("#addressDetail").val();
+
+                // Ghép chuỗi địa chỉ để gửi về server
+                let fullAddr = [detailText, wardText, districtText, provinceText].filter(Boolean).join(", ");
+                $("#fullAddressInput").val(fullAddr);
+            }
+
+            // --- 2. LOGIC TÍNH PHÍ SHIP & TỔNG TIỀN ---
+            function calculateShipping() {
+                var subTotal = parseFloat($('span[data-subtotal]').attr('data-subtotal'));
+                var discount = parseFloat($('#discountDisplay').attr('data-value')) || 0;
+                var provinceName = $("#province option:selected").data("name") || "";
+
+                var shippingFee = 30000; // Mặc định 30k
+
+                // LOGIC 1: Đơn hàng > 1.5 triệu -> Freeship (Logic của bạn)
+                if (subTotal > 1500000) {
+                    shippingFee = 0;
+                }
+                // LOGIC 2: Nội thành Hà Nội Freeship 
+                else if (provinceName.includes("Hà Nội") ) {
+                    shippingFee = 10000; // Ví dụ: Nội thành rẻ hơn
+                }
+
+                // Cập nhật giao diện
+                if (shippingFee === 0) {
+                    $("#shippingFeeDisplay").text("Miễn phí").addClass("text-success").removeClass("text-dark");
+                } else {
+                    $("#shippingFeeDisplay").text(shippingFee.toLocaleString("en-US") + "₫").addClass("text-dark").removeClass("text-success");
+                }
+
+                // Tính tổng cuối cùng
+                var total = subTotal + shippingFee - discount;
+                if (total < 0) total = 0;
+
+                $("#totalDisplay").text(total.toLocaleString("en-US") + "₫");
+            }
+
+            // Gọi tính toán lần đầu khi load trang
+            calculateShipping();
+        });
+    </script>
+}

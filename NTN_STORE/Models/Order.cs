@@ -19,7 +19,8 @@ namespace NTN_STORE.Models
         public string Email { get; set; }
 
         public string? Notes { get; set; } // Ghi chú (có thể null)
-
+        public string? CouponCode { get; set; } // Mã đã dùng
+        public decimal DiscountValue { get; set; } = 0; // Số tiền được giảm
         public decimal TotalAmount { get; set; } // Tổng tiền
         public string Status { get; set; } // Ví dụ: "Pending", "Processing", "Completed"
         public DateTime CreatedAt { get; set; } = DateTime.Now;

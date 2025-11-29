@@ -1,84 +1,180 @@
-﻿@model List<NTN_STORE.Models.WishlistItem>
+﻿@model IEnumerable<NTN_STORE.Models.WishlistItem>
 
 @{
     ViewData["Title"] = "Sản phẩm yêu thích";
     Layout = "_Layout";
 }
 
-<div class="container-fluid">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <nav class="breadcrumb bg-light mb-30">
-                <a class="breadcrumb-item text-dark" asp-controller="Home" asp-action="Index">Trang chủ</a>
-                <span class="breadcrumb-item active">Sản phẩm yêu thích</span>
-            </nav>
-        </div>
+<style>
+    .wishlist-card {
+        border: 1px solid #eee;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        position: relative;
+        background: #fff;
+    }
+
+        .wishlist-card:hover {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            transform: translateY(-5px);
+        }
+
+    .wishlist-img-wrap {
+        position: relative;
+        padding-top: 100%;
+        overflow: hidden;
+        background: #f8f9fa;
+    }
+
+        .wishlist-img-wrap img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: 0.5s;
+        }
+
+    .wishlist-card:hover .wishlist-img-wrap img {
+        transform: scale(1.08);
+    }
+
+    /* Nút xóa nổi */
+    .btn-remove-wish {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 2;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #dc3545;
+        border: 1px solid #eee;
+        transition: 0.2s;
+    }
+
+        .btn-remove-wish:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+    .wishlist-info {
+        padding: 15px;
+        text-align: center;
+    }
+
+    .wishlist-title {
+        font-weight: 600;
+        color: #333;
+        text-decoration: none;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 5px;
+    }
+
+        .wishlist-title:hover {
+            color: #f58220;
+        }
+
+    .btn-action-wish {
+        background: #f58220;
+        color: white;
+        border: none;
+        width: 100%;
+        padding: 8px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        transition: 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+        .btn-action-wish:hover {
+            background: #d46b0f;
+            color: white;
+            box-shadow: 0 4px 10px rgba(245, 130, 32, 0.3);
+        }
+</style>
+
+<div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-transparent p-0">
+            <li class="breadcrumb-item"><a href="/" class="text-muted text-decoration-none">Trang chủ</a></li>
+            <li class="breadcrumb-item active text-dark fw-bold">Yêu thích</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h3 class="fw-bold text-uppercase mb-0">Danh sách yêu thích <span class="text-muted fs-5">(@(Model?.Count() ?? 0))</span></h3>
+        <a href="/Product" class="btn btn-outline-dark rounded-pill px-4 btn-sm">Tiếp tục xem giày</a>
     </div>
-</div>
 
-<div class="container-fluid">
-    <h2 class="section-title position-relative text-uppercase mx-xl-5 mb-4">
-        <span class="bg-secondary pr-3">Danh sách yêu thích (@Model.Count)</span>
-    </h2>
-
-    <div class="row px-xl-5">
-        @if (Model != null && Model.Count > 0)
-        {
+    @if (Model != null && Model.Any())
+    {
+        <div class="row g-4">
             @foreach (var item in Model)
             {
-                // Logic lấy ảnh giống như trong ProductCard
-                var imageUrl = item.Product.Images?.FirstOrDefault()?.ImageUrl ?? "~/img/default-shoe.png";
-
-                <div class="col-lg-3 col-md-4 col-sm-6 pb-1">
-                    <div class="product-item bg-light mb-4 position-relative">
-
-                        <a asp-action="Remove" asp-route-id="@item.ProductId"
-                           class="btn btn-sm btn-danger position-absolute"
-                           style="top: 10px; right: 10px; z-index: 10; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; opacity: 0.9;"
-                           title="Xóa khỏi danh sách"
-                           onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
-                            <i class="fa fa-times"></i>
-                        </a>
-
-                        <div class="product-img position-relative overflow-hidden">
-                            <img class="img-fluid w-100" src="@Url.Content(imageUrl)" alt="@item.Product.Name" style="height: 300px; object-fit: cover;">
-
-                            <div class="product-action">
-                                <a class="btn btn-outline-dark btn-square" asp-controller="Product" asp-action="Detail" asp-route-id="@item.ProductId">
-                                    <i class="fa fa-search"></i>
-                                </a>
-                                <a class="btn btn-outline-dark btn-square" asp-controller="Cart" asp-action="Add" asp-route-id="@item.ProductId">
-                                    <i class="fa fa-shopping-cart"></i>
-                                </a>
-                            </div>
+                <div class="col-lg-3 col-md-4 col-6">
+                    <div class="wishlist-card h-100">
+                        <div class="wishlist-img-wrap">
+                            <a asp-controller="Product" asp-action="Detail" asp-route-id="@item.ProductId">
+                                @if (item.Product.Images != null && item.Product.Images.Any())
+                                {
+                                    <img src="@item.Product.Images.First().ImageUrl" alt="@item.Product.Name">
+                                }
+                                else
+                                {
+                                    <img src="/img/no-image.jpg" alt="No Image">
+                                }
+                            </a>
+                            <a asp-action="Remove" asp-route-id="@item.ProductId" class="btn-remove-wish shadow-sm" title="Bỏ thích">
+                                <i class="fas fa-times"></i>
+                            </a>
                         </div>
 
-                        <div class="text-center py-4">
-                            <a class="h6 text-decoration-none text-truncate d-block px-3" asp-controller="Product" asp-action="Detail" asp-route-id="@item.ProductId">
+                        <div class="wishlist-info">
+                            <div class="small text-muted text-uppercase mb-1">@item.Product.Brand?.Name</div>
+                            <a asp-controller="Product" asp-action="Detail" asp-route-id="@item.ProductId" class="wishlist-title">
                                 @item.Product.Name
                             </a>
-                            <div class="d-flex align-items-center justify-content-center mt-2">
-                                <h5>@item.Product.Price.ToString("N0")đ</h5>
-                                @if (item.Product.OriginalPrice.HasValue && item.Product.OriginalPrice > item.Product.Price)
+
+                            <div class="mb-3">
+                                <span class="fw-bold text-danger">@item.Product.Price.ToString("N0")₫</span>
+                                @if (item.Product.OriginalPrice > item.Product.Price)
                                 {
-                                    <h6 class="text-muted ml-2"><del>@item.Product.OriginalPrice.Value.ToString("N0")đ</del></h6>
+                                    <small class="text-muted text-decoration-line-through ms-1">@item.Product.OriginalPrice.Value.ToString("N0")₫</small>
                                 }
                             </div>
+
+                            <a asp-controller="Product" asp-action="Detail" asp-route-id="@item.ProductId" class="btn-action-wish">
+                                <i class="fas fa-shopping-cart me-1"></i> Chọn phân loại
+                            </a>
                         </div>
                     </div>
                 </div>
             }
-        }
-        else
-        {
-            <div class="col-12 text-center py-5 bg-light mx-3">
-                <i class="far fa-heart fa-4x text-muted mb-4"></i>
-                <h4 class="text-muted font-weight-semi-bold">Danh sách yêu thích trống!</h4>
-                <p class="mb-4">Hãy thả tim cho những đôi giày bạn thích để lưu lại đây nhé.</p>
-                <a asp-controller="Product" asp-action="Index" class="btn btn-primary py-2 px-4 rounded-0">
-                    Tiếp tục mua sắm
-                </a>
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5 my-5">
+            <div class="mb-3">
+                <i class="far fa-heart fa-4x text-muted opacity-25"></i>
             </div>
-        }
-    </div>
+            <h4 class="text-muted fw-bold">Chưa có sản phẩm yêu thích</h4>
+            <p class="text-muted mb-4">Hãy "thả tim" những đôi giày bạn thích để xem lại sau nhé!</p>
+            <a href="/Product" class="btn btn-primary px-5 py-2 rounded-pill fw-bold" style="background: #f58220; border:none;">
+                Dạo cửa hàng ngay
+            </a>
+        </div>
+    }
 </div>

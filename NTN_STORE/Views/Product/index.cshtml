@@ -1,228 +1,518 @@
-﻿@model List<NTN_STORE.Models.Product>
+﻿@model IEnumerable<NTN_STORE.Models.Product>
 
 @{
     ViewData["Title"] = "Cửa hàng";
-    Layout = "_Layout";
 
-    // Lấy các giá trị từ ViewBag để giữ trạng thái filter
-    var currentCategory = ViewBag.CurrentCategory as int?;
-    var currentBrand = ViewBag.CurrentBrand as int?;
-    var minPrice = ViewBag.MinPrice as decimal?;
-    var maxPrice = ViewBag.MaxPrice as decimal?;
-    var searchTerm = ViewBag.Search as string;
+    // Dữ liệu
+    var brands = ViewBag.Brands as List<NTN_STORE.Models.Brand>;
+    var categories = ViewBag.Categories as List<NTN_STORE.Models.Category>;
+    var allSizes = ViewBag.AllSizes as List<string>;
+    var allColors = ViewBag.AllColors as List<string>;
+
+    // Giá trị đang chọn
+    var currentBrandIds = ViewBag.CurrentBrandIds as List<int> ?? new List<int>();
+    var currentSizes = ViewBag.CurrentSizes as List<string> ?? new List<string>();
+    var currentColors = ViewBag.CurrentColors as List<string> ?? new List<string>();
+    var sort = ViewBag.Sort as string;
+
+    // --- HÀM MAP MÀU (Giữ nguyên logic cũ) ---
+    string GetColorStyle(string colorName)
+    {
+        if (string.IsNullOrWhiteSpace(colorName)) return "#eee";
+        var c = colorName.Trim().ToLower();
+        var colors = new Dictionary<string, string> {
+            { "đen", "#000" }, { "black", "#000" }, { "trắng", "#fff" }, { "white", "#fff" },
+            { "đỏ", "#dc3545" }, { "red", "#dc3545" }, { "vàng", "#ffc107" }, { "yellow", "#ffc107" },
+            { "cam", "#fd7e14" }, { "orange", "#fd7e14" }, { "lục", "#198754" }, { "green", "#198754" },
+            { "lam", "#0d6efd" }, { "blue", "#0d6efd" }, { "tím", "#6f42c1" }, { "purple", "#6f42c1" },
+            { "hồng", "#d63384" }, { "pink", "#d63384" }, { "xám", "#6c757d" }, { "gray", "#6c757d" },
+            { "nâu", "#795548" }, { "brown", "#795548" }, { "be", "#f5f5dc" }, { "beige", "#f5f5dc" },
+            { "kem", "#fffdd0" }, { "cream", "#fffdd0" }, { "xanh rêu", "#556b2f" }, { "vàng bò", "#d2691e" }
+        };
+        if (colors.ContainsKey(c)) return colors[c];
+        foreach (var key in colors.Keys) { if (c.Contains(key)) return colors[key]; }
+        return System.Text.RegularExpressions.Regex.IsMatch(c, "^[a-zA-Z]+$") ? c : null;
+    }
 }
 
-<div class="container-fluid">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <nav class="breadcrumb bg-light mb-30">
-                <a class="breadcrumb-item text-dark" href="/">Trang chủ</a>
-                <a class="breadcrumb-item text-dark" href="/Product">Cửa hàng</a>
-                <span class="breadcrumb-item active">Danh sách sản phẩm</span>
-            </nav>
-        </div>
-    </div>
-</div>
-<div class="container-fluid">
-    <div class="row px-xl-5">
+<style>
+    /* --- 1. CATEGORY MENU ĐẸP --- */
+    .cat-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
 
-        <div class="col-lg-3 col-md-4">
-            <form method="get" action="/Product/Index">
+        .cat-menu li {
+            border-bottom: 1px dashed #eee;
+        }
 
-                <h5 class="section-title position-relative text-uppercase mb-3"><span class="bg-secondary pr-3">Tìm kiếm</span></h5>
-                <div class="bg-light p-4 mb-30">
-                    <div class="input-group">
-                        <input type="text" name="search" class="form-control" placeholder="Tìm tên giày..." value="@searchTerm">
-                        <div class="input-group-append">
-                            <span class="input-group-text bg-transparent text-primary">
-                                <i class="fa fa-search"></i>
-                            </span>
+            .cat-menu li:last-child {
+                border-bottom: none;
+            }
+
+    .cat-link {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 5px;
+        color: #444;
+        text-decoration: none;
+        font-size: 15px;
+        transition: all 0.3s ease;
+    }
+
+        .cat-link:hover {
+            color: #f58220; /* Màu cam Biti's */
+            padding-left: 10px; /* Hiệu ứng trượt sang phải */
+            background-color: #fffbf8;
+        }
+
+        .cat-link.active {
+            color: #f58220;
+            font-weight: 700;
+        }
+
+        .cat-link i {
+            font-size: 12px;
+            color: #ccc;
+        }
+
+        .cat-link:hover i {
+            color: #f58220;
+        }
+
+    /* --- 2. SORT DROPDOWN ĐẸP (Pill Shape) --- */
+    .sort-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+
+    .custom-select-sort {
+        appearance: none;
+        -webkit-appearance: none;
+        padding: 8px 35px 8px 15px;
+        font-size: 14px;
+        border: 1px solid #ddd;
+        border-radius: 50px; /* Bo tròn 2 đầu */
+        background-color: white;
+        cursor: pointer;
+        outline: none;
+        min-width: 180px;
+        transition: border-color 0.3s;
+    }
+
+        .custom-select-sort:focus {
+            border-color: #f58220;
+            box-shadow: 0 0 0 3px rgba(245, 130, 32, 0.1);
+        }
+    /* Mũi tên custom cho select */
+    .sort-arrow {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        font-size: 12px;
+        color: #666;
+    }
+
+    /* --- CÁC STYLE CŨ (Giữ nguyên) --- */
+    .filter-section {
+        margin-bottom: 25px;
+    }
+
+    .filter-title {
+        font-weight: 700;
+        font-size: 16px;
+        margin-bottom: 15px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-left: 3px solid #f58220;
+        padding-left: 10px;
+    }
+
+    /* Checkbox & Swatch Style */
+    .custom-checkbox-label {
+        cursor: pointer;
+        font-size: 14px;
+        color: #555;
+        display: flex;
+        align-items: center;
+        transition: color 0.2s;
+    }
+
+        .custom-checkbox-label:hover {
+            color: #f58220;
+        }
+
+    .custom-checkbox-input {
+        margin-right: 10px;
+        accent-color: #f58220;
+        width: 16px;
+        height: 16px;
+    }
+
+    .size-swatch-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .size-swatch-input {
+        display: none;
+    }
+
+    .size-swatch-label {
+        min-width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #ddd;
+        background: #fff;
+        color: #333;
+        font-size: 13px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .size-swatch-input:checked + .size-swatch-label {
+        background: #f58220;
+        color: #fff;
+        border-color: #f58220;
+    }
+
+    .size-swatch-label:hover {
+        border-color: #f58220;
+    }
+
+    .color-swatch-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .color-swatch-input {
+        display: none;
+    }
+
+    .color-swatch-circle {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        border: 1px solid #ddd;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .color-swatch-input:checked + .color-swatch-circle {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 2px #fff, 0 0 0 4px #f58220;
+        border-color: transparent;
+    }
+
+    .color-swatch-text {
+        padding: 5px 10px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        font-size: 12px;
+        cursor: pointer;
+        background: #fff;
+    }
+
+    .color-swatch-input:checked + .color-swatch-text {
+        background: #f58220;
+        color: #fff;
+        border-color: #f58220;
+    }
+
+    /* Product Card */
+    .product-card-wrap {
+        height: 100%;
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.3s;
+        background: #fff;
+    }
+
+        .product-card-wrap:hover {
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+        }
+
+    .product-img-box {
+        position: relative;
+        padding-top: 100%;
+        overflow: hidden;
+        background: #f9f9f9;
+    }
+
+        .product-img-box img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.5s;
+        }
+
+    .product-card-wrap:hover .product-img-box img {
+        transform: scale(1.05);
+    }
+
+    .sale-tag {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #dc3545;
+        color: #fff;
+        font-size: 11px;
+        font-weight: bold;
+        padding: 3px 8px;
+        border-radius: 3px;
+        z-index: 2;
+    }
+</style>
+
+<div class="container py-5">
+    <form method="get" asp-action="Index" id="filterForm">
+        <input type="hidden" name="search" value="@ViewBag.Search" />
+        <input type="hidden" name="page" id="pageInput" value="@ViewBag.Page" />
+        <input type="hidden" name="categoryId" id="categoryInput" value="@ViewBag.CurrentCategory" />
+
+        <div class="row">
+            <div class="col-lg-3 mb-5">
+                <div class="p-3 border rounded bg-white shadow-sm">
+
+                    <div class="filter-section">
+                        <div class="filter-title">Danh mục sản phẩm</div>
+                        <ul class="cat-menu">
+                            <li>
+                                <a href="javascript:void(0)" onclick="setCategory('')"
+                                   class="cat-link @(ViewBag.CurrentCategory == null ? "active" : "")">
+                                    <span>Tất cả sản phẩm</span>
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            @if (categories != null)
+                            {
+                                foreach (var c in categories)
+                                {
+                                    <li>
+                                        <a href="javascript:void(0)" onclick="setCategory(@c.Id)"
+                                           class="cat-link @(ViewBag.CurrentCategory == c.Id ? "active" : "")">
+                                            <span>@c.Name</span>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                }
+                            }
+                        </ul>
+                    </div>
+
+                    <hr class="my-4" style="opacity: 0.1">
+
+                    <div class="filter-section">
+                        <div class="filter-title">Khoảng giá</div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <input type="number" name="minPrice" class="form-control form-control-sm" placeholder="0₫" value="@ViewBag.MinPrice">
+                            <span class="text-muted">-</span>
+                            <input type="number" name="maxPrice" class="form-control form-control-sm" placeholder="Max" value="@ViewBag.MaxPrice">
+                        </div>
+                        <button type="submit" class="btn btn-dark btn-sm w-100 mt-1">Lọc theo giá</button>
+                    </div>
+
+                    <hr class="my-4" style="opacity: 0.1">
+
+                    <div class="filter-section">
+                        <div class="filter-title">Thương hiệu</div>
+                        <div style="max-height: 200px; overflow-y: auto;">
+                            @if (brands != null)
+                            {
+                                foreach (var b in brands)
+                                {
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input custom-checkbox-input" type="checkbox" name="brandIds" value="@b.Id" id="brand-@b.Id"
+                                               @(currentBrandIds.Contains(b.Id) ? "checked" : "") onchange="submitFilter()">
+                                        <label class="form-check-label custom-checkbox-label" for="brand-@b.Id">
+                                            @b.Name
+                                        </label>
+                                    </div>
+                                }
+                            }
                         </div>
                     </div>
-                </div>
 
-                <h5 class="section-title position-relative text-uppercase mb-3"><span class="bg-secondary pr-3">Danh mục</span></h5>
-                <div class="bg-light p-4 mb-30">
-                    <div class="custom-control custom-radio d-flex align-items-center justify-content-between mb-3">
-                        <input type="radio" class="custom-control-input" id="cat-all" name="categoryId" value="" @(currentCategory == null ? "checked" : "")>
-                        <label class="custom-control-label" for="cat-all">Tất cả</label>
-                    </div>
-                    @if (ViewBag.Categories != null)
-                    {
-                        foreach (var cat in ViewBag.Categories)
-                        {
-                            <div class="custom-control custom-radio d-flex align-items-center justify-content-between mb-3">
-                                <input type="radio" class="custom-control-input" id="cat-@cat.Id" name="categoryId" value="@cat.Id" @(currentCategory == cat.Id ? "checked" : "")>
-                                <label class="custom-control-label" for="cat-@cat.Id">@cat.Name</label>
-                            </div>
-                        }
-                    }
-                </div>
+                    <hr class="my-4" style="opacity: 0.1">
 
-                <h5 class="section-title position-relative text-uppercase mb-3"><span class="bg-secondary pr-3">Thương hiệu</span></h5>
-                <div class="bg-light p-4 mb-30">
-                    <div class="custom-control custom-radio d-flex align-items-center justify-content-between mb-3">
-                        <input type="radio" class="custom-control-input" id="brand-all" name="brandId" value="" @(currentBrand == null ? "checked" : "")>
-                        <label class="custom-control-label" for="brand-all">Tất cả</label>
-                    </div>
-                    @if (ViewBag.Brands != null)
-                    {
-                        foreach (var brand in ViewBag.Brands)
-                        {
-                            <div class="custom-control custom-radio d-flex align-items-center justify-content-between mb-3">
-                                <input type="radio" class="custom-control-input" id="brand-@brand.Id" name="brandId" value="@brand.Id" @(currentBrand == brand.Id ? "checked" : "")>
-                                <label class="custom-control-label" for="brand-@brand.Id">@brand.Name</label>
-                            </div>
-                        }
-                    }
-                </div>
-
-                <h5 class="section-title position-relative text-uppercase mb-3"><span class="bg-secondary pr-3">Lọc theo giá</span></h5>
-                <div class="bg-light p-4 mb-30">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <input type="number" name="minPrice" class="form-control" placeholder="Từ" value="@minPrice" style="margin-right: 5px;">
-                        <span> - </span>
-                        <input type="number" name="maxPrice" class="form-control" placeholder="Đến" value="@maxPrice" style="margin-left: 5px;">
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block">Áp dụng</button>
-                    <a href="/Product" class="btn btn-block btn-outline-secondary mt-2">Đặt lại</a>
-                </div>
-
-            </form>
-        </div>
-        <div class="col-lg-9 col-md-8">
-            <div class="row pb-3">
-
-                <div class="col-12 pb-1">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
-                        <div>
-                            <button class="btn btn-sm btn-light"><i class="fa fa-th-large"></i></button>
-                            <button class="btn btn-sm btn-light ml-2"><i class="fa fa-bars"></i></button>
+                    <div class="filter-section">
+                        <div class="filter-title">Kích thước</div>
+                        <div class="size-swatch-group">
+                            @if (allSizes != null)
+                            {
+                                foreach (var size in allSizes)
+                                {
+                                    <div>
+                                        <input type="checkbox" name="sizes" value="@size" id="size-@size" class="size-swatch-input"
+                                               @(currentSizes.Contains(size) ? "checked" : "") onchange="submitFilter()">
+                                        <label for="size-@size" class="size-swatch-label">@size</label>
+                                    </div>
+                                }
+                            }
                         </div>
-                        <div class="ml-2">
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-sm btn-light dropdown-toggle" data-toggle="dropdown">Sắp xếp</button>
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <a class="dropdown-item" href="#">Mới nhất</a>
-                                    <a class="dropdown-item" href="#">Phổ biến</a>
-                                    <a class="dropdown-item" href="#">Đánh giá cao</a>
-                                </div>
-                            </div>
+                    </div>
+
+                    <hr class="my-4" style="opacity: 0.1">
+
+                    <div class="filter-section">
+                        <div class="filter-title">Màu sắc</div>
+                        <div class="color-swatch-group">
+                            @if (allColors != null)
+                            {
+                                foreach (var color in allColors)
+                                {
+                                    var hexCode = GetColorStyle(color);
+                                    <div>
+                                        <input type="checkbox" name="colors" value="@color" id="color-@color" class="color-swatch-input"
+                                               @(currentColors.Contains(color) ? "checked" : "") onchange="submitFilter()">
+                                        @if (hexCode != null)
+                                        {
+                                            <label for="color-@color" class="color-swatch-circle" style="background: @hexCode;" title="@color" data-bs-toggle="tooltip"></label>
+                                        }
+                                        else
+                                        {
+                                            <label for="color-@color" class="color-swatch-text">@color</label>
+                                        }
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="/Product" class="btn btn-outline-danger w-100"><i class="fas fa-sync-alt me-2"></i>Xóa bộ lọc</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-9">
+
+                <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-white border rounded shadow-sm">
+                    <div class="text-muted">
+                        Tìm thấy <b class="text-dark">@ViewBag.TotalItems</b> sản phẩm
+                        @if (!string.IsNullOrEmpty(ViewBag.Search))
+                        {
+                            <span>cho từ khóa "<b>@ViewBag.Search</b>"</span>
+                        }
+                    </div>
+
+                    <div class="d-flex align-items-center">
+                        <label class="me-2 text-muted small">Sắp xếp:</label>
+                        <div class="sort-wrapper">
+                            <select name="sort" class="custom-select-sort" onchange="submitFilter()">
+                                <!option value="newest" @(sort == "newest" ? "selected" : "")>Mới nhất</!option>
+                                <!option value="price_asc" @(sort == "price_asc" ? "selected" : "")>Giá: Thấp đến Cao</!option>
+                                <!option value="price_desc" @(sort == "price_desc" ? "selected" : "")>Giá: Cao đến Thấp</!option>
+                            </select>
+                            <i class="fas fa-chevron-down sort-arrow"></i>
                         </div>
                     </div>
                 </div>
 
                 @if (Model != null && Model.Any())
                 {
-                    foreach (var item in Model)
-                    {
-                        <div class="col-lg-4 col-md-6 col-sm-6 pb-1">
-                            <div class="product-item bg-light mb-4">
-                                <div class="product-img position-relative overflow-hidden">
-                                    @{
-                                        string imgUrl = item.Images?.FirstOrDefault()?.ImageUrl;
-                                        if (!string.IsNullOrEmpty(imgUrl))
+                    <div class="row row-cols-2 row-cols-md-3 g-3">
+                        @foreach (var item in Model)
+                        {
+                            <div class="col">
+                                <div class="product-card-wrap">
+                                    <div class="product-img-box">
+                                        <a asp-action="Detail" asp-route-id="@item.Id">
+                                            @if (item.Images != null && item.Images.Any())
+                                            {
+                                                <img src="@item.Images.First().ImageUrl" alt="@item.Name">
+                                            }
+                                            else
+                                            {
+                                                <img src="/img/no-image.jpg" alt="No Image">
+                                            }
+                                        </a>
+                                        @if (item.OriginalPrice > item.Price)
                                         {
-                                            imgUrl = Url.Content(imgUrl); // chuyển đường dẫn tương đối
-                                        }
-                                        else
-                                        {
-                                            imgUrl = Url.Content("~/img/default-shoe.jpg");
-                                        }
-                                    }
-                                    <img class="img-fluid w-100" src="@imgUrl" alt="@item.Name" style="height: 300px; object-fit: cover;">
-
-
-                                    <div class="product-action">
-                                        <a class="btn btn-outline-dark btn-square" href="#"><i class="fa fa-shopping-cart"></i></a>
-                                        <a class="btn btn-outline-dark btn-square" href="#"><i class="far fa-heart"></i></a>
-                                        <a class="btn btn-outline-dark btn-square" href="/Product/Detail/@item.Id"><i class="fa fa-search"></i></a>
-                                    </div>
-                                </div>
-                                <div class="text-center py-4">
-                                    <a class="h6 text-decoration-none text-truncate" href="/Product/Detail/@item.Id">@item.Name</a>
-                                    <div class="d-flex align-items-center justify-content-center mt-2">
-                                        <h5>@item.Price.ToString("N0") ₫</h5>
-                                        @if (item.OriginalPrice.HasValue)
-                                        {
-                                            <h6 class="text-muted ml-2"><del>@item.OriginalPrice.Value.ToString("N0") ₫</del></h6>
+                                            <span class="sale-tag">-@Math.Round((1 - (item.Price / item.OriginalPrice.Value)) * 100)%</span>
                                         }
                                     </div>
-                                    <div class="d-flex align-items-center justify-content-center mb-1">
-                                        <small class="fa fa-star text-primary mr-1"></small>
-                                        <small class="fa fa-star text-primary mr-1"></small>
-                                        <small class="fa fa-star text-primary mr-1"></small>
-                                        <small class="fa fa-star text-primary mr-1"></small>
-                                        <small class="fa fa-star text-primary mr-1"></small>
-                                        <small>(99)</small>
+                                    <div class="p-3 text-center">
+                                        <div class="text-muted small mb-1 text-uppercase">@item.Brand?.Name</div>
+                                        <h6 class="mb-2 text-truncate fw-bold">
+                                            <a asp-action="Detail" asp-route-id="@item.Id" class="text-dark text-decoration-none">@item.Name</a>
+                                        </h6>
+                                        <div class="d-flex justify-content-center align-items-center gap-2">
+                                            <span class="fw-bold text-danger fs-5">@item.Price.ToString("N0")₫</span>
+                                            @if (item.OriginalPrice > item.Price)
+                                            {
+                                                <small class="text-muted text-decoration-line-through">@item.OriginalPrice.Value.ToString("N0")₫</small>
+                                            }
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                        }
+                    </div>
+
+                    @if (ViewBag.TotalPages > 1)
+                    {
+                        <div class="d-flex justify-content-center mt-5">
+                            <nav>
+                                <ul class="pagination">
+                                    @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                                    {
+                                        <li class="page-item @(ViewBag.Page == i ? "active" : "")">
+                                            <button type="button" class="page-link border-0 rounded-circle mx-1 fw-bold @(ViewBag.Page == i ? "bg-dark text-white" : "text-dark bg-light")"
+                                                    onclick="changePage(@i)" style="width: 40px; height: 40px;">
+                                                @i
+                                            </button>
+                                        </li>
+                                    }
+                                </ul>
+                            </nav>
                         </div>
                     }
                 }
                 else
                 {
-                    <div class="col-12">
-                        <p class="text-center">Không tìm thấy sản phẩm nào phù hợp.</p>
+                    <div class="text-center py-5 bg-white rounded">
+                        <div class="mb-3 text-muted"><i class="fas fa-search fa-3x"></i></div>
+                        <h5 class="text-muted">Không tìm thấy sản phẩm nào phù hợp.</h5>
+                        <button type="button" onclick="window.location.href='/Product'" class="btn btn-primary mt-3">Xem tất cả sản phẩm</button>
                     </div>
                 }
-
-                <div class="col-12">
-                    <nav>
-                        <ul class="pagination justify-content-center">
-                            @{
-                                // Code an toàn: Nếu ViewBag null thì lấy giá trị mặc định là 1
-                                int currentPage = ViewBag.Page as int? ?? 1;
-                                int totalItems = ViewBag.TotalItems as int? ?? 0;
-                                int pageSize = ViewBag.PageSize as int? ?? 9;
-                                int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-                            }
-
-                            @if (currentPage > 1)
-                            {
-                                <li class="page-item">
-                                    <a class="page-link" asp-action="Index"
-                                       asp-route-page="@(currentPage - 1)"
-                                       asp-route-categoryId="@ViewBag.CurrentCategory"
-                                       asp-route-brandId="@ViewBag.CurrentBrand"
-                                       asp-route-search="@ViewBag.Search">Trước</a>
-                                </li>
-                            }
-                            else
-                            {
-                                <li class="page-item disabled"><a class="page-link" href="#">Trước</a></li>
-                            }
-
-                            @for (int i = 1; i <= totalPages; i++)
-                            {
-                                <li class="page-item @(currentPage == i ? "active" : "")">
-                                    <a class="page-link" asp-action="Index"
-                                       asp-route-page="@i"
-                                       asp-route-categoryId="@ViewBag.CurrentCategory"
-                                       asp-route-brandId="@ViewBag.CurrentBrand"
-                                       asp-route-search="@ViewBag.Search">@i</a>
-                                </li>
-                            }
-
-                            @if (currentPage < totalPages)
-                            {
-                                <li class="page-item">
-                                    <a class="page-link" asp-action="Index"
-                                       asp-route-page="@(currentPage + 1)"
-                                       asp-route-categoryId="@ViewBag.CurrentCategory"
-                                       asp-route-brandId="@ViewBag.CurrentBrand"
-                                       asp-route-search="@ViewBag.Search">Sau</a>
-                                </li>
-                            }
-                            else
-                            {
-                                <li class="page-item disabled"><a class="page-link" href="#">Sau</a></li>
-                            }
-                        </ul>
-                    </nav>
-                </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
+
+<script>
+    function submitFilter() {
+        document.getElementById('pageInput').value = 1; // Reset về trang 1
+        document.getElementById('filterForm').submit();
+    }
+    function changePage(page) {
+        document.getElementById('pageInput').value = page;
+        document.getElementById('filterForm').submit();
+    }
+    function setCategory(id) {
+        document.getElementById('categoryInput').value = id;
+        submitFilter();
+    }
+
+    // Kích hoạt tooltip cho màu sắc (nếu dùng bootstrap 5)
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>

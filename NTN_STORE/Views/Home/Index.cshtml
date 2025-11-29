@@ -1,127 +1,402 @@
 ﻿@model NTN_STORE.Models.ViewModels.HomeViewModel
 @{
-    ViewData["Title"] = "NTN Store - Giày thể thao chính hãng";
+    ViewData["Title"] = "Trang chủ - NTN Store";
     Layout = "_Layout";
 }
 
-<div class="container-fluid pt-5">
-    <div class="row px-xl-5 pb-3">
-        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-            <div class="d-flex align-items-center bg-light mb-4" style="padding: 30px;">
-                <h1 class="fa fa-check text-primary m-0 mr-3"></h1>
-                <h5 class="font-weight-semi-bold m-0">Giày chính hãng</h5>
+<style>
+    /* HERO CAROUSEL */
+    .hero-carousel-item {
+        height: 480px;
+        position: relative;
+        background-color: #333;
+    }
+
+    .hero-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.85;
+    }
+
+    .hero-caption {
+        position: absolute;
+        top: 50%;
+        left: 10%;
+        transform: translateY(-50%);
+        color: white;
+        max-width: 600px;
+        z-index: 2;
+    }
+
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .btn-hero {
+        background: #f58220;
+        color: white;
+        padding: 12px 35px;
+        font-size: 16px;
+        font-weight: 700;
+        text-transform: uppercase;
+        border: none;
+        border-radius: 50px;
+        transition: 0.3s;
+    }
+
+        .btn-hero:hover {
+            background: #d46b0f;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(245, 130, 32, 0.4);
+            color: white;
+        }
+
+    /* FEATURES */
+    .feature-box {
+        background: #fff;
+        padding: 25px;
+        border: 1px solid #eee;
+        transition: 0.3s;
+        height: 100%;
+        text-align: center;
+    }
+
+        .feature-box:hover {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transform: translateY(-5px);
+            border-color: #f58220;
+        }
+
+    .feature-icon {
+        font-size: 2.5rem;
+        color: #f58220;
+        margin-bottom: 15px;
+    }
+
+    .feature-title {
+        font-weight: 700;
+        margin-bottom: 5px;
+        font-size: 1.1rem;
+    }
+
+    /* CATEGORIES */
+    .cat-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+        height: 200px;
+        margin-bottom: 20px;
+    }
+
+        .cat-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: 0.5s;
+        }
+
+        .cat-card:hover img {
+            transform: scale(1.1);
+            filter: brightness(0.7);
+        }
+
+    .cat-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: rgba(0,0,0,0.2);
+        transition: 0.3s;
+    }
+
+    .cat-name {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        text-shadow: 1px 1px 5px rgba(0,0,0,0.5);
+    }
+
+    .cat-count {
+        color: #fff;
+        font-size: 0.9rem;
+        background: #f58220;
+        padding: 2px 10px;
+        border-radius: 20px;
+        margin-top: 5px;
+    }
+
+    /* SECTION TITLE */
+    .section-title {
+        position: relative;
+        text-transform: uppercase;
+        font-weight: 800;
+        color: #333;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+    }
+
+        .section-title::after {
+            content: "";
+            flex-grow: 1;
+            height: 2px;
+            background: #eee;
+            margin-left: 20px;
+        }
+
+        .section-title span {
+            color: #f58220;
+            margin-right: 10px;
+        }
+</style>
+
+<div class="container-fluid p-0 mb-5">
+    <div id="header-carousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            <div class="carousel-item hero-carousel-item active">
+                <img class="hero-img" src="~/img/shoes-banner-10.png" alt="Banner 1">
+                <div class="hero-caption">                   
+                    <a href="/Product" class="btn btn-hero animate__animated animate__fadeInUp">Mua ngay</a>
+                </div>
+            </div>
+            <div class="carousel-item hero-carousel-item">
+                <img class="hero-img" src="~/img/shoes-banner-11.jpg" alt="Banner 2">
+                <div class="hero-caption">                  
+                    <a href="/Product?search=Boot" class="btn btn-hero animate__animated animate__fadeInUp">Xem Ngay</a>
+                </div>
+            </div>
+            <div class="carousel-item hero-carousel-item">
+                <img class="hero-img" src="~/img/shoes-banner-6.jpg" alt="Banner 3">
+                <div class="hero-caption">            
+                    <a href="/Product?search=Bóng Đá" class="btn btn-hero animate__animated animate__fadeInUp">Khám phá</a>
+                </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-            <div class="d-flex align-items-center bg-light mb-4" style="padding: 30px;">
-                <h1 class="fa fa-shipping-fast text-primary m-0 mr-2"></h1>
-                <h5 class="font-weight-semi-bold m-0">Giao hàng nhanh</h5>
+        <button class="carousel-control-prev" type="button" data-bs-target="#header-carousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon btn btn-dark rounded-circle p-3" aria-hidden="true"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#header-carousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon btn btn-dark rounded-circle p-3" aria-hidden="true"></span>
+        </button>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row g-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="feature-box">
+                <div class="feature-icon"><i class="fas fa-check"></i></div>
+                <h5 class="feature-title">Chính Hãng 100%</h5>
+                <p class="text-muted m-0 small">Cam kết chất lượng sản phẩm</p>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-            <div class="d-flex align-items-center bg-light mb-4" style="padding: 30px;">
-                <h1 class="fas fa-exchange-alt text-primary m-0 mr-3"></h1>
-                <h5 class="font-weight-semi-bold m-0">Đổi trả 7 ngày</h5>
+        <div class="col-lg-3 col-md-6">
+            <div class="feature-box">
+                <div class="feature-icon"><i class="fas fa-shipping-fast"></i></div>
+                <h5 class="feature-title">Giao Hàng Nhanh</h5>
+                <p class="text-muted m-0 small">Freeship đơn hàng từ 500k</p>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6 col-sm-12 pb-1">
-            <div class="d-flex align-items-center bg-light mb-4" style="padding: 30px;">
-                <h1 class="fa fa-phone-volume text-primary m-0 mr-3"></h1>
-                <h5 class="font-weight-semi-bold m-0">Hỗ trợ 24/7</h5>
+        <div class="col-lg-3 col-md-6">
+            <div class="feature-box">
+                <div class="feature-icon"><i class="fas fa-exchange-alt"></i></div>
+                <h5 class="feature-title">Đổi Trả 14 Ngày</h5>
+                <p class="text-muted m-0 small">Thủ tục đơn giản, miễn phí</p>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="feature-box">
+                <div class="feature-icon"><i class="fas fa-phone-volume"></i></div>
+                <h5 class="feature-title">Hỗ Trợ 24/7</h5>
+                <p class="text-muted m-0 small">Hotline: 1900 123 456</p>
             </div>
         </div>
     </div>
 </div>
-<div class="container-fluid pt-5">
-    <h2 class="section-title position-relative text-uppercase mx-xl-5 mb-4">
-        <span class="bg-secondary pr-3">Danh mục giày</span>
-    </h2>
-    <div class="row px-xl-5 pb-3">
 
-        @foreach (var c in Model.Categories)
-        {
-            <div class="col-lg-3 col-md-4 col-sm-6 pb-1">
-                <a class="text-decoration-none" asp-controller="Product" asp-action="Index" asp-route-categoryId="@c.Id">
-                    <div class="cat-item d-flex align-items-center mb-4">
-                        <div class="overflow-hidden" style="width: 100px; height: 100px;">
-                            <img class="img-fluid" src="@Url.Content(c.ImageUrl ?? "~/img/cat-sneaker.png")" alt="@c.Name" />
-                        </div>
-                        <div class="flex-fill pl-3">
-                            <h6>@c.Name</h6>
-                            <small class="text-body">@c.Products.Count sản phẩm</small>
+<div class="container pt-5 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="section-title mb-0"><span>Lựa chọn</span> Hàng đầu</h2>
+
+        <ul class="nav nav-pills" id="productTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active rounded-pill fw-bold px-4" id="best-tab" data-bs-toggle="tab" data-bs-target="#best-sellers" type="button">Bán Chạy</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill fw-bold px-4 ms-2" id="new-tab" data-bs-toggle="tab" data-bs-target="#new-arrivals" type="button">Mới Nhất</button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content" id="productTabsContent">
+
+        <div class="tab-pane fade show active" id="best-sellers" role="tabpanel">
+            <div class="row px-xl-5 pb-3">
+                @if (Model.BestSellers != null && Model.BestSellers.Any())
+                {
+                    foreach (var product in Model.BestSellers)
+                    {
+                        @await Html.PartialAsync("_ProductCard", product)
+                    }
+                }
+                else
+                {
+                    <div class="col-12 text-center py-5">
+                        <p class="text-muted">Dữ liệu sản phẩm bán chạy đang được cập nhật...</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="new-arrivals" role="tabpanel">
+            <div class="row px-xl-5 pb-3">
+                @if (Model.RecentProducts != null && Model.RecentProducts.Any())
+                {
+                    foreach (var product in Model.RecentProducts)
+                    {
+                        @await Html.PartialAsync("_ProductCard", product)
+                    }
+                }
+                else
+                {
+                    <div class="col-12 text-center py-5">
+                        <p class="text-muted">Chưa có sản phẩm mới.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="container-fluid py-5 my-5" style="background: url('/img/shoes-banner-4.jpg') center/cover fixed no-repeat;">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 text-center p-5 bg-white shadow-lg" style="opacity: 0.95; border-radius: 10px;">
+                <h4 class="text-warning text-uppercase fw-bold mb-3">Khuyến mãi giới hạn</h4>
+                <h1 class="display-5 fw-bold mb-4">Giảm ngay 50K<br> Nhập mã GIAM50K</h1>
+                <p class="mb-4"> Áp dụng cho toàn bộ khách hàng mua sản phẩm trên website</p>
+                <a href="/Product" class="btn btn-dark btn-lg rounded-pill px-5">Mua Ngay</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.BlogPosts != null && Model.BlogPosts.Any())
+{
+    <div class="container mb-5 pb-5">
+        <h2 class="section-header"><span>Tin tức</span> Mới nhất</h2>
+        <div class="row g-4">
+            @foreach (var post in Model.BlogPosts)
+            {
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <a href="/Blog/Detail/@post.Id" class="d-block overflow-hidden" style="height: 200px;">
+                            <img src="@(post.ThumbnailUrl ?? "/img/shoes-banner-2.jpg")"
+                                 class="card-img-top w-100 h-100 object-fit-cover"
+                                 alt="@post.Title"
+                                 style="transition:0.3s" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                        </a>
+                        <div class="card-body">
+                            <div class="text-muted small mb-2">
+                                <i class="far fa-calendar me-1"></i> @post.CreatedAt.ToString("dd/MM")
+                            </div>
+                            <h5 class="card-title fw-bold">
+                                <a href="/Blog/Detail/@post.Id" class="text-dark text-decoration-none">@post.Title</a>
+                            </h5>
+                            <p class="card-text text-muted small text-truncate">@post.Summary</p>
                         </div>
                     </div>
-                </a>
-            </div>
-        }
-
-    </div>
-</div>
-<div class="container-fluid pt-5 pb-3">
-    <h2 class="section-title position-relative text-uppercase mx-xl-5 mb-4">
-        <span class="bg-secondary pr-3">Giày bán chạy</span>
-    </h2>
-    <div class="row px-xl-5">
-
-        @foreach (var product in Model.FeaturedProducts)
-        {
-            @await Html.PartialAsync("_ProductCard", product)
-        }
-
-    </div>
-</div>
-<div class="container-fluid pt-5 pb-3">
-    <div class="row px-xl-5">
-        <div class="col-md-6">
-            <div class="product-offer mb-30" style="height: 300px;">
-                <img class="img-fluid" src="~/img/shoes-offer-big-1.png" alt="">
-                <div class="offer-text">
-                    <h6 class="text-white text-uppercase">Giảm 30%</h6>
-                    <h3 class="text-white mb-3">Giày chạy bộ</h3>
-                    <a asp-controller="Product" asp-action="Index" asp-route-search="Giày chạy bộ" class="btn btn-primary">Xem ngay</a>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="product-offer mb-30" style="height: 300px;">
-                <img class="img-fluid" src="~/img/shoes-offer-big-2.jpg" alt="">
-                <div class="offer-text">
-                    <h6 class="text-white text-uppercase">Siêu sale</h6>
-                    <h3 class="text-white mb-3">Sneaker hot trend</h3>
-                    <a asp-controller="Product" asp-action="Index" asp-route-search="Sneaker" class="btn btn-primary">Mua ngay</a>
-                </div>
-            </div>
+            }
         </div>
     </div>
-</div>
-<div class="container-fluid pt-5 pb-3">
-    <h2 class="section-title position-relative text-uppercase mx-xl-5 mb-4">
-        <span class="bg-secondary pr-3">Giày mới về</span>
-    </h2>
-    <div class="row px-xl-5">
+}
 
-        @foreach (var product in Model.RecentProducts)
+<div class="container pt-3 pb-5">
+    <h2 class="section-title"><span>Sản phẩm</span> Mới về</h2>
+    <div class="row px-xl-5 pb-3">
+        @if (Model.RecentProducts != null && Model.RecentProducts.Any())
         {
-            @await Html.PartialAsync("_ProductCard", product)
+            @foreach (var product in Model.RecentProducts)
+            {
+                @await Html.PartialAsync("_ProductCard", product)
+            }
         }
+        else
+        {
+            <p class="text-center text-muted col-12">Đang cập nhật sản phẩm...</p>
+        }
+    </div>
 
+    <div class="text-center mt-4">
+        <a href="/Product" class="btn btn-outline-dark px-5 py-2 rounded-pill fw-bold">XEM TẤT CẢ SẢN PHẨM</a>
     </div>
 </div>
-<div class="container-fluid py-5">
-    <div class="row px-xl-5">
-        <div class="col">
-            <div class="owl-carousel vendor-carousel">
 
-                @foreach (var brand in Model.Brands)
-                {
-                    <a asp-controller="Product" asp-action="Index" asp-route-brandId="@brand.Id">
-                        <div class="bg-light p-4">
-                            <img src="@Url.Content(brand.ImageUrl ?? "~/img/brand-nike.jpg")" alt="@brand.Name">
-                        </div>
+@if (Model.Brands != null && Model.Brands.Any())
+{
+    <style>
+        .brand-item {
+            transition: all 0.3s;
+            opacity: 0.6;
+            filter: grayscale(100%);
+            padding: 15px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+        }
+
+            .brand-item:hover {
+                opacity: 1;
+                filter: grayscale(0%);
+                border-color: #eee;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+                transform: translateY(-5px);
+            }
+
+        .brand-logo {
+            max-width: 100px; /* Kích thước logo chuẩn */
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+
+    <div class="container py-5 border-top">
+        <div class="section-header mb-4">
+            <h4 class="fw-bold text-uppercase">Thương hiệu đối tác</h4>
+        </div>
+        <div class="row justify-content-center align-items-center g-4">
+            @foreach (var b in Model.Brands.Take(6))
+            {
+                // Logic map tên thương hiệu sang file ảnh
+                string logoFile = "no-image.jpg";
+                var name = b.Name.ToLower();
+
+                if (name.Contains("nike")) { logoFile = "brand-nike.jpg"; }
+                else if (name.Contains("adidas")) { logoFile = "brand-adidas.jpg"; }
+                else if (name.Contains("puma")) { logoFile = "brand-puma.jpg"; }
+                else if (name.Contains("vans")) { logoFile = "brand-vans.jpg"; }
+                else if (name.Contains("converse")) { logoFile = "brand-converse.png"; }
+                else if (name.Contains("mlb")) { logoFile = "brand-mlb.png"; }
+                // Thêm các hãng khác nếu có
+
+                <div class="col-4 col-md-2 text-center">
+                    <a href="/Product?brandId=@b.Id" class="d-block brand-item" title="@b.Name">
+                        <img src="~/img/@logoFile" alt="@b.Name" class="brand-logo img-fluid">
                     </a>
-                }
-
-            </div>
+                </div>
+            }
         </div>
     </div>
-</div>
+}

@@ -6,15 +6,18 @@ namespace NTN_STORE.Models.ViewModels
 {
     public class CartViewModel
     {
-        // Danh sách các CartItem lấy từ CSDL
-        public List<CartItem> CartItems { get; set; } = new List<CartItem>();
+        public List<CartItem> CartItems { get; set; }
 
-        // Tính toán dựa trên CartItems
-        // Lưu ý: Cần Include(c => c.Product) trong Controller
-        public decimal Subtotal => CartItems.Sum(item => item.Product.Price * item.Quantity);
+        // Tổng tiền hàng chưa giảm
+        public decimal SubTotal => CartItems.Sum(x => x.Product.Price * x.Quantity);
 
-        public decimal Shipping { get; set; } = 30000; // Tạm tính 30k
+        // Số tiền được giảm
+        public decimal DiscountAmount { get; set; } = 0;
 
-        public decimal Total => Subtotal + Shipping;
+        // Mã giảm giá đang áp dụng
+        public string AppliedCoupon { get; set; }
+
+        // Tổng thanh toán cuối cùng
+        public decimal Total => SubTotal - DiscountAmount;
     }
 }

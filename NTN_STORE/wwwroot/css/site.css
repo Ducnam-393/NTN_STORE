@@ -1,4 +1,4 @@
-html {
+﻿html {
   font-size: 14px;
 }
 
@@ -19,4 +19,206 @@ html {
 
 body {
   margin-bottom: 60px;
+}
+/* MINI CART STYLES - FIXED */
+.offcanvas-minicart {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999; /* Rất cao để đè lên mọi thứ */
+    visibility: hidden;
+    transition: 0.3s;
+}
+
+    .offcanvas-minicart.open {
+        visibility: visible;
+    }
+
+/* Lớp màn đen mờ */
+.offcanvas-backdrop {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: 0.3s;
+    z-index: 10000; /* Cao hơn container cha 1 chút */
+}
+
+.offcanvas-minicart.open .offcanvas-backdrop {
+    opacity: 1;
+}
+
+/* Nội dung giỏ hàng (Quan trọng nhất) */
+.offcanvas-content {
+    position: absolute;
+    top: 0;
+    right: -400px;
+    width: 350px;
+    height: 100%;
+    background: #fff;
+    transition: 0.4s ease-out;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    /* FIX LỖI KHÔNG BẤM ĐƯỢC: Phải cao hơn backdrop */
+    z-index: 10001;
+}
+
+.offcanvas-minicart.open .offcanvas-content {
+    right: 0;
+}
+
+.mini-cart-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mini-cart-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.mini-cart-footer {
+    padding: 20px;
+    border-top: 1px solid #eee;
+    background: #f9f9f9;
+}
+
+/* Style cho link trong mega menu */
+.mega-menu h6 {
+    font-weight: 700;
+    color: #333;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    font-size: 14px;
+    border-bottom: 2px solid #f58220; /* Cam Biti's */
+    padding-bottom: 5px;
+    display: inline-block;
+}
+
+.mega-menu ul {
+    padding-left: 0;
+    list-style: none;
+}
+
+    .mega-menu ul li a {
+        color: #666;
+        display: block;
+        padding: 5px 0;
+        text-decoration: none;
+        transition: all 0.2s;
+        font-size: 14px;
+    }
+
+        .mega-menu ul li a:hover {
+            color: #f58220;
+            padding-left: 5px;
+        }
+
+/* Ảnh trong menu */
+.mega-menu-img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 8px;
+    transition: transform 0.3s;
+}
+
+    .mega-menu-img:hover {
+        transform: scale(1.02);
+    }
+/* MINI CART STYLES */
+.offcanvas-minicart {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1050;
+    visibility: hidden;
+    transition: 0.3s;
+}
+
+    .offcanvas-minicart.open {
+        visibility: visible;
+    }
+
+.offcanvas-backdrop {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: 0.3s;
+}
+
+.offcanvas-minicart.open .offcanvas-backdrop {
+    opacity: 1;
+}
+
+.offcanvas-content {
+    position: absolute;
+    top: 0;
+    right: -400px;
+    width: 350px;
+    height: 100%;
+    background: #fff;
+    transition: 0.4s ease-out;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.offcanvas-minicart.open .offcanvas-content {
+    right: 0;
+}
+
+.mini-cart-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mini-cart-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.mini-cart-footer {
+    padding: 20px;
+    border-top: 1px solid #eee;
+    background: #f9f9f9;
+}
+// Hàm xóa item từ Mini Cart (AJAX)
+function removeFromMiniCart(id) {
+    // Hiệu ứng mờ đi để biết đang xóa var btn = event.currentTarget;
+    // Lấy nút vừa bấm $(btn).closest('li').css('opacity', '0.5');
+    $.post('/Cart/RemoveFromMiniCart', { id: id }, function(res) {
+        if (res.success) {
+            // Reload lại nội dung cart sau khi xóa thành công
+            $.get('/Cart/GetMiniCart', function(html) {
+                $('#miniCartContent').html(html);
+                // Nếu bạn có hàm cập nhật số lượng trên header thì gọi ở đây
+                // updateCartBadge(); 
+            });
+        } else {
+            alert('Có lỗi xảy ra khi xóa sản phẩm.');
+            $(btn).closest('li').css('opacity', '1'); // Hồi phục nếu lỗi
+        }
+    });
+}
+
+// Hàm đóng Mini Cart
+function closeMiniCart() {
+    $('.offcanvas-minicart').removeClass('open');
 }

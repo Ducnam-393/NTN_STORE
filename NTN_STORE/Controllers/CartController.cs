@@ -38,12 +38,34 @@ namespace NTN_STORE.Controllers
                 .Include(c => c.Variant) // Lấy thông tin Biến thể (Size, Color)
                 .ToListAsync();
 
-            var viewModel = new CartViewModel
+            var vm = new CartViewModel
             {
                 CartItems = cartItemsFromDb
             };
+            // -- LOGIC TÍNH GIẢM GIÁ --
+            var couponCode = HttpContext.Session.GetString("CouponCode");
+            if (!string.IsNullOrEmpty(couponCode))
+            {
+                var coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.Code == couponCode);
+                if (coupon != null)
+                {
+                    vm.AppliedCoupon = coupon.Code;
 
-            return View(viewModel);
+                    // Tính tiền giảm
+                    if (coupon.DiscountPercent > 0)
+                    {
+                        vm.DiscountAmount = vm.SubTotal * coupon.DiscountPercent / 100;
+                    }
+                    else
+                    {
+                        vm.DiscountAmount = coupon.DiscountAmount;
+                    }
+
+                    // Đảm bảo không giảm quá giá trị đơn hàng
+                    if (vm.DiscountAmount > vm.SubTotal) vm.DiscountAmount = vm.SubTotal;
+                }
+            }
+            return View(vm);
         }
 
         // POST: /Cart/AddToCart
@@ -134,6 +156,86 @@ namespace NTN_STORE.Controllers
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(Index));
+        }
+        // Thêm Action ApplyCoupon
+        [HttpPost]
+        public async Task<IActionResult> ApplyCoupon(string couponCode)
+        {
+            if (string.IsNullOrEmpty(couponCode))
+            {
+                TempData["CouponError"] = "Vui lòng nhập mã giảm giá.";
+                return RedirectToAction("Index");
+            }
+
+            var coupon = await _context.Coupons
+                .FirstOrDefaultAsync(c => c.Code == couponCode && c.IsActive);
+
+            if (coupon == null)
+            {
+                TempData["CouponError"] = "Mã giảm giá không tồn tại.";
+                return RedirectToAction("Index");
+            }
+
+            if (coupon.ExpiryDate < DateTime.Now)
+            {
+                TempData["CouponError"] = "Mã giảm giá đã hết hạn.";
+                return RedirectToAction("Index");
+            }
+
+            if (coupon.UsageLimit > 0 && coupon.UsedCount >= coupon.UsageLimit)
+            {
+                TempData["CouponError"] = "Mã giảm giá đã hết lượt sử dụng.";
+                return RedirectToAction("Index");
+            }
+
+            // Mã hợp lệ -> Lưu vào Session
+            HttpContext.Session.SetString("CouponCode", coupon.Code);
+            TempData["CouponSuccess"] = "Áp dụng mã giảm giá thành công!";
+
+            return RedirectToAction("Index");
+        }
+
+        // Thêm Action RemoveCoupon
+        public IActionResult RemoveCoupon()
+        {
+            HttpContext.Session.Remove("CouponCode");
+            TempData["CouponSuccess"] = "Đã hủy mã giảm giá.";
+            return RedirectToAction("Index");
+        }
+        // API: Lấy nội dung Mini Cart (trả về PartialView HTML)
+        [HttpGet]
+        public async Task<IActionResult> GetMiniCart()
+        {
+            var userId = _userManager.GetUserId(User);
+            var cartItems = new List<CartItem>();
+
+            if (userId != null)
+            {
+                cartItems = await _context.CartItems
+                    .Include(c => c.Product).ThenInclude(p => p.Images)
+                    .Include(c => c.Variant)
+                    .Where(c => c.UserId == userId)
+                    .OrderByDescending(c => c.Id)
+                    .ToListAsync();
+            }
+
+            var vm = new CartViewModel { CartItems = cartItems };
+            return PartialView("_MiniCart", vm);
+        }
+
+        // API: Xóa nhanh từ Mini Cart (trả về JSON)
+        [HttpPost]
+        public async Task<IActionResult> RemoveFromMiniCart(int id)
+        {
+            var userId = _userManager.GetUserId(User);
+            var item = await _context.CartItems.FirstOrDefaultAsync(x => x.Id == id && x.UserId == userId);
+            if (item != null)
+            {
+                _context.CartItems.Remove(item);
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            return Json(new { success = false });
         }
     }
 }

@@ -6,7 +6,7 @@ using NTN_STORE.Models;
 
 namespace NTN_STORE.Controllers
 {
-    [Authorize] // Bắt buộc đăng nhập mới xem được
+    [Authorize]
     public class WishlistController : Controller
     {
         private readonly NTNStoreContext _context;
@@ -21,53 +21,45 @@ namespace NTN_STORE.Controllers
         public async Task<IActionResult> Index()
         {
             var userId = _userManager.GetUserId(User);
-
-            var wishlist = await _context.WishlistItems
-                .Include(w => w.Product)
-                .ThenInclude(p => p.Images) // Load ảnh sản phẩm
+            var items = await _context.WishlistItems
+                .Include(w => w.Product).ThenInclude(p => p.Images) // Load ảnh để hiển thị
+                .Include(w => w.Product).ThenInclude(p => p.Brand)
                 .Where(w => w.UserId == userId)
                 .OrderByDescending(w => w.Id)
                 .ToListAsync();
 
-            return View(wishlist);
+            return View(items);
         }
 
-        // Action xóa sản phẩm khỏi wishlist
+        public async Task<IActionResult> Add(int id)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            // Kiểm tra đã có chưa
+            var exists = await _context.WishlistItems.AnyAsync(w => w.UserId == userId && w.ProductId == id);
+            if (!exists)
+            {
+                _context.WishlistItems.Add(new WishlistItem { UserId = userId, ProductId = id });
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Đã thêm vào yêu thích!";
+            }
+
+            // Trả về trang cũ
+            return Redirect(Request.Headers["Referer"].ToString());
+        }
+
         public async Task<IActionResult> Remove(int id)
         {
             var userId = _userManager.GetUserId(User);
-            var item = await _context.WishlistItems
-                .FirstOrDefaultAsync(w => w.ProductId == id && w.UserId == userId);
-
+            var item = await _context.WishlistItems.FirstOrDefaultAsync(w => w.UserId == userId && w.ProductId == id);
             if (item != null)
             {
                 _context.WishlistItems.Remove(item);
                 await _context.SaveChangesAsync();
+                TempData["Success"] = "Đã xóa khỏi yêu thích.";
             }
-
             return RedirectToAction(nameof(Index));
-        }
-
-        // Action thêm sản phẩm (để gọi từ ProductCard)
-        public async Task<IActionResult> Add(int id)
-        {
-            var userId = _userManager.GetUserId(User);
-            // Kiểm tra xem đã có chưa
-            var exists = await _context.WishlistItems.AnyAsync(w => w.UserId == userId && w.ProductId == id);
-
-            if (!exists)
-            {
-                var item = new WishlistItem
-                {
-                    UserId = userId,
-                    ProductId = id
-                };
-                _context.WishlistItems.Add(item);
-                await _context.SaveChangesAsync();
-            }
-
-            // Quay lại trang cũ
-            return Redirect(Request.Headers["Referer"].ToString());
         }
     }
 }

@@ -2,311 +2,698 @@
 
 @{
     ViewData["Title"] = Model.Product.Name;
+
+    // Xử lý biến thể (Size/Màu)
+    var colorVariants = Model.Variants.GroupBy(v => v.Color).ToList();
+    var allSizes = Model.Variants.Select(v => v.Size).Distinct().OrderBy(s => s).ToList();
+
+    // Hàm map màu (giữ nguyên từ các bước trước)
+    string GetColorStyle(string colorName)
+    {
+        if (string.IsNullOrWhiteSpace(colorName)) return "#eee";
+        var c = colorName.Trim().ToLower();
+        var colors = new Dictionary<string, string> {
+            { "đen", "#000" }, { "black", "#000" }, { "trắng", "#fff" }, { "white", "#fff" },
+            { "đỏ", "#dc3545" }, { "red", "#dc3545" }, { "vàng", "#ffc107" }, { "yellow", "#ffc107" },
+            { "cam", "#fd7e14" }, { "orange", "#fd7e14" }, { "lục", "#198754" }, { "green", "#198754" },
+            { "lam", "#0d6efd" }, { "blue", "#0d6efd" }, { "tím", "#6f42c1" }, { "purple", "#6f42c1" },
+            { "hồng", "#d63384" }, { "pink", "#d63384" }, { "xám", "#6c757d" }, { "gray", "#6c757d" },
+            { "nâu", "#795548" }, { "brown", "#795548" }, { "be", "#f5f5dc" }, { "beige", "#f5f5dc" }
+        };
+        if (colors.ContainsKey(c)) return colors[c];
+        foreach (var key in colors.Keys) { if (c.Contains(key)) return colors[key]; }
+        return "#eee";
+    }
 }
 
-<div class="container-fluid">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <nav class="breadcrumb bg-light mb-30">
-                <a class="breadcrumb-item text-dark" href="/">Trang chủ</a>
-                <a class="breadcrumb-item text-dark" href="#">Sản phẩm</a>
-                <span class="breadcrumb-item active">Chi tiết sản phẩm</span>
-            </nav>
-        </div>
-    </div>
-</div>
-<div class="container-fluid pb-5">
-    <div class="row px-xl-5">
-        <div class="col-lg-5 mb-30">
-            <div id="product-carousel" class="carousel slide" data-ride="carousel">
-                <ol class="carousel-indicators">
-                    @for (int i = 0; i < Model.Images.Count; i++)
-                    {
-                        <li data-target="#product-carousel" data-slide-to="@i" class="@(i == 0 ? "active" : "")"></li>
-                    }
-                </ol>
-                <div class="carousel-inner bg-light">
-                    @if (Model.Images != null && Model.Images.Count > 0)
-                    {
-                        for (int i = 0; i < Model.Images.Count; i++)
-                        {
-                            <div class="carousel-item @(i == 0 ? "active" : "")">
-                                <img class="w-100 h-100" src="@Model.Images[i].ImageUrl" alt="Image" style="object-fit: contain; height: 500px !important;">
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <div class="carousel-item active">
-                            <img class="w-100 h-100" src="~/img/no-image.jpg" alt="Image">
-                        </div>
-                    }
-                </div>
-                <a class="carousel-control-prev" href="#product-carousel" data-slide="prev">
-                    <i class="fa fa-2x fa-angle-left text-dark"></i>
-                </a>
-                <a class="carousel-control-next" href="#product-carousel" data-slide="next">
-                    <i class="fa fa-2x fa-angle-right text-dark"></i>
-                </a>
-            </div>
-        </div>
-
-        <div class="col-lg-7 h-auto mb-30">
-            <div class="h-100 bg-light p-30">
-                <h3>@Model.Product.Name</h3>
-                <div class="d-flex mb-3">
-                    <div class="text-primary mr-2">
-                        @for (int i = 1; i <= 5; i++)
-                        {
-                            <small class="@(i <= Math.Round(Model.AverageRating) ? "fas" : "far") fa-star"></small>
-                        }
-                    </div>
-                    <small class="pt-1">(@Model.ReviewCount đánh giá)</small>
-                </div>
-                <h3 class="font-weight-semi-bold mb-4">@Model.Product.Price.ToString("N0") ₫</h3>
-                <p class="mb-4">@Model.Product.Description</p>
-
-                <form asp-controller="Cart" asp-action="AddToCart" method="post">
-                    <input type="hidden" name="productId" value="@Model.Product.Id" />
-
-                    @if (Model.Variants != null && Model.Variants.Any())
-                    {
-                        <div class="d-flex mb-3">
-                            <strong class="text-dark mr-3">Kích thước & Màu sắc:</strong>
-                            <div class="custom-control-group">
-                                @foreach (var variant in Model.Variants.OrderBy(v => v.Color).ThenBy(v => v.Size))
-                                {
-                                    bool isOutOfStock = variant.Stock <= 0;
-                                    <div class="custom-control custom-radio custom-control-inline">
-                                        <input type="radio" class="custom-control-input" id="variant-@variant.Id" name="variantId" value="@variant.Id" @(isOutOfStock ? "disabled" : "") required>
-                                        <label class="custom-control-label" for="variant-@variant.Id">
-                                            @variant.Color - Size @variant.Size @(isOutOfStock ? "(Hết)" : "")
-                                        </label>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    }
-
-                    <div class="d-flex align-items-center mb-4 pt-2">
-                        <div class="input-group quantity mr-3" style="width: 130px;">
-                            <div class="input-group-btn">
-                                <button type="button" class="btn btn-primary btn-minus">
-                                    <i class="fa fa-minus"></i>
-                                </button>
-                            </div>
-                            <input type="text" name="quantity" class="form-control bg-secondary border-0 text-center" value="1">
-                            <div class="input-group-btn">
-                                <button type="button" class="btn btn-primary btn-plus">
-                                    <i class="fa fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary px-3"><i class="fa fa-shopping-cart mr-1"></i> Thêm vào giỏ hàng</button>
-                    </div>
-                </form>
-
-                <div class="d-flex pt-2">
-                    <strong class="text-dark mr-2">Chia sẻ:</strong>
-                    <div class="d-inline-flex">
-                        <a class="text-dark px-2" href=""><i class="fab fa-facebook-f"></i></a>
-                        <a class="text-dark px-2" href=""><i class="fab fa-twitter"></i></a>
-                        <a class="text-dark px-2" href=""><i class="fab fa-linkedin-in"></i></a>
-                        <a class="text-dark px-2" href=""><i class="fab fa-pinterest"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row px-xl-5">
-        <div class="col">
-            <div class="bg-light p-30">
-                <div class="nav nav-tabs mb-4">
-                    <a class="nav-item nav-link text-dark" data-toggle="tab" href="#tab-pane-1">Mô tả</a>
-                    <a class="nav-item nav-link text-dark active" data-toggle="tab" href="#tab-pane-3">Đánh giá (@Model.ReviewCount)</a>
-                </div>
-                <div class="tab-content">
-                    <div class="tab-pane fade" id="tab-pane-1">
-                        <h4 class="mb-3">Mô tả sản phẩm</h4>
-                        <p>@Model.Product.Description</p>
-                    </div>
-
-                    <div class="tab-pane fade show active" id="tab-pane-3">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h4 class="mb-4">@Model.ReviewCount đánh giá cho "@Model.Product.Name"</h4>
-                                @if (Model.Reviews != null && Model.Reviews.Any())
-                                {
-                                    @foreach (var review in Model.Reviews)
-                                    {
-                                        <div class="media mb-4">
-                                            <img src="~/img/user.png" alt="Image" class="img-fluid mr-3 mt-1" style="width: 45px;">
-                                            <div class="media-body">
-                                                <h6>@review.UserId <small> - <i>@review.CreatedAt.ToString("dd/MM/yyyy")</i></small></h6>
-                                                <div class="text-primary mb-2">
-                                                    @for (int i = 1; i <= 5; i++)
-                                                    {
-                                                        <i class="@(i <= review.Rating ? "fas" : "far") fa-star"></i>
-                                                    }
-                                                </div>
-                                                <p>@review.Comment</p>
-                                            </div>
-                                        </div>
-                                    }
-                                }
-                                else
-                                {
-                                    <p class="text-muted">Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!</p>
-                                }
-                            </div>
-
-                            <div class="col-md-6">
-                                <h4 class="mb-4">Gửi đánh giá của bạn</h4>
-                                <small>Địa chỉ email của bạn sẽ không được công bố. Các trường bắt buộc được đánh dấu *</small>
-
-                                @if (TempData["ReviewSuccess"] != null)
-                                {
-                                    <div class="alert alert-success mt-3">@TempData["ReviewSuccess"]</div>
-                                }
-                                @if (TempData["ReviewError"] != null)
-                                {
-                                    <div class="alert alert-danger mt-3">@TempData["ReviewError"]</div>
-                                }
-
-                                @if (User.Identity.IsAuthenticated)
-                                {
-                                    <form asp-controller="Product" asp-action="PostReview" method="post" class="mt-3">
-                                        <input type="hidden" asp-for="NewReview.ProductId" value="@Model.Product.Id" />
-                                        <input type="hidden" id="selected-rating" asp-for="NewReview.Rating" />
-
-                                        <div class="d-flex my-3">
-                                            <p class="mb-0 mr-2">Đánh giá sao * :</p>
-                                            <div class="text-primary">
-                                                <i class="far fa-star rating-star" data-rating="1" style="cursor:pointer; font-size: 1.2rem;"></i>
-                                                <i class="far fa-star rating-star" data-rating="2" style="cursor:pointer; font-size: 1.2rem;"></i>
-                                                <i class="far fa-star rating-star" data-rating="3" style="cursor:pointer; font-size: 1.2rem;"></i>
-                                                <i class="far fa-star rating-star" data-rating="4" style="cursor:pointer; font-size: 1.2rem;"></i>
-                                                <i class="far fa-star rating-star" data-rating="5" style="cursor:pointer; font-size: 1.2rem;"></i>
-                                            </div>
-                                            <span asp-validation-for="NewReview.Rating" class="text-danger ml-2"></span>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label for="message">Nội dung đánh giá *</label>
-                                            <textarea asp-for="NewReview.Comment" id="message" cols="30" rows="5" class="form-control"></textarea>
-                                            <span asp-validation-for="NewReview.Comment" class="text-danger"></span>
-                                        </div>
-
-                                        <div class="form-group">
-                                            <label for="name">Tên hiển thị</label>
-                                            <input type="text" class="form-control" id="name" value="@User.Identity.Name" readonly disabled>
-                                        </div>
-
-                                        <div class="form-group mb-0">
-                                            <input type="submit" value="Gửi đánh giá ngay" class="btn btn-primary px-3">
-                                        </div>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <div class="alert alert-warning mt-3">
-                                        Vui lòng <a asp-area="Identity" asp-page="/Account/Login" class="font-weight-bold">Đăng nhập</a> để viết đánh giá.
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="container-fluid py-5">
-    <h2 class="section-title position-relative text-uppercase mx-xl-5 mb-4"><span class="bg-secondary pr-3">Sản phẩm liên quan</span></h2>
-    <div class="row px-xl-5">
-        @if (Model.RelatedProducts != null)
-        {
-            @foreach (var item in Model.RelatedProducts)
-            {
-                <div class="col-lg-3 col-md-4 col-sm-6 pb-1">
-                    <div class="product-item bg-light mb-4">
-                        <div class="product-img position-relative overflow-hidden">
-                            <img class="img-fluid w-100" src="@(item.Images?.FirstOrDefault()?.ImageUrl ?? "/img/no-image.jpg")" alt="" style="height: 300px; object-fit: cover;">
-                            <div class="product-action">
-                                <a class="btn btn-outline-dark btn-square" href="/Product/Detail/@item.Id"><i class="fa fa-search"></i></a>
-                            </div>
-                        </div>
-                        <div class="text-center py-4">
-                            <a class="h6 text-decoration-none text-truncate" href="/Product/Detail/@item.Id">@item.Name</a>
-                            <div class="d-flex align-items-center justify-content-center mt-2">
-                                <h5>@item.Price.ToString("N0") ₫</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-        }
-    </div>
-</div>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+<style>
+    /* --- 1. GLOBAL STYLES --- */
+    .breadcrumb-item a {
+        color: #888;
+        text-decoration: none;
+        font-size: 0.9rem;
     }
 
-    <script>
-        // Giữ nguyên Script xử lý sao của bạn, nó đã hoạt động tốt
-        document.addEventListener('DOMContentLoaded', function () {
-            const stars = document.querySelectorAll('.rating-star');
-            const ratingInput = document.getElementById('selected-rating');
+    .breadcrumb-item.active {
+        color: #333;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
 
-            function updateStars(rating) {
-                stars.forEach(s => {
-                    const sRating = parseInt(s.getAttribute('data-rating'));
-                    if (sRating <= rating) {
-                        s.classList.remove('far');
-                        s.classList.add('fas'); // Sử dụng 'fas' cho FontAwesome 5 solid
-                    } else {
-                        s.classList.remove('fas');
-                        s.classList.add('far');
-                    }
-                });
+    /* --- 2. PRODUCT IMAGES --- */
+    .gallery-container {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #f8f9fa;
+        margin-bottom: 1rem;
+    }
+
+    .gallery-main-img {
+        width: 100%;
+        height: 500px;
+        object-fit: contain;
+        transition: transform 0.3s;
+    }
+
+    .gallery-thumbs {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 5px;
+    }
+
+    .thumb-item {
+        width: 80px;
+        height: 80px;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        cursor: pointer;
+        object-fit: cover;
+        opacity: 0.6;
+        transition: all 0.2s;
+    }
+
+        .thumb-item:hover, .thumb-item.active {
+            opacity: 1;
+            border-color: #f58220;
+        }
+
+    /* --- 3. PRODUCT INFO --- */
+    .product-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #222;
+        letter-spacing: -0.5px;
+    }
+
+    .price-box {
+        margin: 20px 0;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .current-price {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #d0021b;
+    }
+
+    .old-price {
+        font-size: 1.2rem;
+        color: #aaa;
+        text-decoration: line-through;
+    }
+
+    .sale-badge {
+        background: #ffebeb;
+        color: #d0021b;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    /* --- 4. VARIANTS (SWATCHES) --- */
+    .swatch-label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+        color: #555;
+    }
+
+    /* Color Swatch */
+    .color-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .swatch-color {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 2px solid #eee;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+        .swatch-color:hover {
+            transform: scale(1.1);
+        }
+
+        .swatch-color.selected {
+            border-color: #f58220;
+            transform: scale(1.15);
+        }
+
+            .swatch-color.selected::after {
+                content: '\f00c';
+                font-family: "Font Awesome 5 Free";
+                font-weight: 900;
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                color: #fff;
+                font-size: 14px;
+                text-shadow: 0 0 2px rgba(0,0,0,0.5);
             }
 
-            stars.forEach(star => {
-                star.addEventListener('click', function() {
-                    const rating = parseInt(this.getAttribute('data-rating'));
-                    ratingInput.value = rating;
-                    updateStars(rating);
-                });
+    /* Size Swatch */
+    .size-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
 
-                star.addEventListener('mouseover', function() {
-                    const rating = parseInt(this.getAttribute('data-rating'));
-                    stars.forEach(s => {
-                        const sRating = parseInt(s.getAttribute('data-rating'));
-                        if (sRating <= rating) {
-                            s.classList.remove('far');
-                            s.classList.add('fas', 'text-warning');
+    .swatch-size {
+        min-width: 45px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #e0e0e0;
+        background: #fff;
+        border-radius: 6px;
+        font-weight: 600;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+        .swatch-size:hover {
+            border-color: #f58220;
+            color: #f58220;
+        }
+
+        .swatch-size.selected {
+            background: #f58220;
+            color: white;
+            border-color: #f58220;
+            box-shadow: 0 4px 10px rgba(245, 130, 32, 0.3);
+        }
+
+        .swatch-size.disabled {
+            background: #f8f9fa;
+            color: #ccc;
+            border-color: #eee;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+
+    /* --- 5. ACTIONS --- */
+    .quantity-control {
+        display: flex;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        overflow: hidden;
+        width: fit-content;
+    }
+
+    .qty-btn {
+        border: none;
+        background: #fff;
+        width: 40px;
+        height: 48px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        .qty-btn:hover {
+            background: #f0f0f0;
+        }
+
+    .qty-input {
+        border: none;
+        width: 50px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 1.1rem;
+        outline: none;
+    }
+
+    .btn-buy {
+        background: linear-gradient(45deg, #f58220, #ff6b6b);
+        border: none;
+        color: white;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        height: 50px;
+        border-radius: 6px;
+        width: 100%;
+        font-size: 1.1rem;
+        transition: all 0.3s;
+        box-shadow: 0 5px 15px rgba(245, 130, 32, 0.3);
+    }
+
+        .btn-buy:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(245, 130, 32, 0.4);
+        }
+
+        .btn-buy:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+    /* --- 6. REVIEWS & RATING (LÀM ĐẸP PHẦN NÀY) --- */
+    .review-section {
+        background: #fff;
+        border-top: 1px solid #eee;
+        margin-top: 3rem;
+        padding-top: 3rem;
+    }
+
+    /* Star Rating Input (Tương tác) */
+    .star-rating-input {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 5px;
+    }
+
+        .star-rating-input input {
+            display: none;
+        }
+
+        .star-rating-input label {
+            cursor: pointer;
+            font-size: 2rem;
+            color: #ddd;
+            transition: color 0.2s;
+        }
+
+            .star-rating-input label:hover,
+            .star-rating-input label:hover ~ label,
+            .star-rating-input input:checked ~ label {
+                color: #ffc107;
+            }
+    /* Màu vàng khi hover/check */
+
+    /* File Upload đẹp */
+    .custom-file-upload {
+        border: 2px dashed #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: #fcfcfc;
+    }
+
+        .custom-file-upload:hover {
+            border-color: #f58220;
+            background: #fff5eb;
+        }
+
+        .custom-file-upload i {
+            font-size: 2rem;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+    .upload-preview {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+
+        .upload-preview img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+    /* Review Item */
+    .review-item {
+        background: #fff;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 20px 0;
+    }
+
+    .review-avatar {
+        width: 50px;
+        height: 50px;
+        background: #e9ecef;
+        color: #6c757d;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 1.2rem;
+    }
+
+    .review-images-grid {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .review-img-thumb {
+        width: 80px;
+        height: 80px;
+        border-radius: 6px;
+        object-fit: cover;
+        cursor: zoom-in;
+        border: 1px solid #eee;
+        transition: transform 0.2s;
+    }
+
+        .review-img-thumb:hover {
+            transform: scale(1.05);
+        }
+</style>
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-transparent p-0 m-0">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Product" asp-action="Index">Sản phẩm</a></li>
+            <li class="breadcrumb-item active">@Model.Product.Name</li>
+        </ol>
+    </nav>
+
+    <div class="row gx-5">
+        <div class="col-lg-6 mb-5">
+            <div class="gallery-container">
+                @if (Model.Images != null && Model.Images.Any())
+                {
+                    <img id="mainImage" src="@Model.Images[0].ImageUrl" class="gallery-main-img" alt="@Model.Product.Name">
+                }
+                else
+                {
+                    <img src="/img/no-image.jpg" class="gallery-main-img" alt="No Image">
+                }
+            </div>
+            @if (Model.Images != null && Model.Images.Count > 1)
+            {
+                <div class="gallery-thumbs">
+                    @foreach (var img in Model.Images)
+                    {
+                        <img src="@img.ImageUrl" class="thumb-item" onclick="changeImage(this, '@img.ImageUrl')">
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-6">
+            <div class="mb-2 text-uppercase fw-bold text-muted small">@Model.Product.Brand?.Name</div>
+            <h1 class="product-title">@Model.Product.Name</h1>
+
+            <div class="d-flex align-items-center mt-2">
+                <div class="text-warning me-2">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        if (i <= Math.Round(Model.AverageRating))
+                        {
+                            <i class="fas fa-star"></i>
                         }
-                    });
-                });
-                star.addEventListener('mouseout', function() {
-                    const selectedRating = parseInt(ratingInput.value) || 0;
-                    stars.forEach(s => {
-                        s.classList.remove('text-warning');
-                        if (parseInt(s.getAttribute('data-rating')) > selectedRating) {
-                             s.classList.remove('fas');
-                             s.classList.add('far');
+                        else
+                        {
+
+                            <i class="far fa-star text-muted"></i>
                         }
-                    });
-                    updateStars(selectedRating);
-                });
+                    }
+                </div>
+                <span class="text-muted small">(@Model.ReviewCount đánh giá)</span>
+            </div>
+
+            <div class="price-box">
+                <span class="current-price">@Model.Product.Price.ToString("N0")₫</span>
+                @if (Model.Product.OriginalPrice > Model.Product.Price)
+                {
+                    <span class="old-price">@Model.Product.OriginalPrice.Value.ToString("N0")₫</span>
+                    <span class="sale-badge">Giảm @Math.Round((1 - (Model.Product.Price / Model.Product.OriginalPrice.Value)) * 100)%</span>
+                }
+            </div>
+
+            <p class="text-muted mb-4">@Html.Raw(Model.Product.Description)</p>
+
+            <form asp-controller="Cart" asp-action="AddToCart" method="post" id="addToCartForm">
+                <input type="hidden" name="productId" value="@Model.Product.Id" />
+                <input type="hidden" id="selectedVariantId" name="variantId" required />
+
+                <div class="mb-4">
+                    <div class="swatch-label">Màu sắc: <span id="color-name" class="fw-normal text-dark"></span></div>
+                    <div class="color-options">
+                        @foreach (var group in colorVariants)
+                        {
+                            var hex = GetColorStyle(group.Key);
+                            <div class="swatch-color"
+                                 style="background-color: @hex;"
+                                 title="@group.Key"
+                                 onclick="selectColor(this, '@group.Key')">
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="swatch-label">Kích thước:</div>
+                    <div class="size-options">
+                        @foreach (var size in allSizes)
+                        {
+                            <div class="swatch-size disabled" data-size="@size" onclick="selectSize(this, '@size')">@size</div>
+                        }
+                    </div>
+                    <div id="stock-msg" class="mt-2 small fw-bold text-danger" style="height: 20px;"></div>
+                </div>
+
+                <div class="row align-items-end">
+                    <div class="col-4 col-sm-3">
+                        <div class="swatch-label">Số lượng</div>
+                        <div class="quantity-control">
+                            <button type="button" class="qty-btn" onclick="updateQty(-1)">-</button>
+                            <input type="number" name="quantity" id="quantity" class="qty-input" value="1" min="1">
+                            <button type="button" class="qty-btn" onclick="updateQty(1)">+</button>
+                        </div>
+                    </div>
+                    <div class="col-8 col-sm-9">
+                        <div class="swatch-label text-white">.</div>
+                        <button type="submit" id="btnAddToCart" class="btn-buy" disabled>
+                            <i class="fas fa-shopping-bag me-2"></i> Chọn phân loại
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="row mt-4 pt-4 border-top g-3">
+                <div class="col-6 text-muted small"><i class="fas fa-truck text-warning me-2"></i>Freeship đơn từ 500k</div>
+                <div class="col-6 text-muted small"><i class="fas fa-sync text-warning me-2"></i>Đổi trả trong 7 ngày</div>
+                <div class="col-6 text-muted small"><i class="fas fa-shield-alt text-warning me-2"></i>Bảo hành chính hãng</div>
+                <div class="col-6 text-muted small"><i class="fas fa-phone-alt text-warning me-2"></i>Hotline: 1900 1234</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="review-section" id="reviews">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="text-center mb-5">
+                    <h3 class="fw-bold">Đánh giá sản phẩm</h3>
+                    <p class="text-muted">Chia sẻ cảm nhận của bạn để giúp mọi người mua sắm tốt hơn</p>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-5">
+                    <div class="card-body p-4 bg-light rounded-3">
+                        <form asp-action="PostReview" method="post" enctype="multipart/form-data">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="NewReview.ProductId" value="@Model.Product.Id" />
+
+                            <div class="mb-3 text-center">
+                                <label class="fw-bold mb-2 d-block">Bạn cảm thấy thế nào về sản phẩm?</label>
+                                <div class="star-rating-input justify-content-center">
+                                    <input type="radio" id="star5" name="NewReview.Rating" value="5" /><label for="star5" title="Tuyệt vời"><i class="fas fa-star"></i></label>
+                                    <input type="radio" id="star4" name="NewReview.Rating" value="4" /><label for="star4" title="Tốt"><i class="fas fa-star"></i></label>
+                                    <input type="radio" id="star3" name="NewReview.Rating" value="3" /><label for="star3" title="Bình thường"><i class="fas fa-star"></i></label>
+                                    <input type="radio" id="star2" name="NewReview.Rating" value="2" /><label for="star2" title="Tệ"><i class="fas fa-star"></i></label>
+                                    <input type="radio" id="star1" name="NewReview.Rating" value="1" /><label for="star1" title="Rất tệ"><i class="fas fa-star"></i></label>
+                                </div>
+                                <span class="text-danger small" asp-validation-for="NewReview.Rating"></span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-7">
+                                    <textarea name="NewReview.Comment" class="form-control border-0 shadow-none h-100 p-3" placeholder="Hãy chia sẻ cảm nhận của bạn về chất lượng, kiểu dáng..." style="resize: none; min-height: 120px;"></textarea>
+                                    <span class="text-danger small" asp-validation-for="NewReview.Comment"></span>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="custom-file-upload d-block h-100 d-flex flex-column align-items-center justify-content-center">
+                                        <input type="file" name="NewReview.ReviewImages" multiple accept="image/*" onchange="previewImages(this)" style="display: none;">
+                                        <i class="fas fa-camera"></i>
+                                        <span class="small text-muted">Thêm hình ảnh thực tế</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="upload-preview" id="imagePreviewContainer"></div>
+
+                            <div class="text-end mt-3">
+                                <button type="submit" class="btn btn-primary px-5 rounded-pill fw-bold">Gửi đánh giá</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold border-bottom pb-3 mb-4">@Model.ReviewCount bình luận</h5>
+
+                @if (Model.Reviews != null && Model.Reviews.Any())
+                {
+                    foreach (var review in Model.Reviews)
+                    {
+                        <div class="review-item">
+                            <div class="d-flex">
+                                <div class="review-avatar me-3">
+                                    @(review.User?.UserName?.Substring(0, 1).ToUpper() ?? "U")
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <h6 class="fw-bold mb-0">@review.User?.UserName</h6>
+                                        <span class="text-muted small">@review.CreatedAt.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                    <div class="text-warning mb-2" style="font-size: 0.8rem;">
+                                        @for (int i = 0; i < 5; i++)
+                                        {
+                                            if (i < review.Rating)
+                                            {
+                                                <i class="fas fa-star"></i>
+                                            }
+                                            else
+                                            {
+
+                                                <i class="far fa-star text-light-gray"></i>
+                                            }
+                                        }
+                                    </div>
+                                    <p class="text-secondary mb-2">@review.Comment</p>
+
+                                    @if (review.Images != null && review.Images.Any())
+                                    {
+                                        <div class="review-images-grid">
+                                            @foreach (var img in review.Images)
+                                            {
+                                                <a href="@img.Url" target="_blank">
+                                                    <img src="@img.Url" class="review-img-thumb" alt="Review Image">
+                                                </a>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <img src="https://cdn-icons-png.flaticon.com/512/1660/1660114.png" width="80" class="mb-3 opacity-25">
+                        <p class="text-muted">Chưa có đánh giá nào. Hãy là người đầu tiên sở hữu sản phẩm này!</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. Đổi ảnh Gallery
+    function changeImage(element, src) {
+        document.getElementById('mainImage').src = src;
+        document.querySelectorAll('.thumb-item').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+    }
+
+    // 2. Preview ảnh upload
+    function previewImages(input) {
+        var container = document.getElementById('imagePreviewContainer');
+        container.innerHTML = '';
+        if (input.files) {
+            Array.from(input.files).forEach(file => {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var img = document.createElement('img');
+                    img.src = e.target.result;
+                    container.appendChild(img);
+                }
+                reader.readAsDataURL(file);
             });
+        }
+    }
 
-            // Reset stars if validation failed
-            const initialRating = parseInt(ratingInput.value) || 0;
-            if (initialRating > 0) updateStars(initialRating);
+    // 3. Logic chọn Variant (Size/Color)
+    var variants = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Variants, new System.Text.Json.JsonSerializerOptions { ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles }));
+    var selectedColor = null;
+    var selectedSize = null;
+
+    function selectColor(el, color) {
+        document.querySelectorAll('.swatch-color').forEach(e => e.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedColor = color;
+        document.getElementById('color-name').innerText = color;
+
+        // Reset Size
+        selectedSize = null;
+        document.querySelectorAll('.swatch-size').forEach(e => {
+            e.classList.remove('selected');
+            e.classList.add('disabled'); // Disable hết trước
         });
-    </script>
-}
+
+        // Enable size có hàng
+        var availableSizes = variants.filter(v => v.Color === color && v.Stock > 0).map(v => v.Size);
+        document.querySelectorAll('.swatch-size').forEach(e => {
+            if (availableSizes.includes(e.getAttribute('data-size'))) {
+                e.classList.remove('disabled');
+            }
+        });
+
+        checkSelection();
+    }
+
+    function selectSize(el, size) {
+        if (el.classList.contains('disabled')) return;
+        document.querySelectorAll('.swatch-size').forEach(e => e.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedSize = size;
+        checkSelection();
+    }
+
+    function checkSelection() {
+        var btn = document.getElementById('btnAddToCart');
+        var msg = document.getElementById('stock-msg');
+        var inputId = document.getElementById('selectedVariantId');
+
+        if (selectedColor && selectedSize) {
+            var variant = variants.find(v => v.Color === selectedColor && v.Size === selectedSize);
+            if (variant) {
+                inputId.value = variant.Id;
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-cart-plus me-2"></i> THÊM VÀO GIỎ';
+                msg.innerText = `Còn ${variant.Stock} sản phẩm`;
+                msg.className = "mt-2 small fw-bold text-success";
+            }
+        } else {
+            btn.disabled = true;
+            btn.innerHTML = 'Vui lòng chọn màu & size';
+            msg.innerText = "";
+        }
+    }
+
+    function updateQty(val) {
+        var input = document.getElementById('quantity');
+        var current = parseInt(input.value);
+        if (current + val >= 1) input.value = current + val;
+    }
+</script>

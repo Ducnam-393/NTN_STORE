@@ -18,34 +18,32 @@ namespace NTN_STORE.Controllers
         // Sửa action Index
         public async Task<IActionResult> Index()
         {
-            var categories = await _context.Categories
-                .Include(c => c.Products) // Include để đếm số lượng sản phẩm
-                .ToListAsync();
+            var vm = new HomeViewModel();
 
-            var featuredProducts = await _context.Products
-                .Include(p => p.Images) // Include ảnh
-                .Where(p => p.IsFeatured)
-                .OrderByDescending(p => p.CreatedAt)
-                .Take(8) // Lấy 8 sản phẩm
-                .ToListAsync();
-
-            var recentProducts = await _context.Products
+            // 1. Sản phẩm mới (giữ nguyên)
+            vm.RecentProducts = await _context.Products
                 .Include(p => p.Images)
-                .OrderByDescending(p => p.CreatedAt)
-                .Take(8) // Lấy 8 sản phẩm mới nhất
+                .Where(p => p.IsActive)
+                .OrderByDescending(p => p.CreatedAt).Take(8).ToListAsync();
+
+            // 2. Sản phẩm bán chạy (Logic: Đếm trong OrderDetail)
+            // Tạm thời lấy ngẫu nhiên để demo nếu chưa có nhiều đơn hàng
+            vm.BestSellers = await _context.Products
+                .Include(p => p.Images)
+                .Where(p => p.IsActive && p.IsFeatured) // Hoặc logic count order
+                .Take(8).ToListAsync();
+
+            // 3. Brands
+            vm.Brands = await _context.Brands.ToListAsync();
+
+            // 4. Blog (Nếu chưa có bảng Blog thì mock data hoặc null)
+            vm.BlogPosts = await _context.BlogPosts
+                .Where(b => b.IsVisible)
+                .OrderByDescending(b => b.CreatedAt)
+                .Take(3)
                 .ToListAsync();
 
-            var brands = await _context.Brands.ToListAsync();
-
-            var vm = new HomeViewModel
-            {
-                Categories = categories,
-                FeaturedProducts = featuredProducts,
-                RecentProducts = recentProducts,
-                Brands = brands
-            };
-
-            return View(vm); // Truyền ViewModel
+            return View(vm);
         }
 
         public IActionResult Contact()

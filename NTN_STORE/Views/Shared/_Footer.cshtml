@@ -1,70 +1,171 @@
-﻿<div class="container-fluid bg-dark text-secondary mt-5 pt-5">
-    <div class="row px-xl-5 pt-5">
+﻿<style>
+    /* FOOTER STYLES */
+    .footer-dark {
+        background-color: #222;
+        color: #bbb;
+        padding-top: 60px;
+        font-size: 14px;
+    }
 
-        <div class="col-lg-4 col-md-12 mb-5 pr-3 pr-xl-5">
-            <h5 class="text-secondary text-uppercase mb-4">NTN Shoe Store</h5>
-            <p class="mb-4">Cửa hàng giày chính hãng – Cập nhật mẫu mới liên tục.</p>
-            <p><i class="fa fa-map-marker-alt text-primary mr-2"></i>123 Street - Hà Nội</p>
-            <p><i class="fa fa-envelope text-primary mr-2"></i>support@ntnstore.com</p>
-            <p><i class="fa fa-phone-alt text-primary mr-2"></i>0988 888 888</p>
-        </div>
+    .footer-title {
+        color: #fff;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+        letter-spacing: 1px;
+        border-left: 3px solid #f58220;
+        padding-left: 15px;
+    }
 
-        <div class="col-lg-8 col-md-12">
-            <div class="row">
+    .footer-text {
+        line-height: 1.8;
+        margin-bottom: 20px;
+    }
 
-                <div class="col-md-4 mb-5">
-                    <h5 class="text-secondary text-uppercase mb-4">Danh mục</h5>
-                    <a class="text-secondary d-block mb-2" asp-area="" asp-controller="Product" asp-action="Index" asp-route-search="Sneaker">Sneaker</a>
-                    <a class="text-secondary d-block mb-2" asp-area="" asp-controller="Product" asp-action="Index" asp-route-search="Giày chạy bộ">Giày chạy bộ</a>
-                    <a class="text-secondary d-block mb-2" asp-area="" asp-controller="Product" asp-action="Index" asp-route-search="Giày đá bóng">Giày đá bóng</a>
-                    <a class="text-secondary d-block mb-2" asp-area="" asp-controller="Product" asp-action="Index" asp-route-search="Giày bóng rổ">Giày bóng rổ</a>
-                </div>
+    .footer-link {
+        display: block;
+        color: #bbb;
+        margin-bottom: 10px;
+        transition: 0.2s;
+        text-decoration: none;
+    }
 
-                <div class="col-md-4 mb-5">
-                    <h5 class="text-secondary text-uppercase mb-4">Hỗ trợ</h5>
+        .footer-link:hover {
+            color: #f58220;
+            padding-left: 5px;
+        }
 
-                    <a class="text-secondary d-block mb-2" asp-area="" asp-controller="Home" asp-action="Returns">
-                        <i class="fa fa-angle-right mr-2"></i>Đổi trả
-                    </a>
+        .footer-link i {
+            width: 20px;
+            color: #666;
+        }
 
-                    <a class="text-secondary d-block mb-2" asp-area="" asp-controller="Home" asp-action="Warranty">
-                        <i class="fa fa-angle-right mr-2"></i>Bảo hành
-                    </a>
+    .footer-social .btn-social {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #333;
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 5px;
+        transition: 0.3s;
+        border: none;
+    }
 
-                    <a class="text-secondary d-block mb-2" asp-area="" asp-controller="Home" asp-action="Shipping">
-                        <i class="fa fa-angle-right mr-2"></i>Vận chuyển
-                    </a>
+        .footer-social .btn-social:hover {
+            background: #f58220;
+            transform: translateY(-3px);
+            color: white;
+        }
 
-                    <a class="text-secondary d-block mb-2" asp-area="" asp-controller="Home" asp-action="Contact">
-                        <i class="fa fa-angle-right mr-2"></i>Liên hệ
-                    </a>
-                </div>
+    .newsletter-input {
+        background: #333;
+        border: 1px solid #444;
+        color: #fff;
+        height: 45px;
+        border-radius: 4px 0 0 4px;
+    }
 
-                <div class="col-md-4 mb-5">
-                    <h5 class="text-secondary text-uppercase mb-4">Đăng ký nhận tin</h5>
-                    <form>
-                        <div class="input-group">
-                            <input type="text" class="form-control" placeholder="Email của bạn">
-                            <div class="input-group-append">
-                                <button class="btn btn-primary">Gửi</button>
-                            </div>
+        .newsletter-input:focus {
+            background: #333;
+            border-color: #f58220;
+            color: #fff;
+            box-shadow: none;
+        }
+
+    .newsletter-btn {
+        background: #f58220;
+        color: #fff;
+        border: none;
+        height: 45px;
+        padding: 0 20px;
+        border-radius: 0 4px 4px 0;
+        font-weight: 600;
+        transition: 0.3s;
+    }
+
+        .newsletter-btn:hover {
+            background: #d46b0f;
+        }
+
+    .footer-bottom {
+        background: #1a1a1a;
+        padding: 20px 0;
+        margin-top: 50px;
+        border-top: 1px solid #333;
+    }
+</style>
+
+<div class="container-fluid footer-dark">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 col-md-12 mb-5 pr-3 pr-xl-5">
+                <h5 class="footer-title">NTN Shoe Store</h5>
+                <p class="footer-text">
+                    Hệ thống cửa hàng giày chính hãng hàng đầu Việt Nam. Cam kết chất lượng, mẫu mã đa dạng và dịch vụ tận tâm.
+                </p>
+                <p class="mb-2"><i class="fa fa-map-marker-alt text-warning mr-3"></i> 123 Đường ABC, Hà Nội, Việt Nam</p>
+                <p class="mb-2"><i class="fa fa-envelope text-warning mr-3"></i> support@ntnstore.com</p>
+                <p class="mb-0"><i class="fa fa-phone-alt text-warning mr-3"></i> 0968686868</p>
+            </div>
+
+            <div class="col-lg-8 col-md-12">
+                <div class="row">
+                    <div class="col-md-4 mb-5">
+                        <h5 class="footer-title">Cửa hàng</h5>
+                        <div class="d-flex flex-column justify-content-start">
+                            <a class="footer-link" href="/"><i class="fa fa-angle-right"></i> Trang chủ</a>
+                            <a class="footer-link" href="/Product"><i class="fa fa-angle-right"></i> Sản phẩm</a>
+                            <a class="footer-link" href="/Cart"><i class="fa fa-angle-right"></i> Giỏ hàng</a>
+                            <a class="footer-link" href="/Checkout"><i class="fa fa-angle-right"></i> Thanh toán</a>
                         </div>
-                    </form>
-                    <div class="d-flex mt-3">
-                        <a class="btn btn-primary btn-square mr-2" href="https://www.facebook.com/Duc.nam.2003"><i class="fab fa-facebook-f"></i></a>
-                        <a class="btn btn-primary btn-square mr-2" href="https://www.instagram.com/"><i class="fab fa-instagram"></i></a>
-                        <a class="btn btn-primary btn-square" href="https://www.tiktok.com/vi-VN/"><i class="fab fa-tiktok"></i></a>
+                    </div>
+
+                    <div class="col-md-4 mb-5">
+                        <h5 class="footer-title">Hỗ trợ</h5>
+                        <div class="d-flex flex-column justify-content-start">
+                            <a class="footer-link" href="/Home/About"><i class="fa fa-angle-right"></i> Về chúng tôi</a>
+                            <a class="footer-link" href="/Home/Returns"><i class="fa fa-angle-right"></i> Chính sách đổi trả</a>
+                            <a class="footer-link" href="/Home/Warranty"><i class="fa fa-angle-right"></i> Chính Sách Bảo Hành</a>
+                            <a class="footer-link" href="/Home/FAQ"><i class="fa fa-angle-right"></i> Câu hỏi thường gặp</a>
+                            <a class="footer-link" href="/Home/Support"><i class="fa fa-angle-right"></i> Trung Tâm Hỗ Trợ</a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 mb-5">
+                        <h5 class="footer-title">Đăng ký nhận tin</h5>
+                        <p>Nhận ngay mã giảm giá 10% cho đơn hàng đầu tiên.</p>
+                        <form action="">
+                            <div class="input-group">
+                                <input type="text" class="form-control newsletter-input" placeholder="Email của bạn">
+                                <button class="newsletter-btn">Gửi</button>
+                            </div>
+                        </form>
+                        <h6 class="text-white text-uppercase mt-4 mb-3" style="font-size: 12px; letter-spacing: 1px;">Kết nối với chúng tôi</h6>
+                        <div class="footer-social">
+                            <a class="btn btn-social" href="#"><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-social" href="#"><i class="fab fa-instagram"></i></a>
+                            <a class="btn btn-social" href="#"><i class="fab fa-tiktok"></i></a>
+                            <a class="btn btn-social" href="#"><i class="fab fa-youtube"></i></a>
+                        </div>
                     </div>
                 </div>
-
             </div>
         </div>
-
     </div>
 
-    <div class="row border-top mx-xl-5 py-4">
-        <div class="col-md-6 text-center text-md-left">
-            © 2025 NTN Shoe Store. All Rights Reserved.
+    <div class="footer-bottom">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                    <p class="mb-0">&copy; 2025 <a class="text-warning text-decoration-none" href="#">NTN Store</a>. All Rights Reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <img class="img-fluid" src="~/img/payments.jpg" alt="Payments" style="max-height: 30px; opacity: 0.8;">
+                </div>
+            </div>
         </div>
     </div>
 </div>

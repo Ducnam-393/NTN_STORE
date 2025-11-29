@@ -1,2 +1,6 @@
 ﻿@model int
-<span class="badge text-secondary border border-secondary rounded-circle" style="padding-bottom: 2px;">@Model</span>
+
+@if (Model > 0)
+{
+    <span class="badge-counter">@Model</span>
+}

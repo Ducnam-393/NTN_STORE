@@ -25,7 +25,8 @@ namespace NTN_STORE.Models
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Promotion> Promotions { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
-
+        public DbSet<ReviewImage> ReviewImages { get; set; }
+        public DbSet<Coupon> Coupons { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -62,10 +63,10 @@ namespace NTN_STORE.Models
 
             // (OPTIONAL) Các decimal khác bạn muốn chuẩn hóa
             modelBuilder.Entity<OrderDetail>()
-    .HasOne(od => od.Product)
-    .WithMany()
-    .HasForeignKey(od => od.ProductId)
-    .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(od => od.Product)
+                .WithMany()
+                .HasForeignKey(od => od.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<OrderDetail>()
                 .HasOne(od => od.Variant)
@@ -91,6 +92,11 @@ namespace NTN_STORE.Models
                 .WithMany(p => p.Reviews)
                 .HasForeignKey(r => r.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
-        }
+            modelBuilder.Entity<ReviewImage>()
+                .HasOne(ri => ri.Review)
+                .WithMany(r => r.Images)
+                .HasForeignKey(ri => ri.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
+    }
     }
 }

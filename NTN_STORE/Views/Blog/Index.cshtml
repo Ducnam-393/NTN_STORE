@@ -1,0 +1,69 @@
+﻿@model IEnumerable<NTN_STORE.Models.BlogPost>
+@{
+    ViewData["Title"] = "Tin tức & Sự kiện";
+}
+
+<div class="container py-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-transparent p-0">
+            <li class="breadcrumb-item"><a href="/" class="text-muted text-decoration-none">Trang chủ</a></li>
+            <li class="breadcrumb-item active fw-bold" aria-current="page">Blog</li>
+        </ol>
+    </nav>
+
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-uppercase">Góc Tin Tức</h2>
+        <p class="text-muted">Cập nhật xu hướng thời trang và mẹo vặt hay nhất</p>
+    </div>
+
+    <div class="row g-4">
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var item in Model)
+            {
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <a asp-action="Detail" asp-route-id="@item.Id" class="overflow-hidden d-block" style="height: 220px;">
+                            <img src="@(string.IsNullOrEmpty(item.ThumbnailUrl) ? "/img/shoes-banner-1.png" : item.ThumbnailUrl)"
+                                 class="card-img-top w-100 h-100 object-fit-cover" style="transition: 0.3s;"
+                                 onmouseover="this.style.transform='scale(1.05)'"
+                                 onmouseout="this.style.transform='scale(1)'" alt="@item.Title">
+                        </a>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between small text-muted mb-2">
+                                <span><i class="far fa-calendar me-1"></i> @item.CreatedAt.ToString("dd/MM/yyyy")</span>
+                                <span><i class="far fa-user me-1"></i> @item.Author</span>
+                            </div>
+                            <h5 class="card-title fw-bold mb-2">
+                                <a asp-action="Detail" asp-route-id="@item.Id" class="text-dark text-decoration-none hover-orange">@item.Title</a>
+                            </h5>
+                            <p class="card-text text-muted small text-truncate-3">@item.Summary</p>
+                        </div>
+                        <div class="card-footer bg-white border-0 pt-0 pb-4">
+                            <a asp-action="Detail" asp-route-id="@item.Id" class="btn btn-outline-dark btn-sm rounded-pill px-3">Đọc tiếp</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12 text-center">
+                <p class="text-muted">Chưa có bài viết nào.</p>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .text-truncate-3 {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .hover-orange:hover {
+        color: #f58220 !important;
+    }
+</style>

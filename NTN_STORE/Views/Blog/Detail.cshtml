@@ -1,0 +1,37 @@
+﻿@model NTN_STORE.Models.BlogPost
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb bg-transparent p-0">
+                    <li class="breadcrumb-item"><a href="/" class="text-muted text-decoration-none">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a href="/Blog" class="text-muted text-decoration-none">Blog</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Chi tiết</li>
+                </ol>
+            </nav>
+
+            <h1 class="fw-bold mb-3">@Model.Title</h1>
+            <div class="d-flex align-items-center text-muted mb-4 border-bottom pb-3">
+                <div class="me-3"><i class="far fa-calendar me-1"></i> @Model.CreatedAt.ToString("dd/MM/yyyy")</div>
+                <div class="me-3"><i class="far fa-user me-1"></i> @Model.Author</div>
+            </div>
+
+            <div class="article-content" style="font-size: 1.1rem; line-height: 1.8; color: #333;">
+                @if (!string.IsNullOrEmpty(Model.ThumbnailUrl))
+                {
+                    <img src="@Model.ThumbnailUrl" class="img-fluid rounded mb-4 w-100" alt="@Model.Title">
+                }
+
+                @Html.Raw(Model.Content)
+            </div>
+
+            <div class="mt-5 text-center">
+                <a href="/Blog" class="btn btn-secondary rounded-pill px-4"><i class="fas fa-arrow-left me-2"></i>Quay lại danh sách</a>
+            </div>
+        </div>
+    </div>
+</div>

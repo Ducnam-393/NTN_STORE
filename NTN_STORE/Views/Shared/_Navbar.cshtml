@@ -1,112 +1,136 @@
-﻿
-<!-- Carousel Start -->
-<div class="container-fluid mb-3">
-    <div class="row px-xl-5">
-        <div class="col-lg-8">
-            <div id="header-carousel" class="carousel slide carousel-fade mb-30 mb-lg-0"
-                 data-ride="carousel" data-interval="2500">
+﻿@using Microsoft.AspNetCore.Identity
+@inject NTN_STORE.Models.NTNStoreContext _context
 
-                <ol class="carousel-indicators">
-                    <li data-target="#header-carousel" data-slide-to="0" class="active"></li>
-                    <li data-target="#header-carousel" data-slide-to="1"></li>
-                    <li data-target="#header-carousel" data-slide-to="2"></li>
-                    <li data-target="#header-carousel" data-slide-to="3"></li>
-                </ol>
+@{
+    // Lấy danh mục để hiển thị menu dọc
+    var categories = _context.Categories.ToList();
+}
 
-                <div class="carousel-inner">
+<style>
+    /* NAVBAR STYLES */
+    .navbar-ntn {
+        background: #333;
+        padding: 0;
+    }
 
-                    <div class="carousel-item position-relative active" style="height: 430px;">
-                        <img class="position-absolute w-100 h-100" src="~/img/shoes-banner-1.png" style="object-fit: cover;">
-                        <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
-                            <div class="p-3" style="max-width: 700px;">
-                                <h1 class="display-4 text-white mb-3 animate__animated animate__fadeInDown">Sneaker 2025</h1>
-                                <p class="mx-md-5 px-5 animate__animated animate__bounceIn">
-                                    Bộ sưu tập sneaker mới nhất dành cho mọi phong cách.
-                                </p>
+    .nav-link-ntn {
+        color: rgba(255,255,255,0.8) !important;
+        padding: 15px 20px !important;
+        font-weight: 500;
+        transition: all 0.2s;
+        text-transform: uppercase;
+        font-size: 14px;
+    }
 
-                                <a class="btn btn-outline-light py-2 px-4 mt-3 animate__animated animate__fadeInUp"
-                                   asp-area="" asp-controller="Product" asp-action="Index" asp-route-search="Sneaker">
-                                    Mua ngay
-                                </a>
-                            </div>
-                        </div>
+        .nav-link-ntn:hover, .nav-link-ntn.active {
+            color: #fff !important;
+            background: #f58220;
+        }
+
+    /* Vertical Menu */
+    .cat-btn {
+        background: #f58220;
+        color: white;
+        height: 100%;
+        font-weight: 700;
+        text-transform: uppercase;
+        border-radius: 0;
+        padding: 0 25px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        border: none;
+    }
+
+        .cat-btn:hover {
+            background: #d46b0f;
+            color: white;
+        }
+
+    .cat-menu-wrap {
+        position: relative;
+        z-index: 999;
+    }
+
+    .cat-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: white;
+        border: 1px solid #eee;
+        border-top: none;
+        box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        display: none;
+    }
+
+    .cat-menu-wrap:hover .cat-dropdown {
+        display: block;
+        animation: fadeIn 0.2s;
+    }
+
+    .cat-link {
+        display: block;
+        padding: 10px 20px;
+        color: #555;
+        text-decoration: none;
+        border-bottom: 1px solid #f5f5f5;
+        transition: 0.2s;
+    }
+
+        .cat-link:hover {
+            color: #f58220;
+            background: #f9f9f9;
+            padding-left: 25px;
+        }
+
+        .cat-link:last-child {
+            border-bottom: none;
+        }
+</style>
+
+<div class="container-fluid navbar-ntn sticky-top">
+    <div class="container">
+        <div class="row px-0">
+            <div class="col-lg-3 d-none d-lg-block cat-menu-wrap p-0">
+                <a class="btn cat-btn" data-bs-toggle="collapse" href="#navbar-vertical">
+                    <span><i class="fas fa-bars me-2"></i>Danh mục</span>
+                    <i class="fas fa-angle-down"></i>
+                </a>
+                <nav class="cat-dropdown" id="navbar-vertical">
+                    <div class="navbar-nav w-100 overflow-hidden">
+                        <a href="/Product" class="cat-link fw-bold">Tất cả sản phẩm</a>
+                        @foreach (var cat in categories.Take(8))
+                        {
+                            <a href="/Product?categoryId=@cat.Id" class="cat-link">@cat.Name</a>
+                        }
                     </div>
-
-                    <div class="carousel-item position-relative" style="height: 430px;">
-                        <img class="position-absolute w-100 h-100" src="~/img/shoes-banner-5.jpg" style="object-fit: cover;">
-                        <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
-                            <div class="p-3" style="max-width: 700px;">
-                                <h1 class="display-4 text-white mb-3 animate__animated animate__fadeInDown">Boot thời trang</h1>
-                                <p class="mx-md-5 px-5 animate__animated animate__bounceIn">
-                                     Giảm giá 30% hôm nay!
-                                </p>
-
-                                <a class="btn btn-outline-light py-2 px-4 mt-3 animate__animated animate__fadeInUp"
-                                   asp-area="" asp-controller="Product" asp-action="Index" asp-route-search="Boot">
-                                    Xem ngay
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="carousel-item position-relative" style="height: 430px;">
-                        <img class="position-absolute w-100 h-100" src="~/img/shoes-banner-6.jpg" style="object-fit: cover;">
-                        <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
-                            <div class="p-3" style="max-width: 700px;">
-                                <h1 class="display-4 text-white mb-3 animate__animated animate__fadeInDown">Giày thể thao nam / nữ</h1>
-                                <p class="mx-md-5 px-5 animate__animated animate__bounceIn">
-                                    Đa dạng mẫu mã – Hợp xu hướng – Giá tốt nhất.
-                                </p>
-
-                                <a class="btn btn-outline-light py-2 px-4 mt-3 animate__animated animate__fadeInUp"
-                                   asp-controller="Product" asp-action="Index" asp-route-search="Giày thể thao">
-                                    Mua ngay
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="carousel-item position-relative" style="height: 430px;">
-                        <img class="position-absolute w-100 h-100" src="~/img/shoes-banner-4.jpg" style="object-fit: cover;">
-                        <div class="carousel-caption d-flex flex-column align-items-center justify-content-center">
-                            <div class="p-3" style="max-width: 700px;">
-                                <h1 class="display-4 text-white mb-3 animate__animated animate__fadeInDown">Giày cầu lông nam / nữ</h1>
-                                <p class="mx-md-5 px-5 animate__animated animate__bounceIn">
-                                    Giày mới nhất cho người chơi cầu lông – Ưu đãi hấp dẫn!
-                                </p>
-
-                                <a class="btn btn-outline-light py-2 px-4 mt-3 animate__animated animate__fadeInUp"
-                                   asp-controller="Product" asp-action="Index" asp-route-search="Cầu lông">
-                                    Mua ngay
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
+                </nav>
             </div>
-        </div>
 
-        <div class="col-lg-4">
-            <div class="product-offer mb-30" style="height: 200px;">
-                <img class="img-fluid" src="~/img/shoes-offer-1.png" alt="">
-                <div class="offer-text">
-                    <h6 class="text-white text-uppercase">Giảm 20%</h6>
-                    <h3 class="text-white mb-3">Giày Running</h3>
+            <div class="col-lg-9">
+                <nav class="navbar navbar-expand-lg navbar-dark bg-dark p-0 h-100">
+                    <a href="/" class="navbar-brand d-block d-lg-none px-3">Menu</a>
+                    <button class="navbar-toggler me-3" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
 
-                    <a asp-controller="Product" asp-action="Index" asp-route-search="Giày chạy bộ" class="btn btn-primary">Mua ngay</a>
-                </div>
-            </div>
-            <div class="product-offer mb-30" style="height: 200px;">
-                <img class="img-fluid" src="~/img/shoes-offer-2.png" alt="">
-                <div class="offer-text">
-                    <h6 class="text-white text-uppercase">Giảm 15%</h6>
-                    <h3 class="text-white mb-3">Sneaker Hot</h3>
+                    <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
+                        <div class="navbar-nav me-auto py-0">
+                            <a asp-area="" asp-controller="Home" asp-action="Index" class="nav-item nav-link nav-link-ntn @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")">Trang chủ</a>
+                            <a asp-area="" asp-controller="Product" asp-action="Index" class="nav-item nav-link nav-link-ntn @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")">Cửa hàng</a>
 
-                    <a asp-controller="Product" asp-action="Index" asp-route-search="Sneaker" class="btn btn-primary">Xem ngay</a>
-                </div>
+                            <a asp-area="" asp-controller="Blog" asp-action="Index" class="nav-item nav-link nav-link-ntn @(ViewContext.RouteData.Values["controller"]?.ToString() == "Blog" ? "active" : "")">Tin tức</a>
+
+                            <a asp-area="" asp-controller="Home" asp-action="Contact" class="nav-item nav-link nav-link-ntn">Liên hệ</a>
+                        </div>
+                        <div class="navbar-nav ms-auto py-0 d-none d-lg-block px-3 text-white-50" style="line-height: 50px; font-size: 13px;">
+                            <i class="fas fa-check-circle text-success me-1"></i> Hàng chính hãng 100%
+                        </div>
+                    </div>
+                </nav>
             </div>
         </div>
     </div>
 </div>
-<!-- Carousel End -->
