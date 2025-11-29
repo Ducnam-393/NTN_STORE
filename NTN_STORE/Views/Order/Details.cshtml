@@ -1,0 +1,155 @@
+﻿@model NTN_STORE.Models.Order
+
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng #" + Model.OrderCode;
+    Layout = "_Layout";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="/Order" class="text-decoration-none text-muted"><i class="fas fa-arrow-left me-2"></i>Trở lại</a>
+        <span class="text-muted">MÃ ĐƠN HÀNG: #@Model.OrderCode</span>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <div class="row text-center step-container">
+                @{
+                    string s = Model.Status;
+                    bool isCancel = s == "Cancelled";
+                }
+
+                @if (!isCancel)
+                {
+                    <div class="col step active">
+                        <div class="step-icon"><i class="fas fa-file-invoice"></i></div>
+                        <p>Đã đặt hàng</p>
+                    </div>
+                    <div class="col step @(s == "Shipping" || s == "Completed" ? "active" : "")">
+                        <div class="step-icon"><i class="fas fa-truck"></i></div>
+                        <p>Đang giao</p>
+                    </div>
+                    <div class="col step @(s == "Completed" ? "active" : "")">
+                        <div class="step-icon"><i class="fas fa-star"></i></div>
+                        <p>Hoàn thành</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="col step active text-danger">
+                        <div class="step-icon bg-danger border-danger text-white"><i class="fas fa-times"></i></div>
+                        <p>Đã hủy</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">Địa chỉ nhận hàng</h5>
+                    <div class="ps-3 border-start border-3 border-warning">
+                        <p class="fw-bold mb-1">@Model.CustomerName</p>
+                        <p class="text-muted mb-1">@Model.PhoneNumber</p>
+                        <p class="text-muted mb-0">@Model.Address</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <table class="table mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Sản phẩm</th>
+                                <th class="text-center">Đơn giá</th>
+                                <th class="text-center">Số lượng</th>
+                                <th class="text-end pe-4">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.OrderDetails)
+                            {
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <img src="@(item.Product.Images?.FirstOrDefault()?.ImageUrl ?? "/img/no-image.jpg")" width="60" class="rounded border me-3">
+                                            <div>
+                                                <div class="fw-bold">@item.Product.Name</div>
+                                                <small class="text-muted">@item.Variant?.Color / @item.Variant?.Size</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center align-middle">@item.Price.ToString("N0")₫</td>
+                                    <td class="text-center align-middle">@item.Quantity</td>
+                                    <td class="text-end align-middle pe-4 fw-bold">@((item.Price * item.Quantity).ToString("N0"))đ</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card-footer bg-white text-end p-4">
+                    <div class="row justify-content-end">
+                        <div class="col-md-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Tổng tiền hàng</span>
+                                <span>@Model.OrderDetails.Sum(x => x.Price * x.Quantity).ToString("N0")₫</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Phí vận chuyển</span>
+                                <span>@( (Model.TotalAmount - Model.OrderDetails.Sum(x => x.Price * x.Quantity) + Model.DiscountValue).ToString("N0") )₫</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 text-success">
+                                <span>Giảm giá</span>
+                                <span>-@Model.DiscountValue.ToString("N0")₫</span>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold fs-5">Thành tiền</span>
+                                <span class="fw-bold fs-4 text-danger">@Model.TotalAmount.ToString("N0")₫</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Status == "Completed" || Model.Status == "Cancelled")
+    {
+        <div class="text-center mt-4">
+            <a asp-action="BuyAgain" asp-route-id="@Model.Id" class="btn btn-warning text-white fw-bold px-5 py-2 shadow">MUA LẠI ĐƠN NÀY</a>
+        </div>
+    }
+</div>
+
+<style>
+    .step-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #eee;
+        color: #999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        border: 2px solid #ddd;
+    }
+
+    .step.active .step-icon {
+        background: #f58220;
+        color: white;
+        border-color: #f58220;
+    }
+
+    .step.active p {
+        color: #f58220;
+        font-weight: bold;
+    }
+</style>

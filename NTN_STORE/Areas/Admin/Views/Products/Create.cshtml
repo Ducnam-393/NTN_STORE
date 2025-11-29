@@ -110,32 +110,38 @@
                 </div>
 
                 <div class="tab-pane fade" id="images" role="tabpanel">
+
                     <div class="form-group">
-                        <label class="font-weight-bold">Thêm ảnh mới (Chọn nhiều ảnh)</label>
+                        <label class="font-weight-bold">Thêm ảnh mới (Chọn nhiều ảnh cùng lúc)</label>
                         <div class="custom-file">
-                            <input asp-for="ImageFiles" class="custom-file-input" multiple id="customFile">
-                            <label class="custom-file-label" for="customFile">Chọn file...</label>
+                            <input asp-for="ImageFiles" class="custom-file-input" multiple id="productImages" accept="image/*">
+                            <label class="custom-file-label" for="productImages">Chọn file...</label>
                         </div>
+                        <small class="text-muted">Giữ phím Ctrl để chọn nhiều ảnh.</small>
                     </div>
+
+                    <div class="row mt-3" id="preview-area"></div>
+
                     <hr />
-                    <label class="font-weight-bold">Ảnh hiện có:</label>
-                    <div class="row">
-                        @if (Model.ExistingImages != null)
-                        {
-                            foreach (var img in Model.ExistingImages)
+
+                    @if (Model.ExistingImages != null && Model.ExistingImages.Any())
+                    {
+                        <label class="font-weight-bold text-primary">Ảnh hiện có trong kho:</label>
+                        <div class="row">
+                            @foreach (var img in Model.ExistingImages)
                             {
-                                <div class="col-md-2 col-4 mb-3 text-center">
-                                    <div class="card h-100 p-2">
+                                <div class="col-md-2 col-4 mb-3 text-center existing-image-item">
+                                    <div class="card h-100 p-2 shadow-sm">
                                         <img src="@img.ImageUrl" class="img-fluid rounded mb-2" style="height: 100px; object-fit: cover;">
                                         <div class="custom-control custom-checkbox">
-                                            <input type="checkbox" name="ImagesToDelete" value="@img.Id" class="custom-control-input" id="del_@img.Id">
+                                            <input type="checkbox" name="ImagesToDelete" value="@img.Id" class="custom-control-input delete-checkbox" id="del_@img.Id">
                                             <label class="custom-control-label text-danger" for="del_@img.Id">Xóa</label>
                                         </div>
                                     </div>
                                 </div>
                             }
-                        }
-                    </div>
+                        </div>
+                    }
                 </div>
 
             </div>
@@ -180,6 +186,49 @@
         $(".custom-file-input").on("change", function() {
             var fileName = $(this).val().split("\\").pop();
             $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+        });
+        / --- XỬ LÝ PREVIEW NHIỀU ẢNH ---
+        $("#productImages").on("change", function() {
+            var files = this.files;
+            var previewArea = $('#preview-area');
+            previewArea.empty(); // Xóa preview cũ
+
+            // Hiển thị số lượng file đã chọn lên label
+            var label = $(this).siblings(".custom-file-label");
+            if(files.length > 0) {
+                label.addClass("selected").html(files.length + " ảnh được chọn");
+            } else {
+                label.html("Chọn file...");
+            }
+
+            // Duyệt qua từng file để tạo thumbnail
+            if (files) {
+                [].forEach.call(files, function(file) {
+                    var reader = new FileReader();
+                    reader.onload = function (e) {
+                        // Tạo HTML hiển thị ảnh
+                        var html = `
+                            <div class="col-md-2 col-4 mb-3 text-center">
+                                <div class="card h-100 p-2 border-success">
+                                    <img src="${e.target.result}" class="img-fluid rounded" style="height: 100px; object-fit: cover;">
+                                    <span class="badge badge-success mt-2">Mới</span>
+                                </div>
+                            </div>`;
+                        previewArea.append(html);
+                    }
+                    reader.readAsDataURL(file);
+                });
+            }
+        });
+
+        // Hiệu ứng mờ khi tick chọn xóa ảnh cũ
+        $('.delete-checkbox').change(function() {
+            var card = $(this).closest('.card');
+            if(this.checked) {
+                card.addClass('bg-light').css('opacity', '0.5');
+            } else {
+                card.removeClass('bg-light').css('opacity', '1');
+            }
         });
     </script>
 }
