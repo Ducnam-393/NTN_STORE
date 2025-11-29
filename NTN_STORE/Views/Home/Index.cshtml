@@ -163,31 +163,30 @@
 <div class="container-fluid p-0 mb-5">
     <div id="header-carousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
         <div class="carousel-inner">
-            <div class="carousel-item hero-carousel-item active">
-                <img class="hero-img" src="~/img/shoes-banner-10.png" alt="Banner 1">
-                <div class="hero-caption">                   
-                    <a href="/Product" class="btn btn-hero animate__animated animate__fadeInUp">Mua ngay</a>
+            @if (Model.Sliders != null && Model.Sliders.Any())
+            {
+                int i = 0;
+                foreach (var item in Model.Sliders)
+                {
+                    <div class="carousel-item hero-carousel-item @(i == 0 ? "active" : "")">
+                        <img class="hero-img" src="@item.ImageUrl" alt="@item.Title">
+                        <div class="hero-overlay"></div>
+                        <div class="hero-caption">
+                            <div class="h5 text-warning fw-bold animate__animated animate__fadeInDown">@item.SubTitle</div>
+                            <h1 class="hero-title animate__animated animate__fadeInUp">@Html.Raw(item.Title)</h1>
+                            <a href="@item.LinkUrl" class="btn btn-hero animate__animated animate__fadeInUp">Xem Ngay</a>
+                        </div>
+                    </div>
+                    i++;
+                }
+            }
+            else
+            {
+                <div class="carousel-item hero-carousel-item active">
+                    <img class="hero-img" src="~/img/shoes-banner-10.png" alt="Default">
                 </div>
-            </div>
-            <div class="carousel-item hero-carousel-item">
-                <img class="hero-img" src="~/img/shoes-banner-11.jpg" alt="Banner 2">
-                <div class="hero-caption">                  
-                    <a href="/Product?search=Boot" class="btn btn-hero animate__animated animate__fadeInUp">Xem Ngay</a>
-                </div>
-            </div>
-            <div class="carousel-item hero-carousel-item">
-                <img class="hero-img" src="~/img/shoes-banner-6.jpg" alt="Banner 3">
-                <div class="hero-caption">            
-                    <a href="/Product?search=Bóng Đá" class="btn btn-hero animate__animated animate__fadeInUp">Khám phá</a>
-                </div>
-            </div>
+            }
         </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#header-carousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon btn btn-dark rounded-circle p-3" aria-hidden="true"></span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#header-carousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon btn btn-dark rounded-circle p-3" aria-hidden="true"></span>
-        </button>
     </div>
 </div>
 

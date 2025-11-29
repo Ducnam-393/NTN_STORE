@@ -20,5 +20,8 @@ namespace NTN_STORE.Models
 
         // Thêm dòng này
         public ICollection<ReviewImage> Images { get; set; } = new List<ReviewImage>();
+        public bool IsVisible { get; set; } = true; // Mặc định là hiện
+        public string? Reply { get; set; } // Nội dung shop trả lời
+        public DateTime? ReplyDate { get; set; }
     }
 }

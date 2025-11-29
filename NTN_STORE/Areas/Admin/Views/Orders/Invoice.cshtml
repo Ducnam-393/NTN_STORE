@@ -1,0 +1,140 @@
+﻿@model NTN_STORE.Models.Order
+@{
+    Layout = null; // Không dùng Layout chung của Admin
+    decimal subTotal = Model.OrderDetails.Sum(x => x.Price * x.Quantity);
+    decimal discount = Model.DiscountValue;
+    decimal shippingFee = Model.TotalAmount - (subTotal - discount);
+    if (shippingFee < 0) shippingFee = 0;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hóa đơn #@Model.OrderCode</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            background: #fff;
+            padding: 20px;
+        }
+
+        .invoice-header {
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .invoice-logo {
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .table th {
+            background-color: #f8f9fa !important;
+            color: #000;
+        }
+        @@media print {
+            .no-print
+
+        {
+            display: none;
+        }
+
+        body {
+            padding: 0;
+        }
+
+        }
+    </style>
+</head>
+<body onload="window.print()">
+
+    <div class="container" style="max-width: 800px;">
+        <div class="text-end no-print mb-3">
+            <button onclick="window.print()" class="btn btn-primary">In hóa đơn</button>
+            <button onclick="window.close()" class="btn btn-secondary">Đóng</button>
+        </div>
+
+        <div class="invoice-header d-flex justify-content-between align-items-end">
+            <div>
+                <div class="invoice-logo">NTN STORE</div>
+                <div>Địa chỉ: 123 Đường ABC, Hà Nội</div>
+                <div>Hotline: 1900 123 456</div>
+            </div>
+            <div class="text-end">
+                <h2 class="mb-0">HÓA ĐƠN BÁN HÀNG</h2>
+                <div>Mã đơn: <b>#@Model.OrderCode</b></div>
+                <div>Ngày: @Model.CreatedAt.ToString("dd/MM/yyyy")</div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-6">
+                <h6 class="fw-bold border-bottom pb-1">Người nhận:</h6>
+                <div>Tên: <b>@Model.CustomerName</b></div>
+                <div>SĐT: @Model.PhoneNumber</div>
+                <div>Đ/c: @Model.Address</div>
+            </div>
+            <div class="col-6">
+                <h6 class="fw-bold border-bottom pb-1">Ghi chú:</h6>
+                <p class="fst-italic">@(Model.Notes ?? "Không có")</p>
+            </div>
+        </div>
+
+        <table class="table table-bordered border-dark mb-4">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Sản phẩm</th>
+                    <th class="text-center">SL</th>
+                    <th class="text-end">Đơn giá</th>
+                    <th class="text-end">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int i = 1;
+                }
+                @foreach (var item in Model.OrderDetails)
+                {
+                    <tr>
+                        <td class="text-center">@(i++)</td>
+                        <td>
+                            @item.Product.Name <br>
+                            <small>Phân loại: @item.Variant?.Color - Size @item.Variant?.Size</small>
+                        </td>
+                        <td class="text-center">@item.Quantity</td>
+                        <td class="text-end">@item.Price.ToString("N0")</td>
+                        <td class="text-end">@((item.Price * item.Quantity).ToString("N0"))</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="text-end fw-bold">Tổng tiền hàng</td>
+                    <td class="text-end">@subTotal.ToString("N0")</td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="text-end">Phí vận chuyển</td>
+                    <td class="text-end">@shippingFee.ToString("N0")</td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="text-end">Giảm giá</td>
+                    <td class="text-end">-@discount.ToString("N0")</td>
+                </tr>
+                <tr class="bg-light">
+                    <td colspan="4" class="text-end fw-bold fs-5">TỔNG THANH TOÁN</td>
+                    <td class="text-end fw-bold fs-5">@Model.TotalAmount.ToString("N0")</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="text-center mt-5">
+            <p>Cảm ơn quý khách đã mua hàng tại NTN Store!</p>
+            <small class="fst-italic">Vui lòng kiểm tra hàng trước khi nhận. Hỗ trợ đổi trả trong vòng 7 ngày.</small>
+        </div>
+    </div>
+</body>
+</html>

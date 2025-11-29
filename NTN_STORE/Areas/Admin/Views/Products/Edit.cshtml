@@ -1,160 +1,183 @@
 ﻿@model NTN_STORE.Models.ViewModels.ProductFormViewModel
+
 @{
-    ViewData["Title"] = "Chỉnh sửa sản phẩm";
+    ViewData["Title"] = "Cập nhật sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h1 class="h3 mb-4 text-gray-800">@ViewData["Title"]</h1>
-<div class="card shadow mb-4">
-    <div class="card-body">
-        <form asp-action="Edit" method="post" enctype="multipart/form-data">
-            @Html.AntiForgeryToken()
-            <input type="hidden" asp-for="Product.Id" />
-
-            <div class="form-group">
-                <label asp-for="Product.Name"></label>
-                <input asp-for="Product.Name" class="form-control" />
-                <span asp-validation-for="Product.Name" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="Product.Description"></label>
-                <textarea asp-for="Product.Description" class="form-control"></textarea>
-                <span asp-validation-for="Product.Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input" asp-for="Product.IsFeatured" id="isFeaturedCheck">
-                    <label class="custom-control-label" for="isFeaturedCheck">Là sản phẩm bán chạy (Nổi bật)</label>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6 form-group">
-                    <label asp-for="Product.Price"></label>
-                    <input asp-for="Product.Price" class="form-control" type="number" />
-                </div>
-                <div class="col-md-6 form-group">
-                    <label asp-for="Product.OriginalPrice"></label>
-                    <input asp-for="Product.OriginalPrice" class="form-control" type="number" />
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6 form-group">
-                    <label asp-for="Product.CategoryId"></label>
-                    <select asp-for="Product.CategoryId" asp-items="@Model.Categories" class="form-control">
-                        <option value="">-- Chọn danh mục --</option>
-                    </select>
-                </div>
-                <div class="col-md-6 form-group">
-                    <label asp-for="Product.BrandId"></label>
-                    <select asp-for="Product.BrandId" asp-items="@Model.Brands" class="form-control">
-                        <option value="">-- Chọn thương hiệu --</option>
-                    </select>
-                </div>
-            </div>
-
-            <hr class="my-4" />
-
-            @* --- Phần Variants --- *@
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h6 class="font-weight-bold text-primary">Danh sách Size/Màu</h6>
-                <button type="button" class="btn btn-sm btn-success" onclick="addVariantRow()">
-                    <i class="fas fa-plus"></i> Thêm biến thể
-                </button>
-            </div>
-
-            <table class="table table-bordered" id="variantsTable">
-                <thead>
-                    <tr>
-                        <th>Size</th>
-                        <th>Màu sắc</th>
-                        <th>Số lượng kho</th>
-                        <th style="width: 50px;"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (int i = 0; i < Model.Variants.Count; i++)
-                    {
-                        <tr>
-                            @* QUAN TRỌNG: Thêm Variants.Index *@
-                            <input type="hidden" name="Variants.Index" value="@i" />
-                            <input type="hidden" name="Variants[@i].Id" value="@Model.Variants[i].Id" />
-
-                            <td>
-                                <input name="Variants[@i].Size" value="@Model.Variants[i].Size" class="form-control" placeholder="VD: 40" required />
-                            </td>
-                            <td>
-                                <input name="Variants[@i].Color" value="@Model.Variants[i].Color" class="form-control" placeholder="VD: Đen" required />
-                            </td>
-                            <td>
-                                <input name="Variants[@i].Stock" value="@Model.Variants[i].Stock" type="number" class="form-control" />
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-danger btn-circle btn-sm" onclick="removeRow(this)">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-
-            <div class="form-group mt-3">
-                <label>Thay đổi ảnh (Để trống nếu giữ nguyên)</label>
-                <div class="custom-file">
-                    <input asp-for="ImageFile" class="custom-file-input" id="customFileEdit">
-                    <label class="custom-file-label" for="customFileEdit">Chọn file...</label>
-                </div>
-                @if (Model.Product.Images != null && Model.Product.Images.Count > 0)
-                {
-                    <div class="mt-2">
-                        <label>Ảnh hiện tại:</label><br />
-                        <img src="@Model.Product.Images.First().ImageUrl" width="100" class="img-thumbnail" />
-                    </div>
-                }
-            </div>
-
-            <button type="submit" class="btn btn-primary mt-3">Lưu thay đổi</button>
-            <a asp-action="Index" class="btn btn-secondary mt-3">Hủy</a>
-        </form>
-    </div>
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Cập nhật sản phẩm</h1>
+    <a asp-action="Index" class="btn btn-secondary btn-sm shadow-sm"><i class="fas fa-arrow-left"></i> Quay lại</a>
 </div>
 
+<form asp-action="Edit" enctype="multipart/form-data" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <ul class="nav nav-pills card-header-pills" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="info-tab" data-toggle="tab" href="#info" role="tab">1. Thông tin chung</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="variant-tab" data-toggle="tab" href="#variants" role="tab">2. Biến thể & Kho</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="image-tab" data-toggle="tab" href="#images" role="tab">3. Hình ảnh</a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="myTabContent">
+
+                <div class="tab-pane fade show active" id="info" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label asp-for="Name" class="font-weight-bold"></label>
+                                <input asp-for="Name" class="form-control" placeholder="Nhập tên sản phẩm..." />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Description" class="font-weight-bold"></label>
+                                <textarea asp-for="Description" id="editor" class="form-control"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-4 border-left">
+                            <div class="form-group">
+                                <label asp-for="CategoryId" class="font-weight-bold">Danh mục</label>
+                                <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.CategoryId"></select>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="BrandId" class="font-weight-bold">Thương hiệu</label>
+                                <select asp-for="BrandId" class="form-control" asp-items="ViewBag.BrandId"></select>
+                            </div>
+                            <hr>
+                            <div class="form-group">
+                                <label asp-for="Price" class="font-weight-bold text-primary"></label>
+                                <input asp-for="Price" class="form-control" type="number" />
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="OriginalPrice" class="font-weight-bold"></label>
+                                <input asp-for="OriginalPrice" class="form-control" type="number" />
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="ImportPrice" class="font-weight-bold text-danger"></label>
+                                <input asp-for="ImportPrice" class="form-control" type="number" />
+                            </div>
+                            <hr>
+                            <div class="custom-control custom-checkbox">
+                                <input asp-for="IsActive" class="custom-control-input" />
+                                <label class="custom-control-label" asp-for="IsActive">Hiển thị sản phẩm</label>
+                            </div>
+                            <div class="custom-control custom-checkbox">
+                                <input asp-for="IsFeatured" class="custom-control-input" />
+                                <label class="custom-control-label" asp-for="IsFeatured">Sản phẩm nổi bật</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="variants" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="variantTable">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Màu sắc</th>
+                                    <th>Kích thước (Size)</th>
+                                    <th>Số lượng tồn kho</th>
+                                    <th class="text-center">Xóa</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.Variants.Count; i++)
+                                {
+                                    <tr class="variant-row" style="@(Model.Variants[i].IsDeleted ? "display:none" : "")">
+                                        <input type="hidden" asp-for="Variants[i].Id" />
+                                        <input type="hidden" asp-for="Variants[i].IsDeleted" class="is-deleted" />
+                                        <td><input asp-for="Variants[i].Color" class="form-control" placeholder="VD: Đen, Trắng..." /></td>
+                                        <td><input asp-for="Variants[i].Size" class="form-control" placeholder="VD: 39, 40..." /></td>
+                                        <td><input asp-for="Variants[i].Stock" class="form-control" type="number" min="0" /></td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-danger btn-sm btn-remove-variant"><i class="fas fa-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn btn-success btn-sm" id="addVariant"><i class="fas fa-plus"></i> Thêm phân loại mới</button>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="images" role="tabpanel">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Thêm ảnh mới (Chọn nhiều ảnh)</label>
+                        <div class="custom-file">
+                            <input asp-for="ImageFiles" class="custom-file-input" multiple id="customFile">
+                            <label class="custom-file-label" for="customFile">Chọn file...</label>
+                        </div>
+                    </div>
+                    <hr />
+                    <label class="font-weight-bold">Ảnh hiện có:</label>
+                    <div class="row">
+                        @if (Model.ExistingImages != null)
+                        {
+                            foreach (var img in Model.ExistingImages)
+                            {
+                                <div class="col-md-2 col-4 mb-3 text-center">
+                                    <div class="card h-100 p-2">
+                                        <img src="@img.ImageUrl" class="img-fluid rounded mb-2" style="height: 100px; object-fit: cover;">
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" name="ImagesToDelete" value="@img.Id" class="custom-control-input" id="del_@img.Id">
+                                            <label class="custom-control-label text-danger" for="del_@img.Id">Xóa</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="card-footer text-right">
+            <button type="submit" class="btn btn-primary btn-lg px-5"><i class="fas fa-save"></i> Lưu Thay Đổi</button>
+        </div>
+    </div>
+</form>
+
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-
+    <script src="https://cdn.ckeditor.com/4.16.2/standard/ckeditor.js"></script>
     <script>
-        function addVariantRow() {
-            var tableBody = document.getElementById("variantsTable").getElementsByTagName('tbody')[0];
-            var newRow = tableBody.insertRow();
+        // 1. Kích hoạt CKEditor
+        CKEDITOR.replace('editor');
 
-            // Index ngẫu nhiên
-            var index = new Date().getTime();
+        // 2. Xử lý thêm dòng Variant động
+        $('#addVariant').click(function () {
+            var index = $('#variantTable tbody tr').length;
+            var html = `
+                <tr class="variant-row">
+                    <input type="hidden" name="Variants[${index}].Id" value="0" />
+                    <input type="hidden" name="Variants[${index}].IsDeleted" value="false" class="is-deleted" />
+                    <td><input name="Variants[${index}].Color" class="form-control" placeholder="Màu..." /></td>
+                    <td><input name="Variants[${index}].Size" class="form-control" placeholder="Size..." /></td>
+                    <td><input name="Variants[${index}].Stock" class="form-control" type="number" value="0" /></td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger btn-sm btn-remove-variant"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            $('#variantTable tbody').append(html);
+        });
 
-            var cell1 = newRow.insertCell(0);
-            var cell2 = newRow.insertCell(1);
-            var cell3 = newRow.insertCell(2);
-            var cell4 = newRow.insertCell(3);
+        // 3. Xử lý xóa dòng Variant (Soft delete)
+        $(document).on('click', '.btn-remove-variant', function () {
+            var row = $(this).closest('tr');
+            row.find('.is-deleted').val('true');
+            row.hide();
+        });
 
-            // Input hidden cho Variants.Index và Variants[...].Id = 0 (đánh dấu là mới)
-            var htmlIndex = '<input type="hidden" name="Variants.Index" value="' + index + '" />';
-            var htmlId = '<input type="hidden" name="Variants[' + index + '].Id" value="0" />';
-
-            cell1.innerHTML = htmlIndex + htmlId + '<input name="Variants[' + index + '].Size" class="form-control" required placeholder="Size" />';
-            cell2.innerHTML = '<input name="Variants[' + index + '].Color" class="form-control" required placeholder="Màu" />';
-            cell3.innerHTML = '<input name="Variants[' + index + '].Stock" type="number" value="100" class="form-control" />';
-            cell4.innerHTML = '<button type="button" class="btn btn-danger btn-circle btn-sm" onclick="removeRow(this)"><i class="fas fa-trash"></i></button>';
-        }
-
-        function removeRow(button) {
-            var row = button.closest('tr');
-            row.remove();
-        }
-
-        // Update tên file khi chọn ảnh
-         $(".custom-file-input").on("change", function() {
+        // 4. Custom File Input
+        $(".custom-file-input").on("change", function() {
             var fileName = $(this).val().split("\\").pop();
             $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
         });

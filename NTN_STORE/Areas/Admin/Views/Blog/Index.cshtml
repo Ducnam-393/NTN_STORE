@@ -1,0 +1,55 @@
+﻿@model IEnumerable<NTN_STORE.Models.BlogPost>
+@{
+    ViewData["Title"] = "Quản lý Bài viết";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Danh sách Tin tức / Vlog</h6>
+        <a asp-action="Create" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Viết bài mới</a>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th width="10%">Ảnh</th>
+                    <th width="40%">Tiêu đề</th>
+                    <th width="15%">Tác giả</th>
+                    <th width="15%">Ngày đăng</th>
+                    <th width="10%">Trạng thái</th>
+                    <th width="10%">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><img src="@item.ThumbnailUrl" class="img-thumbnail" style="height: 50px;"></td>
+                        <td>
+                            <div class="font-weight-bold">@item.Title</div>
+                            <small class="text-muted">@item.Summary</small>
+                        </td>
+                        <td>@item.Author</td>
+                        <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            @if (item.IsVisible)
+                            {
+                                <span class="badge badge-success">Hiển thị</span>
+                            }
+                            else
+                            {
+
+                                <span class="badge badge-secondary">Ẩn</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm" onclick="return confirm('Xóa bài viết này?')"><i class="fas fa-trash"></i></a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

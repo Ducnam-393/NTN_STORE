@@ -1,0 +1,81 @@
+﻿@model IEnumerable<NTN_STORE.Models.Review>
+@{
+    ViewData["Title"] = "Quản lý Đánh giá";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+        <h6 class="m-0 font-weight-bold text-primary">Đánh giá từ khách hàng</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th>Khách hàng</th>
+                        <th>Đánh giá</th>
+                        <th>Nội dung</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <a href="/Product/Detail/@item.ProductId" target="_blank">@item.Product?.Name</a>
+                            </td>
+                            <td>
+                                <div class="font-weight-bold">@item.User?.UserName</div>
+                                <small>@item.CreatedAt.ToString("dd/MM/yyyy")</small>
+                            </td>
+                            <td>
+                                <span class="text-warning font-weight-bold">@item.Rating <i class="fas fa-star"></i></span>
+                            </td>
+                            <td>
+                                <p class="mb-1">@item.Comment</p>
+                                @if (item.Images != null && item.Images.Any())
+                                {
+                                    <div class="d-flex gap-1">
+                                        @foreach (var img in item.Images)
+                                        {
+                                            <img src="@img.Url" style="width:40px; height:40px; object-fit:cover; border-radius:4px;" class="mr-1">
+                                        }
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrEmpty(item.Reply))
+                                {
+                                    <div class="mt-2 p-2 bg-light rounded small border-left-primary">
+                                        <strong>Shop trả lời:</strong> @item.Reply
+                                    </div>
+                                }
+                                else
+                                {
+                                    <form asp-action="Reply" method="post" class="mt-2 d-flex">
+                                        <input type="hidden" name="id" value="@item.Id">
+                                        <input type="text" name="replyContent" class="form-control form-control-sm mr-2" placeholder="Nhập câu trả lời...">
+                                        <button class="btn btn-sm btn-primary">Gửi</button>
+                                    </form>
+                                }
+                            </td>
+                            <td>
+                                <a asp-action="ToggleVisibility" asp-route-id="@item.Id" class="badge @(item.IsVisible ? "badge-success" : "badge-secondary")" style="cursor:pointer">
+                                    @(item.IsVisible ? "Hiện" : "Ẩn")
+                                </a>
+                            </td>
+                            <td>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm btn-circle" onclick="return confirm('Xóa đánh giá này?')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

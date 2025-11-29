@@ -1,40 +1,93 @@
 ﻿@model IEnumerable<NTN_STORE.Models.Order>
 
 @{
-    ViewData["Title"] = "Quản lý Đơn hàng";
+    ViewData["Title"] = "Quản lý đơn hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+    string status = ViewBag.CurrentStatus as string;
 }
 
-<h1 class="h3 mb-2 text-gray-800">Quản lý Đơn hàng</h1>
-<p class="mb-4">Danh sách các đơn hàng đã được đặt trên hệ thống.</p>
-
 <div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Tất cả Đơn hàng</h6>
+    <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Quản lý Đơn hàng</h6>
     </div>
+
+    <div class="card-body border-bottom">
+        <ul class="nav nav-pills">
+            <li class="nav-item">
+                <a class="nav-link @(status == "All" ? "active" : "")" href="/Admin/Orders?status=All">Tất cả</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(status == "Pending" ? "active" : "")" href="/Admin/Orders?status=Pending">
+                    Chờ xử lý @if(ViewBag.CountPending > 0){
+                    <span class="badge badge-danger ml-1">@ViewBag.CountPending</span>
+                                        }
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(status == "Shipping" ? "active" : "")" href="/Admin/Orders?status=Shipping">Đang giao</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(status == "Completed" ? "active" : "")" href="/Admin/Orders?status=Completed">Hoàn thành</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(status == "Cancelled" ? "active" : "")" href="/Admin/Orders?status=Cancelled">Đã hủy</a>
+            </li>
+        </ul>
+    </div>
+
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
+            <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                <thead class="thead-light">
                     <tr>
                         <th>Mã ĐH</th>
-                        <th>Tên Khách hàng</th>
+                        <th>Khách hàng</th>
                         <th>Ngày đặt</th>
                         <th>Tổng tiền</th>
                         <th>Trạng thái</th>
-                        <th>Hành động</th>
+                        <th class="text-center">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td>@item.Id</td>
-                            <td>@Html.DisplayFor(modelItem => item.CustomerName)</td>
-                            <td>@Html.DisplayFor(modelItem => item.CreatedAt)</td>
-                            <td>@item.TotalAmount.ToString("N0")đ</td>
-                            <td>@Html.DisplayFor(modelItem => item.Status)</td>
+                            <td class="font-weight-bold">#@item.OrderCode</td>
                             <td>
-                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">Chi tiết</a>
+                                <div class="font-weight-bold text-dark">@item.CustomerName</div>
+                                <small class="text-muted">@item.PhoneNumber</small>
+                            </td>
+                            <td>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-danger font-weight-bold">@item.TotalAmount.ToString("N0")₫</td>
+                            <td>
+                                @switch (item.Status)
+                                {
+                                    case "Pending":
+                                        <span class="badge badge-warning">Chờ xử lý</span>
+                                        ; break;
+                                    case "Shipping":
+
+                                        <span class="badge badge-info">Đang giao</span>
+                                        ; break;
+                                    case "Completed":
+
+                                        <span class="badge badge-success">Hoàn thành</span>
+                                        ; break;
+                                    case "Cancelled":
+
+                                        <span class="badge badge-danger">Đã hủy</span>
+                                        ; break;
+                                    default:
+
+                                        <span class="badge badge-secondary">@item.Status</span>
+                                        ; break;
+                                }
+                            </td>
+                            <td class="text-center">
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-primary btn-sm btn-icon-split">
+                                    <span class="icon text-white-50"><i class="fas fa-eye"></i></span>
+                                    <span class="text">Xem</span>
+                                </a>
                             </td>
                         </tr>
                     }

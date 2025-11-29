@@ -1,4 +1,4 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NTN_STORE.Models
@@ -11,7 +11,9 @@ namespace NTN_STORE.Models
         public string Name { get; set; }
 
         public string Description { get; set; }
-
+        [Display(Name = "Giá nhập (Vốn)")]
+        public decimal ImportPrice { get; set; } = 0;
+        [Display(Name = "Giá bán")]
         public decimal Price { get; set; }
 
         public decimal? OriginalPrice { get; set; }

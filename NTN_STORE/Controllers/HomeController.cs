@@ -42,6 +42,10 @@ namespace NTN_STORE.Controllers
                 .OrderByDescending(b => b.CreatedAt)
                 .Take(3)
                 .ToListAsync();
+            vm.Sliders = await _context.Sliders
+                .Where(s => s.IsActive)
+                .OrderBy(s => s.DisplayOrder)
+                .ToListAsync();
 
             return View(vm);
         }

@@ -1,0 +1,89 @@
+﻿@model NTN_STORE.Models.Slider
+@{
+    ViewData["Title"] = "Cập nhật Banner";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Cập nhật Banner</h1>
+    <a asp-action="Index" class="btn btn-secondary btn-sm shadow-sm"><i class="fas fa-arrow-left"></i> Quay lại</a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Chi tiết Banner</h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" enctype="multipart/form-data">
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="ImageUrl" />
+
+                    <div class="form-group text-center mb-4">
+                        <label class="font-weight-bold d-block text-left">Hình ảnh hiện tại</label>
+                        <img id="imgPreview" src="@Model.ImageUrl" class="img-fluid rounded shadow-sm border" style="max-height: 200px;" />
+
+                        <div class="custom-file mt-3 text-left">
+                            <input type="file" name="ImageFile" class="custom-file-input" id="customFile" onchange="previewImage(this)">
+                            <label class="custom-file-label" for="customFile">Chọn ảnh khác nếu muốn thay đổi...</label>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="SubTitle" class="font-weight-bold">Tiêu đề phụ</label>
+                                <input asp-for="SubTitle" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Title" class="font-weight-bold">Tiêu đề chính</label>
+                                <input asp-for="Title" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="LinkUrl" class="font-weight-bold">Đường dẫn (Link)</label>
+                        <input asp-for="LinkUrl" class="form-control" />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="DisplayOrder" class="font-weight-bold">Thứ tự</label>
+                                <input asp-for="DisplayOrder" class="form-control" type="number" />
+                            </div>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="custom-control custom-switch mt-4">
+                                <input type="checkbox" class="custom-control-input" asp-for="IsActive" id="activeSwitch">
+                                <label class="custom-control-label font-weight-bold" for="activeSwitch">Hiển thị</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <button type="submit" class="btn btn-warning btn-block font-weight-bold text-white">CẬP NHẬT THAY ĐỔI</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('imgPreview').src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+
+            var fileName = input.files[0].name;
+            input.nextElementSibling.innerHTML = fileName;
+        }
+    }
+</script>
