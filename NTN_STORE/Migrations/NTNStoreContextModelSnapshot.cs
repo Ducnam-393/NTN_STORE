@@ -382,6 +382,44 @@ namespace NTN_STORE.Migrations
                     b.ToTable("Coupons");
                 });
 
+            modelBuilder.Entity("NTN_STORE.Models.InventoryLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ChangeAmount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProductVariantId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReferenceCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RemainingStock")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductVariantId");
+
+                    b.ToTable("InventoryLogs");
+                });
+
             modelBuilder.Entity("NTN_STORE.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -699,6 +737,68 @@ namespace NTN_STORE.Migrations
                     b.ToTable("Sliders");
                 });
 
+            modelBuilder.Entity("NTN_STORE.Models.StockImport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("TotalCost")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("StockImports");
+                });
+
+            modelBuilder.Entity("NTN_STORE.Models.StockImportDetail", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ProductVariantId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StockImportId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductVariantId");
+
+                    b.HasIndex("StockImportId");
+
+                    b.ToTable("StockImportDetails");
+                });
+
             modelBuilder.Entity("NTN_STORE.Models.StoreLocation", b =>
                 {
                     b.Property<int>("Id")
@@ -824,6 +924,17 @@ namespace NTN_STORE.Migrations
                     b.Navigation("Variant");
                 });
 
+            modelBuilder.Entity("NTN_STORE.Models.InventoryLog", b =>
+                {
+                    b.HasOne("NTN_STORE.Models.ProductVariant", "Variant")
+                        .WithMany()
+                        .HasForeignKey("ProductVariantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Variant");
+                });
+
             modelBuilder.Entity("NTN_STORE.Models.Order", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
@@ -931,6 +1042,36 @@ namespace NTN_STORE.Migrations
                     b.Navigation("Review");
                 });
 
+            modelBuilder.Entity("NTN_STORE.Models.StockImport", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("NTN_STORE.Models.StockImportDetail", b =>
+                {
+                    b.HasOne("NTN_STORE.Models.ProductVariant", "Variant")
+                        .WithMany()
+                        .HasForeignKey("ProductVariantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NTN_STORE.Models.StockImport", "StockImport")
+                        .WithMany("Details")
+                        .HasForeignKey("StockImportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StockImport");
+
+                    b.Navigation("Variant");
+                });
+
             modelBuilder.Entity("NTN_STORE.Models.WishlistItem", b =>
                 {
                     b.HasOne("NTN_STORE.Models.Product", "Product")
@@ -969,6 +1110,11 @@ namespace NTN_STORE.Migrations
             modelBuilder.Entity("NTN_STORE.Models.Review", b =>
                 {
                     b.Navigation("Images");
+                });
+
+            modelBuilder.Entity("NTN_STORE.Models.StockImport", b =>
+                {
+                    b.Navigation("Details");
                 });
 #pragma warning restore 612, 618
         }

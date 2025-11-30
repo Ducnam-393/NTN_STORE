@@ -1,0 +1,184 @@
+﻿@{
+    ViewData["Title"] = "Tạo Phiếu Nhập Kho";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Nhập hàng vào kho</h1>
+    <a asp-action="Index" class="btn btn-secondary btn-sm shadow-sm"><i class="fas fa-arrow-left"></i> Quay lại kho</a>
+</div>
+
+<form asp-action="CreateImport" method="post" id="importForm">
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Thông tin chung</h6>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label>Ngày tạo:</label>
+                        <input type="text" class="form-control" value="@DateTime.Now.ToString("dd/MM/yyyy HH:mm")" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label>Người nhập:</label>
+                        <input type="text" class="form-control" value="@User.Identity.Name" readonly />
+                    </div>
+                    <div class="form-group">
+                        <label>Ghi chú nhập hàng <span class="text-danger">*</span></label>
+                        <textarea name="note" class="form-control" rows="4" placeholder="VD: Nhập hàng Nike vụ Đông 2025..." required></textarea>
+                    </div>
+                    <div class="alert alert-info small">
+                        <i class="fas fa-info-circle"></i> Giá nhập mới sẽ cập nhật lại giá vốn của sản phẩm.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center bg-white">
+                    <h6 class="m-0 font-weight-bold text-primary">Chi tiết hàng nhập</h6>
+                    <button type="button" class="btn btn-success btn-sm shadow-sm" id="addRow">
+                        <i class="fas fa-plus"></i> Thêm dòng
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered mb-0" id="importTable">
+                            <thead class="bg-light text-dark">
+                                <tr>
+                                    <th width="35%">Chọn Sản phẩm (Hãng - Tên - Màu/Size)</th>
+                                    <th width="15%" class="text-center">Thông tin hiện tại</th>
+                                    <th width="15%">Số lượng nhập</th>
+                                    <th width="20%">Giá nhập đơn vị (VNĐ)</th>
+                                    <th width="15%">Thành tiền</th>
+                                    <th width="5%"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="import-row">
+                                    <td>
+                                        <select name="variantIds" class="form-control product-select" required onchange="loadProductInfo(this)">
+                                            <option value="">-- Chọn sản phẩm --</option>
+                                            @foreach (var item in (SelectList)ViewBag.VariantList)
+                                            {
+                                                <option value="@item.Value">@item.Text</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td class="text-center bg-light">
+                                        <small class="d-block text-muted info-box">
+                                            Tồn: <span class="font-weight-bold text-dark">-</span><br>
+                                            Vốn cũ: <span class="font-weight-bold text-dark">-</span>
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="quantities" class="form-control text-center qty-input" min="1" value="1" required onchange="updateRowTotal(this)" />
+                                    </td>
+                                    <td>
+                                        <input type="number" name="prices" class="form-control text-right price-input" min="0" step="1000" value="0" required onchange="updateRowTotal(this)" />
+                                    </td>
+                                    <td class="text-right align-middle font-weight-bold text-primary row-total">0₫</td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-danger btn-sm removeRow"><i class="fas fa-trash"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-light">
+                                    <td colspan="4" class="text-right font-weight-bold text-uppercase">Tổng tiền phiếu nhập:</td>
+                                    <td class="text-right font-weight-bold text-danger h5 mb-0" id="grandTotal">0₫</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer text-right">
+                    <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm" onclick="return confirm('Xác nhận nhập kho?')">
+                        <i class="fas fa-save mr-2"></i> HOÀN TẤT NHẬP KHO
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        // 1. Hàm load thông tin tồn kho & giá cũ từ API
+        function loadProductInfo(selectElement) {
+            var row = $(selectElement).closest('tr');
+            var id = $(selectElement).val();
+            var infoBox = row.find('.info-box');
+            var priceInput = row.find('.price-input');
+
+            if (id) {
+                // Hiệu ứng loading
+                infoBox.css('opacity', '0.5');
+
+                $.get('/Admin/Inventory/GetVariantInfo?id=' + id, function (data) {
+                    infoBox.html(`
+                        Tồn: <b class="${data.currentStock <= 5 ? 'text-danger' : 'text-success'}">${data.currentStock}</b><br>
+                        Vốn cũ: <b>${data.lastImportPrice.toLocaleString('en-US')}</b>
+                    `);
+
+                    // Gợi ý giá nhập bằng giá cũ (tiện lợi)
+                    if(priceInput.val() == 0 || priceInput.val() == "") {
+                        priceInput.val(data.lastImportPrice);
+                    }
+
+                    infoBox.css('opacity', '1');
+                    updateRowTotal(selectElement);
+                });
+            } else {
+                infoBox.html('Tồn: -<br>Vốn cũ: -');
+            }
+        }
+
+        // 2. Tính thành tiền từng dòng & Tổng cộng
+        function updateRowTotal(element) {
+            var row = $(element).closest('tr');
+            var qty = parseFloat(row.find('.qty-input').val()) || 0;
+            var price = parseFloat(row.find('.price-input').val()) || 0;
+            var total = qty * price;
+
+            row.find('.row-total').text(total.toLocaleString('en-US') + '₫');
+            updateGrandTotal();
+        }
+
+        function updateGrandTotal() {
+            var grandTotal = 0;
+            $('.import-row').each(function () {
+                var qty = parseFloat($(this).find('.qty-input').val()) || 0;
+                var price = parseFloat($(this).find('.price-input').val()) || 0;
+                grandTotal += (qty * price);
+            });
+            $('#grandTotal').text(grandTotal.toLocaleString('en-US') + '₫');
+        }
+
+        // 3. Thêm/Xóa dòng
+        $('#addRow').click(function () {
+            var newRow = $('#importTable tbody tr:first').clone();
+
+            // Reset giá trị dòng mới
+            newRow.find('select').val('');
+            newRow.find('.info-box').html('Tồn: -<br>Vốn cũ: -');
+            newRow.find('.qty-input').val(1);
+            newRow.find('.price-input').val(0);
+            newRow.find('.row-total').text('0₫');
+
+            $('#importTable tbody').append(newRow);
+        });
+
+        $(document).on('click', '.removeRow', function () {
+            if ($('#importTable tbody tr').length > 1) {
+                $(this).closest('tr').remove();
+                updateGrandTotal();
+            } else {
+                alert("Phải có ít nhất 1 dòng nhập hàng!");
+            }
+        });
+    </script>
+}

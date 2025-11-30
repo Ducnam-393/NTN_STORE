@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -14,11 +15,13 @@ namespace NTN_STORE.Areas.Admin.Controllers
     {
         private readonly NTNStoreContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment; // Để lưu file ảnh
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public ProductsController(NTNStoreContext context, IWebHostEnvironment webHostEnvironment)
+        public ProductsController(NTNStoreContext context, IWebHostEnvironment webHostEnvironment, UserManager<IdentityUser> userManager)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
+            _userManager = userManager; // Gán giá trị
         }
 
         // 1. DANH SÁCH (Đã làm đẹp ở bước trước, giữ nguyên hoặc cập nhật nếu cần)
@@ -52,6 +55,9 @@ namespace NTN_STORE.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
+                var user = await _userManager.GetUserAsync(User);
+                string userName = user?.UserName ?? "Admin";
+
                 // A. Lưu Sản phẩm chính
                 var product = new Product
                 {
@@ -67,7 +73,7 @@ namespace NTN_STORE.Areas.Admin.Controllers
                     CreatedAt = DateTime.Now
                 };
                 _context.Products.Add(product);
-                await _context.SaveChangesAsync(); // Lưu để lấy ID
+                await _context.SaveChangesAsync(); // Lưu để lấy ID sản phẩm
 
                 // B. Lưu Ảnh
                 if (model.ImageFiles != null)
@@ -87,25 +93,44 @@ namespace NTN_STORE.Areas.Admin.Controllers
                     }
                 }
 
-                // C. Lưu Biến thể
+                // C. Lưu Biến thể & GHI LOG KHO (FIX LOGIC)
                 if (model.Variants != null)
                 {
                     foreach (var v in model.Variants)
                     {
                         if (!string.IsNullOrEmpty(v.Color) && !string.IsNullOrEmpty(v.Size))
                         {
-                            _context.ProductVariants.Add(new ProductVariant
+                            var newVariant = new ProductVariant
                             {
                                 ProductId = product.Id,
                                 Color = v.Color,
                                 Size = v.Size,
-                                Stock = v.Stock
-                            });
+                                Stock = v.Stock // Lưu số lượng ban đầu
+                            };
+                            _context.ProductVariants.Add(newVariant);
+                            await _context.SaveChangesAsync(); // Lưu để lấy VariantId
+
+                            // --- LOGIC MỚI: Ghi nhận tồn đầu kỳ ---
+                            if (v.Stock > 0)
+                            {
+                                var log = new InventoryLog
+                                {
+                                    ProductVariantId = newVariant.Id,
+                                    Action = "Initial Stock", // Khởi tạo
+                                    ChangeAmount = v.Stock,
+                                    RemainingStock = v.Stock,
+                                    ReferenceCode = "INIT-" + product.Id, // Mã tham chiếu
+                                    UserId = userName,
+                                    CreatedAt = DateTime.Now
+                                };
+                                _context.InventoryLogs.Add(log);
+                            }
                         }
                     }
                 }
 
                 await _context.SaveChangesAsync();
+                TempData["Success"] = "Thêm sản phẩm mới thành công!";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -114,7 +139,6 @@ namespace NTN_STORE.Areas.Admin.Controllers
             ViewBag.BrandId = new SelectList(_context.Brands, "Id", "Name", model.BrandId);
             return View(model);
         }
-
         // 4. CHỈNH SỬA (GET)
         public async Task<IActionResult> Edit(int id)
         {
@@ -152,7 +176,6 @@ namespace NTN_STORE.Areas.Admin.Controllers
             return View(vm);
         }
 
-        // 5. CHỈNH SỬA (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, ProductFormViewModel model)
@@ -161,6 +184,9 @@ namespace NTN_STORE.Areas.Admin.Controllers
 
             if (ModelState.IsValid)
             {
+                var user = await _userManager.GetUserAsync(User);
+                string userName = user?.UserName ?? "Admin";
+
                 var product = await _context.Products.FindAsync(id);
                 if (product == null) return NotFound();
 
@@ -180,7 +206,6 @@ namespace NTN_STORE.Areas.Admin.Controllers
                 {
                     var imagesToDelete = await _context.ProductImages.Where(i => model.ImagesToDelete.Contains(i.Id)).ToListAsync();
                     _context.ProductImages.RemoveRange(imagesToDelete);
-                    // (Optional: Xóa file vật lý trong wwwroot nếu cần)
                 }
 
                 // Xử lý thêm ảnh mới
@@ -199,40 +224,90 @@ namespace NTN_STORE.Areas.Admin.Controllers
                     }
                 }
 
-                // Xử lý Variants (Cập nhật / Thêm mới / Xóa)
+                // Xử lý Variants & GHI LOG ĐIỀU CHỈNH KHO (FIX LOGIC)
                 if (model.Variants != null)
                 {
                     foreach (var v in model.Variants)
                     {
-                        if (v.IsDeleted && v.Id > 0) // Xóa
+                        if (v.IsDeleted && v.Id > 0) // Xóa variant
                         {
                             var variantToDelete = await _context.ProductVariants.FindAsync(v.Id);
-                            if (variantToDelete != null) _context.ProductVariants.Remove(variantToDelete);
+                            if (variantToDelete != null)
+                            {
+                                // Ghi log hủy hàng
+                                _context.InventoryLogs.Add(new InventoryLog
+                                {
+                                    ProductVariantId = variantToDelete.Id,
+                                    Action = "Delete Variant",
+                                    ChangeAmount = -variantToDelete.Stock,
+                                    RemainingStock = 0,
+                                    ReferenceCode = "EDIT-" + product.Id,
+                                    UserId = userName,
+                                    CreatedAt = DateTime.Now
+                                });
+                                _context.ProductVariants.Remove(variantToDelete);
+                            }
                         }
-                        else if (v.Id > 0) // Cập nhật
+                        else if (v.Id > 0) // Cập nhật variant có sẵn
                         {
                             var variantToUpdate = await _context.ProductVariants.FindAsync(v.Id);
                             if (variantToUpdate != null)
                             {
                                 variantToUpdate.Color = v.Color;
                                 variantToUpdate.Size = v.Size;
-                                variantToUpdate.Stock = v.Stock;
+
+                                // --- LOGIC MỚI: Kiểm tra chênh lệch tồn kho ---
+                                int stockDiff = v.Stock - variantToUpdate.Stock;
+                                if (stockDiff != 0)
+                                {
+                                    // Ghi log điều chỉnh (Adjustment)
+                                    _context.InventoryLogs.Add(new InventoryLog
+                                    {
+                                        ProductVariantId = variantToUpdate.Id,
+                                        Action = "Adjustment", // Điều chỉnh tay
+                                        ChangeAmount = stockDiff,
+                                        RemainingStock = v.Stock,
+                                        ReferenceCode = "EDIT-" + product.Id,
+                                        UserId = userName,
+                                        CreatedAt = DateTime.Now
+                                    });
+                                }
+
+                                variantToUpdate.Stock = v.Stock; // Cập nhật số lượng mới
+                                _context.ProductVariants.Update(variantToUpdate);
                             }
                         }
-                        else if (!v.IsDeleted) // Thêm mới
+                        else if (!v.IsDeleted) // Thêm variant mới
                         {
-                            _context.ProductVariants.Add(new ProductVariant
+                            var newVariant = new ProductVariant
                             {
                                 ProductId = id,
                                 Color = v.Color,
                                 Size = v.Size,
                                 Stock = v.Stock
-                            });
+                            };
+                            _context.ProductVariants.Add(newVariant);
+                            await _context.SaveChangesAsync(); // Lưu để lấy ID
+
+                            if (newVariant.Stock > 0)
+                            {
+                                _context.InventoryLogs.Add(new InventoryLog
+                                {
+                                    ProductVariantId = newVariant.Id,
+                                    Action = "New Variant",
+                                    ChangeAmount = newVariant.Stock,
+                                    RemainingStock = newVariant.Stock,
+                                    ReferenceCode = "EDIT-" + product.Id,
+                                    UserId = userName,
+                                    CreatedAt = DateTime.Now
+                                });
+                            }
                         }
                     }
                 }
 
                 await _context.SaveChangesAsync();
+                TempData["Success"] = "Cập nhật sản phẩm thành công!";
                 return RedirectToAction(nameof(Index));
             }
 

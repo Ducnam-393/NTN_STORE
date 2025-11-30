@@ -1,0 +1,55 @@
+﻿@model IEnumerable<NTN_STORE.Models.InventoryLog>
+@{
+    ViewData["Title"] = "Lịch sử kho";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="card shadow">
+    <div class="card-header py-3"><h6 class="m-0 font-weight-bold text-primary">Nhật ký hoạt động kho</h6></div>
+    <div class="card-body">
+        <table class="table table-bordered table-striped" id="dataTable">
+            <thead>
+                <tr>
+                    <th>Thời gian</th>
+                    <th>Người thực hiện</th>
+                    <th>Hành động</th>
+                    <th>Sản phẩm</th>
+                    <th>Thay đổi</th>
+                    <th>Tồn cuối</th>
+                    <th>Chứng từ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in Model)
+                {
+                    <tr>
+                        <td>@log.CreatedAt.ToString("dd/MM HH:mm")</td>
+                        <td>@log.UserId</td>
+                        <td>
+                            @if (log.Action == "Import")
+                            {
+                                <span class="badge badge-success">Nhập hàng</span>
+                            }
+                            else if (log.Action == "Sale")
+                            {
+
+                                <span class="badge badge-warning">Bán hàng</span>
+                            }
+                            else
+                            {
+
+                                <span class="badge badge-secondary">@log.Action</span>
+                            }
+                        </td>
+                        <td>@log.Variant?.Product?.Name <br><small>(@log.Variant?.Color - @log.Variant?.Size)</small></td>
+                        <td class="font-weight-bold @(log.ChangeAmount > 0 ? "text-success" : "text-danger")">
+                            @(log.ChangeAmount > 0 ? "+" : "")@log.ChangeAmount
+                        </td>
+                        <td>@log.RemainingStock</td>
+                        <td><small>#@log.ReferenceCode</small></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

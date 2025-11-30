@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using ClosedXML.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -127,6 +128,36 @@ namespace NTN_STORE.Areas.Admin.Controllers
             }
 
             return RedirectToAction(nameof(Details), new { id = userId });
+        }
+        public async Task<IActionResult> ExportExcel()
+        {
+            var users = await _userManager.Users.ToListAsync();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("Khách hàng");
+
+                worksheet.Cell(1, 1).Value = "Username";
+                worksheet.Cell(1, 2).Value = "Email";
+                worksheet.Cell(1, 3).Value = "SĐT";
+
+                int row = 2;
+                foreach (var user in users)
+                {
+                    worksheet.Cell(row, 1).Value = user.UserName;
+                    worksheet.Cell(row, 2).Value = user.Email;
+                    worksheet.Cell(row, 3).Value = "'" + user.PhoneNumber;
+                    row++;
+                }
+
+                worksheet.Columns().AdjustToContents();
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "KhachHang.xlsx");
+                }
+            }
         }
     }
 }

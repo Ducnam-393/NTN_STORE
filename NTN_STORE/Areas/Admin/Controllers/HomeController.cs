@@ -46,9 +46,17 @@ namespace NTN_STORE.Areas.Admin.Controllers
                 .Include(od => od.Product)
                 .Where(od => od.Order.Status == "Completed" || od.Order.Status == "Shipped")
                 .SumAsync(od => od.Quantity * (od.Product != null ? od.Product.ImportPrice : 0));
+            // 3. Tính Thuế & Lợi nhuận theo Luật Việt Nam 2025 (Mô hình Doanh nghiệp)
+            // Lợi nhuận gộp = Doanh thu - Giá vốn
+            decimal grossProfit = totalRevenue - totalExpense;
 
-            // Thuế ước tính (10%)
-            decimal estimatedTax = totalRevenue * 0.1m;
+            // Thuế Thu nhập doanh nghiệp (CIT): 20% trên lợi nhuận (Nếu lỗ thì không đóng thuế)
+            // Nếu là Hộ kinh doanh: Sửa thành totalRevenue * 0.015m (1.5% doanh thu)
+            decimal corporateTaxRate = 0.20m;
+            decimal estimatedTax = grossProfit > 0 ? grossProfit * corporateTaxRate : 0;
+
+            // Lợi nhuận ròng (Tiền thực nhận)
+            // NetProfit đã được tính trong ViewModel = Revenue - Expense - Tax
 
             // 3. Biểu đồ doanh thu (7 ngày gần nhất)
             var today = DateTime.Today;

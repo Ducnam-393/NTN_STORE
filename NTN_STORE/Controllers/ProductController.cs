@@ -163,7 +163,34 @@ namespace NTN_STORE.Controllers
                 ReviewCount = reviews.Count,
                 NewReview = new SubmitReviewViewModel { ProductId = id }
             };
+            // --- LOGIC SẢN PHẨM ĐÃ XEM ---
+            var recentIds = new List<int>();
+            if (Request.Cookies["RecentProducts"] != null)
+            {
+                // Lấy danh sách ID từ Cookie
+                recentIds = Request.Cookies["RecentProducts"].Split(',').Select(int.Parse).ToList();
+            }
 
+            // Xóa ID hiện tại (để đưa lên đầu) và giới hạn 6 sản phẩm
+            recentIds.Remove(id);
+            recentIds.Insert(0, id);
+            if (recentIds.Count > 6) recentIds = recentIds.Take(6).ToList();
+
+            // Lưu lại Cookie (Hạn 30 ngày)
+            Response.Cookies.Append("RecentProducts", string.Join(",", recentIds),
+                new CookieOptions { Expires = DateTime.Now.AddDays(30) });
+
+            // Lấy danh sách sản phẩm từ DB để hiển thị (Trừ sản phẩm đang xem)
+            var viewedProducts = await _context.Products
+                .Include(p => p.Images)
+                .Where(p => recentIds.Contains(p.Id) && p.Id != id)
+                .ToListAsync();
+
+            // Sắp xếp đúng thứ tự đã xem
+            viewedProducts = viewedProducts.OrderBy(p => recentIds.IndexOf(p.Id)).ToList();
+
+            // Truyền sang View
+            ViewBag.RecentlyViewed = viewedProducts;
             return View(vm);
         }
         [HttpPost]
@@ -228,6 +255,39 @@ namespace NTN_STORE.Controllers
 
             TempData["ReviewError"] = "Vui lòng kiểm tra lại thông tin đánh giá.";
             return RedirectToAction(nameof(Detail), new { id = model.ProductId });
+        }
+        // API: Tìm kiếm gợi ý (Autocomplete)
+        [HttpGet]
+        public async Task<IActionResult> SearchJson(string term)
+        {
+            if (string.IsNullOrEmpty(term)) return Json(new List<object>());
+
+            var products = await _context.Products
+                .Include(p => p.Images)
+                .Where(p => p.IsActive && (p.Name.Contains(term) || p.Description.Contains(term)))
+                .Select(p => new
+                {
+                    id = p.Id,
+                    name = p.Name,
+                    price = p.Price,
+                    image = p.Images != null && p.Images.Any() ? p.Images.First().ImageUrl : "/img/no-image.jpg"
+                })
+                .Take(5) // Gợi ý 5 sản phẩm
+                .ToListAsync();
+
+            return Json(products);
+        }
+        [HttpPost]
+        [HttpPost]
+        public async Task<IActionResult> SubscribeStock(string email, int productId, string note)
+        {
+            if (string.IsNullOrEmpty(email)) return Json(new { success = false, message = "Vui lòng nhập email!" });
+
+            // Lưu vào Database (Ví dụ: Bảng StockSubscriptions)
+            // Hoặc đơn giản là log ra console/gửi mail cho Admin
+
+            // Demo trả về thành công
+            return Json(new { success = true, message = "Đăng ký thành công! Chúng tôi sẽ báo khi có hàng." });
         }
     }
 }

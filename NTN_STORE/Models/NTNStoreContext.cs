@@ -28,6 +28,9 @@ namespace NTN_STORE.Models
         public DbSet<ReviewImage> ReviewImages { get; set; }
         public DbSet<Coupon> Coupons { get; set; }
         public DbSet<Slider> Sliders { get; set; }
+        public DbSet<StockImport> StockImports { get; set; }
+        public DbSet<StockImportDetail> StockImportDetails { get; set; }
+        public DbSet<InventoryLog> InventoryLogs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

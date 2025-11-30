@@ -90,18 +90,26 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @for (int i = 0; i < Model.Variants.Count; i++)
+                                @if (Model.Variants != null)
                                 {
-                                    <tr class="variant-row" style="@(Model.Variants[i].IsDeleted ? "display:none" : "")">
-                                        <input type="hidden" asp-for="Variants[i].Id" />
-                                        <input type="hidden" asp-for="Variants[i].IsDeleted" class="is-deleted" />
-                                        <td><input asp-for="Variants[i].Color" class="form-control" placeholder="VD: Đen, Trắng..." /></td>
-                                        <td><input asp-for="Variants[i].Size" class="form-control" placeholder="VD: 39, 40..." /></td>
-                                        <td><input asp-for="Variants[i].Stock" class="form-control" type="number" min="0" /></td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-danger btn-sm btn-remove-variant"><i class="fas fa-trash"></i></button>
-                                        </td>
-                                    </tr>
+                                    for (int i = 0; i < Model.Variants.Count; i++)
+                                    {
+                                        var v = Model.Variants[i];
+                                        <tr class="variant-row" style="@(v.IsDeleted ? "display:none" : "")">
+                                            <input type="hidden" name="Variants.Index" value="@i" />
+                                            <input type="hidden" asp-for="Variants[i].Id" />
+                                            <input type="hidden" asp-for="Variants[i].IsDeleted" class="is-deleted" />
+
+                                            <td><input asp-for="Variants[i].Color" class="form-control" /></td>
+                                            <td><input asp-for="Variants[i].Size" class="form-control" /></td>
+                                            <td><input asp-for="Variants[i].Stock" class="form-control" type="number" /></td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-danger btn-sm btn-remove-existing">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
                                 }
                             </tbody>
                         </table>
@@ -153,82 +161,94 @@
 </form>
 
 @section Scripts {
+    <script src="~/Admin/vendor/jquery/jquery.min.js"></script>
+
     <script src="https://cdn.ckeditor.com/4.16.2/standard/ckeditor.js"></script>
+
     <script>
-        // 1. Kích hoạt CKEditor
-        CKEDITOR.replace('editor');
+        $(document).ready(function() {
+            // --- CẤU HÌNH CKEDITOR ---
+            if ($('#editor').length) {
+                CKEDITOR.replace('editor');
+            }
 
-        // 2. Xử lý thêm dòng Variant động
-        $('#addVariant').click(function () {
-            var index = $('#variantTable tbody tr').length;
-            var html = `
-                <tr class="variant-row">
-                    <input type="hidden" name="Variants[${index}].Id" value="0" />
-                    <input type="hidden" name="Variants[${index}].IsDeleted" value="false" class="is-deleted" />
-                    <td><input name="Variants[${index}].Color" class="form-control" placeholder="Màu..." /></td>
-                    <td><input name="Variants[${index}].Size" class="form-control" placeholder="Size..." /></td>
-                    <td><input name="Variants[${index}].Stock" class="form-control" type="number" value="0" /></td>
-                    <td class="text-center">
-                        <button type="button" class="btn btn-danger btn-sm btn-remove-variant"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>`;
-            $('#variantTable tbody').append(html);
+            // --- FIX LỖI NÚT THÊM BIẾN THỂ ---
+            $('#addVariant').on('click', function () {
+                // Đếm số dòng hiện tại để tạo index mới (tránh trùng index)
+                // Chúng ta dùng Date.now() để tạo index duy nhất, đảm bảo không bị lỗi khi xóa dòng giữa chừng
+                var uniqueIndex = new Date().getTime();
+
+                var html = `
+                    <tr class="variant-row" id="row_${uniqueIndex}">
+                        <input type="hidden" name="Variants.Index" value="${uniqueIndex}" />
+                        <input type="hidden" name="Variants[${uniqueIndex}].Id" value="0" />
+                        <input type="hidden" name="Variants[${uniqueIndex}].IsDeleted" value="false" class="is-deleted" />
+
+                        <td>
+                            <input name="Variants[${uniqueIndex}].Color" class="form-control" placeholder="Màu (VD: Đen)" required />
+                        </td>
+                        <td>
+                            <input name="Variants[${uniqueIndex}].Size" class="form-control" placeholder="Size (VD: 40)" required />
+                        </td>
+                        <td>
+                            <input name="Variants[${uniqueIndex}].Stock" class="form-control" type="number" value="0" min="0" />
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-danger btn-sm btn-remove-variant" onclick="removeVariant(${uniqueIndex})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+
+                $('#variantTable tbody').append(html);
+            });
+
+            // --- XỬ LÝ PREVIEW ẢNH ---
+            $("#productImages").on("change", function() {
+                var files = this.files;
+                var previewArea = $('#preview-area');
+                previewArea.empty();
+
+                if(files.length > 0) {
+                    $(this).siblings(".custom-file-label").addClass("selected").html(files.length + " ảnh đã chọn");
+
+                    [].forEach.call(files, function(file) {
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            var html = `
+                                <div class="col-md-2 col-4 mb-3 text-center">
+                                    <div class="card h-100 p-1 border-success">
+                                        <img src="${e.target.result}" class="img-fluid rounded" style="height: 80px; object-fit: cover;">
+                                    </div>
+                                </div>`;
+                            previewArea.append(html);
+                        }
+                        reader.readAsDataURL(file);
+                    });
+                }
+            });
         });
 
-        // 3. Xử lý xóa dòng Variant (Soft delete)
-        $(document).on('click', '.btn-remove-variant', function () {
-            var row = $(this).closest('tr');
-            row.find('.is-deleted').val('true');
-            row.hide();
-        });
+        // --- HÀM XÓA BIẾN THỂ (Viết ngoài document.ready để gọi onclick) ---
+        function removeVariant(index) {
+            // Nếu là dòng mới thêm (chưa có trong DB), xóa hẳn khỏi HTML
+            var row = $('#row_' + index);
+            var idInput = row.find('input[name$=".Id"]');
 
-        // 4. Custom File Input
-        $(".custom-file-input").on("change", function() {
-            var fileName = $(this).val().split("\\").pop();
-            $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
-        });
-        / --- XỬ LÝ PREVIEW NHIỀU ẢNH ---
-        $("#productImages").on("change", function() {
-            var files = this.files;
-            var previewArea = $('#preview-area');
-            previewArea.empty(); // Xóa preview cũ
-
-            // Hiển thị số lượng file đã chọn lên label
-            var label = $(this).siblings(".custom-file-label");
-            if(files.length > 0) {
-                label.addClass("selected").html(files.length + " ảnh được chọn");
+            if (idInput.val() == "0") {
+                row.remove();
             } else {
-                label.html("Chọn file...");
+                // Nếu đã có trong DB, chỉ ẩn đi và đánh dấu IsDeleted = true
+                row.find('.is-deleted').val('true');
+                row.hide();
             }
+        }
 
-            // Duyệt qua từng file để tạo thumbnail
-            if (files) {
-                [].forEach.call(files, function(file) {
-                    var reader = new FileReader();
-                    reader.onload = function (e) {
-                        // Tạo HTML hiển thị ảnh
-                        var html = `
-                            <div class="col-md-2 col-4 mb-3 text-center">
-                                <div class="card h-100 p-2 border-success">
-                                    <img src="${e.target.result}" class="img-fluid rounded" style="height: 100px; object-fit: cover;">
-                                    <span class="badge badge-success mt-2">Mới</span>
-                                </div>
-                            </div>`;
-                        previewArea.append(html);
-                    }
-                    reader.readAsDataURL(file);
-                });
-            }
-        });
-
-        // Hiệu ứng mờ khi tick chọn xóa ảnh cũ
-        $('.delete-checkbox').change(function() {
-            var card = $(this).closest('.card');
-            if(this.checked) {
-                card.addClass('bg-light').css('opacity', '0.5');
-            } else {
-                card.removeClass('bg-light').css('opacity', '1');
-            }
+        // Xử lý xóa cho các dòng có sẵn (khi load trang Edit)
+        $(document).on('click', '.btn-remove-existing', function() {
+             var row = $(this).closest('tr');
+             row.find('.is-deleted').val('true');
+             row.hide();
         });
     </script>
 }

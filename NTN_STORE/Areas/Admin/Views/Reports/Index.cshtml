@@ -1,0 +1,117 @@
+﻿@model NTN_STORE.Models.ViewModels.ReportViewModel
+
+@{
+    ViewData["Title"] = "Báo cáo Thống kê";
+    Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Báo cáo hiệu quả kinh doanh</h1>
+</div>
+
+<div class="card shadow mb-4 border-left-primary">
+    <div class="card-body">
+        <form method="get" asp-action="Index" class="form-inline d-flex align-items-end">
+
+            <div class="form-group mr-3 mb-0">
+                <label class="font-weight-bold mr-2">Từ ngày:</label>
+                <input type="date" name="fromDate" class="form-control"
+                       value="@Model.FromDate.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <div class="form-group mr-3 mb-0">
+                <label class="font-weight-bold mr-2">Đến ngày:</label>
+                <input type="date" name="toDate" class="form-control"
+                       value="@Model.ToDate.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <div class="form-group mb-0">
+                <button type="submit" class="btn btn-primary shadow-sm mr-2">
+                    <i class="fas fa-filter fa-sm"></i> Xem báo cáo
+                </button>
+
+                <a href="@Url.Action("ExportReport", new { fromDate = Model.FromDate.ToString("yyyy-MM-dd"), toDate = Model.ToDate.ToString("yyyy-MM-dd") })"
+                   class="btn btn-success shadow-sm">
+                    <i class="fas fa-file-excel fa-sm"></i> Xuất Excel
+                </a>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-success">Kết quả tài chính (Thực tế)</h6>
+                <i class="fas fa-coins text-gray-300"></i>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <tr>
+                            <td>Doanh thu (Đã hoàn thành)</td>
+                            <td class="text-right font-weight-bold text-primary">@Model.TotalRevenue.ToString("N0")₫</td>
+                        </tr>
+                        <tr>
+                            <td>Giá vốn hàng bán (COGS)</td>
+                            <td class="text-right font-weight-bold text-warning">@Model.TotalCost.ToString("N0")₫</td>
+                        </tr>
+                        <tr class="bg-light">
+                            <td class="text-uppercase font-weight-bold text-dark">Lợi nhuận gộp</td>
+                            <td class="text-right font-weight-bold text-success h4 mb-0">@Model.GrossProfit.ToString("N0")₫</td>
+                        </tr>
+                    </table>
+                </div>
+                <p class="small text-muted mt-2 font-italic">
+                    * Lưu ý: Doanh thu & Lợi nhuận chỉ tính trên các đơn hàng có trạng thái <b>"Completed" (Hoàn thành)</b> hoặc <b>"Shipping" (Đang giao)</b>.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-danger">Hiệu suất vận hành</h6>
+                <i class="fas fa-shipping-fast text-gray-300"></i>
+            </div>
+            <div class="card-body">
+                <div class="row text-center mb-4">
+                    <div class="col-4 border-right">
+                        <div class="h4 font-weight-bold text-gray-800">@Model.TotalOrders</div>
+                        <div class="small text-uppercase text-muted font-weight-bold">Tổng đơn</div>
+                    </div>
+                    <div class="col-4 border-right">
+                        <div class="h4 font-weight-bold text-success">@Model.CompletedOrders</div>
+                        <div class="small text-uppercase text-muted font-weight-bold">Thành công</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="h4 font-weight-bold text-danger">@Model.CancelledOrders</div>
+                        <div class="small text-uppercase text-muted font-weight-bold">Đã hủy</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="small font-weight-bold">Tỷ lệ hủy đơn <span class="float-right">@Model.CancelRate%</span></h4>
+                    <div class="progress mb-3">
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: @Model.CancelRate%" aria-valuenow="@Model.CancelRate" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    @if (Model.CancelRate > 20)
+                    {
+                        <div class="alert alert-danger py-2 small">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> <b>Cảnh báo:</b> Tỷ lệ hủy cao (>20%). Cần kiểm tra lại quy trình chốt đơn.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success py-2 small">
+                            <i class="fas fa-check-circle mr-1"></i> Tỷ lệ hủy ở mức an toàn.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

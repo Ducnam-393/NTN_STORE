@@ -105,23 +105,88 @@
             </div>
             <div class="card-body">
                 <div class="mb-3 text-center">
-                    <span class="h5 badge badge-pill @(Model.Status == "Completed" ? "badge-success" : "badge-warning") px-3 py-2">
-                        @Model.Status
+                    <span class="h5 badge badge-pill px-3 py-2
+                  @(Model.Status == "Completed" ? "badge-success" :
+                                              Model.Status == "Cancelled" ? "badge-danger" :
+                                              Model.Status == "Shipping" ? "badge-info" : "badge-warning")">
+                        @switch (Model.Status)
+                        {
+                            case "Pending":
+                                <text>Chờ xử lý</text>
+                                ; break;
+                            case "Shipping":
+
+                                <text>Đang giao hàng</text>
+                                ; break;
+                            case "Completed":
+
+                                <text>Hoàn thành</text>
+                                ; break;
+                            case "Cancelled":
+
+                                <text>Đã hủy</text>
+                                ; break;
+                            default:
+
+                                @Model.Status
+                                ; break;
+                        }
                     </span>
                 </div>
-                <form asp-action="UpdateStatus" method="post">
-                    <input type="hidden" name="id" value="@Model.Id" />
-                    <div class="form-group">
-                        <label class="small font-weight-bold">Chuyển trạng thái:</label>
-                        <select name="status" class="form-control">
-                            <!option value="Pending" @(Model.Status == "Pending" ? "selected" : "")>Chờ xử lý (Pending)</!option>
-                            <!option value="Shipping" @(Model.Status == "Shipping" ? "selected" : "")>Đang giao (Shipping)</!option>
-                            <!option value="Completed" @(Model.Status == "Completed" ? "selected" : "")>Hoàn thành (Completed)</!option>
-                            <!option value="Cancelled" @(Model.Status == "Cancelled" ? "selected" : "")>Đã hủy (Cancelled)</!option>
-                        </select>
+
+                <hr>
+
+                @if (Model.Status == "Cancelled" || Model.Status == "Completed")
+                {
+                    <div class="alert alert-secondary text-center mb-0">
+                        <i class="fas fa-lock mr-2"></i> Đơn hàng đã kết thúc. Không thể thay đổi trạng thái.
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block">Cập nhật ngay</button>
-                </form>
+                }
+                else
+                {
+                    <form asp-action="UpdateStatus" method="post">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <div class="form-group">
+                            <label class="small font-weight-bold">Chuyển trạng thái sang:</label>
+                            <select name="status" class="form-control">
+                                @if (Model.Status == "Pending")
+                                {
+                                    <option value="Shipping">Đang giao (Shipping)</option>
+                                    <option value="Cancelled">Hủy đơn (Cancel)</option>
+                                }
+                                else if (Model.Status == "Shipping")
+                                {
+                                    <option value="Completed">Đã giao xong (Complete)</option>
+                                    <option value="Cancelled">Giao thất bại / Hủy</option>
+                                }
+                                else if (Model.Status == "Unpaid") /* THÊM ĐOẠN NÀY */
+                                {
+                                    <option value="Pending">Đã nhận tiền (Chuyển sang Chờ xử lý)</option>
+                                    <option value="Cancelled">Hủy đơn (Khách không thanh toán)</option>
+                                }
+                                else if (Model.Status == "Paid") /* THÊM NẾU CÓ THANH TOÁN ONLINE THÀNH CÔNG */
+                                {
+                                    <option value="Shipping">Đang giao hàng</option>
+                                    <option value="Cancelled">Hoàn tiền & Hủy</option>
+                                }
+                                else
+                                {
+                                    <option value="Pending">Chờ xử lý</option>
+                                    <option value="Shipping">Đang giao</option>
+                                    <option value="Completed">Hoàn thành</option>
+                                    <option value="Cancelled">Hủy</option>
+                                }
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block font-weight-bold">
+                            <i class="fas fa-check mr-1"></i> Cập nhật ngay
+                        </button>
+                    </form>
+
+                    <div class="mt-3 text-center">
+                        <small class="text-muted font-italic">* Chuyển sang "Hủy" sẽ tự động cộng lại tồn kho.</small>
+                    </div>
+                }
             </div>
         </div>
 
