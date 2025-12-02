@@ -3,160 +3,135 @@
 @{
     ViewData["Title"] = "Đơn hàng của tôi";
     Layout = "_Layout";
-    string status = ViewBag.CurrentStatus as string;
+    string currentStatus = ViewBag.CurrentStatus as string;
 }
 
 <style>
-    .order-nav .nav-link {
+    .nav-tabs .nav-link {
         color: #555;
-        font-weight: 500;
+        font-weight: 600;
         border: none;
         border-bottom: 2px solid transparent;
-        padding: 15px 20px;
-        background: #fff;
     }
 
-        .order-nav .nav-link.active {
+        .nav-tabs .nav-link.active {
             color: #f58220;
             border-bottom: 2px solid #f58220;
-            background: #fff;
+            background: none;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: #f58220;
         }
 
     .order-card {
         background: #fff;
         border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         margin-bottom: 20px;
-        overflow: hidden;
+        border: 1px solid #eee;
     }
 
     .order-header {
-        padding: 15px 20px;
+        padding: 15px;
         border-bottom: 1px solid #f0f0f0;
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        background: #fcfcfc;
-    }
-
-    .order-body {
-        padding: 20px;
+        background: #fbfbfb;
     }
 
     .order-footer {
-        padding: 15px 20px;
+        padding: 15px;
         border-top: 1px solid #f0f0f0;
-        background: #fcfcfc;
         text-align: right;
+        background: #fbfbfb;
     }
 
-    .product-mini {
-        display: flex;
-        margin-bottom: 15px;
-    }
-
-        .product-mini img {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border: 1px solid #eee;
-            border-radius: 4px;
-        }
-
-    .status-badge {
-        font-size: 0.85rem;
+    .status-text {
+        font-weight: 700;
         text-transform: uppercase;
-        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .btn-view-detail {
+        background-color: #007bff !important; /* xanh dương */
+        color: white !important;
+        border: none !important;
     }
 </style>
 
-<div class="container py-5 bg-light">
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb bg-transparent p-0">
-            <li class="breadcrumb-item"><a href="/" class="text-muted text-decoration-none">Trang chủ</a></li>
-            <li class="breadcrumb-item active text-dark fw-bold">Đơn mua</li>
-        </ol>
-    </nav>
+<div class="container py-5">
+    <h3 class="fw-bold mb-4 text-uppercase">Lịch sử đơn hàng</h3>
 
-    <div class="bg-white mb-4 shadow-sm rounded sticky-top" style="top: 70px; z-index: 99;">
-        <ul class="nav nav-tabs order-nav nav-fill">
-            <li class="nav-item"><a class="nav-link @(status == "All" ? "active" : "")" href="/Order?status=All">Tất cả</a></li>
-            <li class="nav-item"><a class="nav-link @(status == "Pending" ? "active" : "")" href="/Order?status=Pending">Chờ xác nhận</a></li>
-            <li class="nav-item"><a class="nav-link @(status == "Shipping" ? "active" : "")" href="/Order?status=Shipping">Đang giao</a></li>
-            <li class="nav-item"><a class="nav-link @(status == "Completed" ? "active" : "")" href="/Order?status=Completed">Hoàn thành</a></li>
-            <li class="nav-item"><a class="nav-link @(status == "Cancelled" ? "active" : "")" href="/Order?status=Cancelled">Đã hủy</a></li>
-        </ul>
-    </div>
+    <ul class="nav nav-tabs mb-4 bg-white rounded shadow-sm">
+        <li class="nav-item"><a class="nav-link @(currentStatus == "All" ? "active" : "")" href="/Order?status=All">Tất cả</a></li>
+        <li class="nav-item"><a class="nav-link @(currentStatus == "Pending" ? "active" : "")" href="/Order?status=Pending">Chờ thanh toán</a></li>
+        <li class="nav-item"><a class="nav-link @(currentStatus == "Shipping" ? "active" : "")" href="/Order?status=Shipping">Đang vận chuyển</a></li>
+        <li class="nav-item"><a class="nav-link @(currentStatus == "Completed" ? "active" : "")" href="/Order?status=Completed">Hoàn thành</a></li>
+        <li class="nav-item"><a class="nav-link @(currentStatus == "Cancelled" ? "active" : "")" href="/Order?status=Cancelled">Đã hủy</a></li>
+    </ul>
 
     @if (Model != null && Model.Any())
     {
-        @foreach (var order in Model)
+        foreach (var order in Model)
         {
             <div class="order-card">
                 <div class="order-header">
                     <div>
-                        <span class="fw-bold me-2">#@order.OrderCode</span>
+                        <span class="fw-bold">#@order.OrderCode</span>
+                        <span class="mx-2 text-muted">|</span>
                         <span class="text-muted small">@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
                     </div>
-                    <div class="status-badge text-primary">
-                        @switch (order.Status)
+                    <div>
+                        @if (order.Status == "Pending")
                         {
-                            case "Pending":
-                                <span class="text-warning"><i class="fas fa-clock me-1"></i>Chờ xử lý</span>
-                                ; break;
-                            case "Shipping":
+                            <span class="status-text text-warning">Chờ xác nhận</span>
+                        }
+                        else if (order.Status == "Shipping")
+                        {
 
-                                <span class="text-info"><i class="fas fa-truck me-1"></i>Đang giao hàng</span>
-                                ; break;
-                            case "Completed":
+                            <span class="status-text text-primary">Đang vận chuyển</span>
+                        }
+                        else if (order.Status == "Completed")
+                        {
 
-                                <span class="text-success"><i class="fas fa-check-circle me-1"></i>Hoàn thành</span>
-                                ; break;
-                            case "Cancelled":
+                            <span class="status-text text-success">Giao hàng thành công</span>
+                        }
+                        else if (order.Status == "Cancelled")
+                        {
 
-                                <span class="text-danger"><i class="fas fa-times-circle me-1"></i>Đã hủy</span>
-                                ; break;
+                            <span class="status-text text-danger">Đã hủy</span>
                         }
                     </div>
                 </div>
 
-                <div class="order-body">
+                <div class="p-3">
                     @foreach (var item in order.OrderDetails)
                     {
-                        <div class="product-mini">
-                            <img src="@(item.Product.Images?.FirstOrDefault()?.ImageUrl ?? "/img/no-image.jpg")" alt="@item.Product.Name">
-                            <div class="ms-3">
+                        <div class="d-flex mb-3 border-bottom pb-3 last-no-border">
+                            <img src="@(item.Product.Images?.FirstOrDefault()?.ImageUrl ?? "/img/no-image.jpg")" style="width: 80px; height: 80px; object-fit: cover; border: 1px solid #eee; border-radius: 5px;">
+                            <div class="ms-3 flex-grow-1">
                                 <h6 class="mb-1 fw-bold">@item.Product.Name</h6>
                                 <div class="text-muted small mb-1">Phân loại: @(item.Variant?.Color ?? "-"), Size @(item.Variant?.Size ?? "-")</div>
                                 <div>x @item.Quantity</div>
                             </div>
-                            <div class="ms-auto text-end">
-                                <div class="fw-bold text-dark">@item.Price.ToString("N0")₫</div>
+                            <div class="text-end">
+                                <span class="text-danger fw-bold">@item.Price.ToString("N0")₫</span>
                             </div>
                         </div>
                     }
                 </div>
 
-                <div class="order-footer">
-                    <div class="d-flex justify-content-end align-items-center mb-3">
-                        <span class="text-muted me-2">Thành tiền:</span>
+                <div class="order-footer d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="text-muted">Thành tiền:</span>
                         <span class="fs-4 fw-bold text-danger">@order.TotalAmount.ToString("N0")₫</span>
                     </div>
-
-                    <div class="d-flex justify-content-end gap-2">
-                        <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-outline-secondary">Xem chi tiết</a>
-
-                        @if (order.Status == "Pending")
-                        {
-                            <form asp-action="Cancel" method="post" onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này?');">
-                                <input type="hidden" name="id" value="@order.Id" />
-                                <button type="submit" class="btn btn-danger">Hủy đơn hàng</button>
-                            </form>
-                        }
-
+                    <div>
+                        <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-view-detail me-2">Xem chi tiết</a>
                         @if (order.Status == "Completed" || order.Status == "Cancelled")
                         {
-                            <a asp-action="BuyAgain" asp-route-id="@order.Id" class="btn btn-primary px-4" style="background: #f58220; border:none;">Mua Lại</a>
+                            <a asp-action="BuyAgain" asp-route-id="@order.Id" class="btn btn-warning text-white fw-bold">Mua Lại</a>
                         }
                     </div>
                 </div>
@@ -167,8 +142,8 @@
     {
         <div class="text-center py-5">
             <img src="https://cdn-icons-png.flaticon.com/512/4076/4076432.png" width="100" class="mb-3 opacity-50">
-            <p class="text-muted">Chưa có đơn hàng nào.</p>
-            <a href="/Product" class="btn btn-primary">Mua sắm ngay</a>
+            <p class="text-muted">Chưa có đơn hàng nào trong mục này.</p>
+            <a href="/Product" class="btn btn-primary">Dạo cửa hàng ngay</a>
         </div>
     }
 </div>

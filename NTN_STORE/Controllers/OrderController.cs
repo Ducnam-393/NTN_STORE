@@ -3,10 +3,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NTN_STORE.Models;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace NTN_STORE.Controllers
 {
-    [Authorize] // Bắt buộc đăng nhập
+    [Authorize]
     public class OrderController : Controller
     {
         private readonly NTNStoreContext _context;
@@ -18,7 +21,7 @@ namespace NTN_STORE.Controllers
             _userManager = userManager;
         }
 
-        // 1. Danh sách đơn hàng (Có lọc theo trạng thái)
+        // 1. DANH SÁCH ĐƠN HÀNG (CÓ TAB LỌC)
         public async Task<IActionResult> Index(string status = "All")
         {
             var userId = _userManager.GetUserId(User);
@@ -27,19 +30,22 @@ namespace NTN_STORE.Controllers
                 .Include(o => o.OrderDetails).ThenInclude(od => od.Variant)
                 .Where(o => o.UserId == userId);
 
-            // Lọc trạng thái
-            if (status != "All")
+            // Lọc theo Tab
+            switch (status)
             {
-                query = query.Where(o => o.Status == status);
+                case "Pending": query = query.Where(o => o.Status == "Pending" || o.Status == "Unpaid"); break;
+                case "Shipping": query = query.Where(o => o.Status == "Shipping"); break;
+                case "Completed": query = query.Where(o => o.Status == "Completed"); break;
+                case "Cancelled": query = query.Where(o => o.Status == "Cancelled"); break;
             }
 
             var orders = await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
-            ViewBag.CurrentStatus = status;
 
+            ViewBag.CurrentStatus = status;
             return View(orders);
         }
 
-        // 2. Chi tiết đơn hàng
+        // 2. CHI TIẾT ĐƠN HÀNG & TIMELINE
         public async Task<IActionResult> Details(int id)
         {
             var userId = _userManager.GetUserId(User);
@@ -49,71 +55,77 @@ namespace NTN_STORE.Controllers
                 .FirstOrDefaultAsync(o => o.Id == id && o.UserId == userId);
 
             if (order == null) return NotFound();
+
             return View(order);
         }
 
-        // 3. Hủy đơn hàng (Chỉ khi đang Pending)
+        // 3. HỦY ĐƠN HÀNG (Chỉ cho phép khi còn ở trạng thái Pending/Unpaid)
         [HttpPost]
-        public async Task<IActionResult> Cancel(int id)
+        public async Task<IActionResult> CancelOrder(int id, string reason)
         {
             var userId = _userManager.GetUserId(User);
             var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == id && o.UserId == userId);
 
-            if (order != null && order.Status == "Pending")
+            if (order != null && (order.Status == "Pending" || order.Status == "Unpaid"))
             {
                 order.Status = "Cancelled";
+                order.Notes = order.Notes + $" [Khách hủy: {reason}]"; // Lưu lý do hủy
+
+                // (Optional) Tại đây bạn nên cộng lại số lượng tồn kho cho ProductVariant
+
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Đã hủy đơn hàng thành công.";
             }
             else
             {
-                TempData["Error"] = "Không thể hủy đơn hàng này.";
+                TempData["Error"] = "Đơn hàng đã được xử lý, không thể hủy.";
             }
-            return RedirectToAction(nameof(Index));
+
+            return RedirectToAction(nameof(Details), new { id = id });
         }
 
         // 4. CHỨC NĂNG MUA LẠI (RE-ORDER)
         public async Task<IActionResult> BuyAgain(int id)
         {
             var userId = _userManager.GetUserId(User);
-            var order = await _context.Orders
+            // Lấy đơn hàng cũ
+            var oldOrder = await _context.Orders
                 .Include(o => o.OrderDetails)
                 .FirstOrDefaultAsync(o => o.Id == id && o.UserId == userId);
 
-            if (order != null)
-            {
-                foreach (var item in order.OrderDetails)
-                {
-                    // 1. Check xem sản phẩm/biến thể còn tồn tại và còn hàng không
-                    var variant = await _context.ProductVariants.FindAsync(item.VariantId);
-                    if (variant != null && variant.Stock > 0)
-                    {
-                        // 2. Thêm vào giỏ hàng
-                        var cartItem = await _context.CartItems
-                            .FirstOrDefaultAsync(c => c.UserId == userId && c.ProductId == item.ProductId && c.VariantId == item.VariantId);
+            if (oldOrder == null) return NotFound();
 
-                        if (cartItem != null)
+            // Duyệt qua từng sản phẩm trong đơn cũ để thêm vào giỏ hiện tại
+            foreach (var item in oldOrder.OrderDetails)
+            {
+                // Kiểm tra xem sản phẩm/variant còn tồn tại và còn hàng không
+                var variant = await _context.ProductVariants.FindAsync(item.VariantId);
+                if (variant != null && variant.Stock > 0)
+                {
+                    // Kiểm tra xem trong giỏ đã có chưa
+                    var cartItem = await _context.CartItems
+                        .FirstOrDefaultAsync(c => c.UserId == userId && c.VariantId == item.VariantId);
+
+                    if (cartItem != null)
+                    {
+                        cartItem.Quantity += 1; // Hoặc += item.Quantity
+                    }
+                    else
+                    {
+                        _context.CartItems.Add(new CartItem
                         {
-                            cartItem.Quantity += 1; // Đã có thì +1
-                        }
-                        else
-                        {
-                            _context.CartItems.Add(new CartItem
-                            {
-                                UserId = userId,
-                                ProductId = item.ProductId,
-                                VariantId = item.VariantId,
-                                Quantity = 1 // Mặc định mua lại số lượng 1
-                            });
-                        }
+                            UserId = userId,
+                            ProductId = item.ProductId,
+                            VariantId = item.VariantId,
+                            Quantity = 1 // Mặc định thêm 1
+                        });
                     }
                 }
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Đã thêm sản phẩm vào giỏ hàng!";
-                return RedirectToAction("Index", "Cart");
             }
 
-            return RedirectToAction(nameof(Index));
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Đã thêm sản phẩm vào giỏ hàng!";
+            return RedirectToAction("Index", "Cart");
         }
     }
 }

@@ -1,9 +1,93 @@
 ﻿@model NTN_STORE.Models.Order
-
 @{
-    ViewData["Title"] = "Chi tiết đơn hàng #" + Model.OrderCode;
+    ViewData["Title"] = "Chi tiết đơn hàng";
     Layout = "_Layout";
+
+    // Logic xác định trạng thái active của Timeline
+    int step = 0;
+    if (Model.Status == "Pending" || Model.Status == "Unpaid") { step = 1; }
+    else if (Model.Status == "Processing") { step = 2; } // Nếu bạn có trạng thái này
+    else if (Model.Status == "Shipping") { step = 3; }
+    else if (Model.Status == "Completed") { step = 4; }
+    else if (Model.Status == "Cancelled") { step = -1; }
 }
+
+<style>
+    /* TIMELINE STYLES */
+    .stepper-wrapper {
+        margin-top: 20px;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+    .stepper-item {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        z-index: 2;
+    }
+
+        .stepper-item::before {
+            position: absolute;
+            content: "";
+            border-bottom: 4px solid #ddd;
+            width: 100%;
+            top: 25px;
+            left: -50%;
+            z-index: 1;
+        }
+
+        .stepper-item:first-child::before {
+            content: none;
+        }
+
+        .stepper-item.active::before {
+            border-bottom: 4px solid #28a745;
+        }
+
+    .step-counter {
+        position: relative;
+        z-index: 3;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #ddd;
+        color: #fff;
+        margin-bottom: 10px;
+        font-size: 1.2rem;
+    }
+
+    .stepper-item.active .step-counter {
+        background-color: #28a745;
+    }
+
+    .step-name {
+        font-size: 0.9rem;
+        color: #888;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .stepper-item.active .step-name {
+        color: #28a745;
+    }
+
+    /* CANCEL STYLE */
+    .stepper-item.cancelled .step-counter {
+        background-color: #dc3545;
+    }
+
+    .stepper-item.cancelled .step-name {
+        color: #dc3545;
+    }
+</style>
 
 <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -11,49 +95,55 @@
         <span class="text-muted">MÃ ĐƠN HÀNG: #@Model.OrderCode</span>
     </div>
 
-    <div class="card border-0 shadow-sm mb-4">
+    <div class="card shadow-sm mb-4 border-0">
         <div class="card-body p-4">
-            <div class="row text-center step-container">
-                @{
-                    string s = Model.Status;
-                    bool isCancel = s == "Cancelled";
-                }
-
-                @if (!isCancel)
-                {
-                    <div class="col step active">
-                        <div class="step-icon"><i class="fas fa-file-invoice"></i></div>
-                        <p>Đã đặt hàng</p>
+            @if (step != -1)
+            {
+                <div class="stepper-wrapper">
+                    <div class="stepper-item active">
+                        <div class="step-counter"><i class="fas fa-file-invoice"></i></div>
+                        <div class="step-name">Đơn hàng đã đặt<br><small>@Model.CreatedAt.ToString("HH:mm dd/MM")</small></div>
                     </div>
-                    <div class="col step @(s == "Shipping" || s == "Completed" ? "active" : "")">
-                        <div class="step-icon"><i class="fas fa-truck"></i></div>
-                        <p>Đang giao</p>
+                    <div class="stepper-item @(step >= 2 ? "active" : "")">
+                        <div class="step-counter"><i class="fas fa-box-open"></i></div>
+                        <div class="step-name">Đã xác nhận<br><small>Shop đang đóng gói</small></div>
                     </div>
-                    <div class="col step @(s == "Completed" ? "active" : "")">
-                        <div class="step-icon"><i class="fas fa-star"></i></div>
-                        <p>Hoàn thành</p>
+                    <div class="stepper-item @(step >= 3 ? "active" : "")">
+                        <div class="step-counter"><i class="fas fa-shipping-fast"></i></div>
+                        <div class="step-name">Đang vận chuyển<br><small>Giao cho ĐVVC</small></div>
                     </div>
-                }
-                else
-                {
-                    <div class="col step active text-danger">
-                        <div class="step-icon bg-danger border-danger text-white"><i class="fas fa-times"></i></div>
-                        <p>Đã hủy</p>
+                    <div class="stepper-item @(step >= 4 ? "active" : "")">
+                        <div class="step-counter"><i class="fas fa-star"></i></div>
+                        <div class="step-name">Đã giao hàng<br><small>Thành công</small></div>
                     </div>
-                }
-            </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-danger text-center m-0">
+                    <i class="fas fa-times-circle fa-2x mb-2"></i><br>
+                    <strong>Đơn hàng đã bị hủy</strong><br>
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <span>Lý do: @Model.Notes</span>
+                    }
+                </div>
+            }
         </div>
     </div>
 
     <div class="row g-4">
         <div class="col-lg-12">
             <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h5 class="fw-bold mb-3">Địa chỉ nhận hàng</h5>
-                    <div class="ps-3 border-start border-3 border-warning">
-                        <p class="fw-bold mb-1">@Model.CustomerName</p>
-                        <p class="text-muted mb-1">@Model.PhoneNumber</p>
+                <div class="card-body bg-light rounded">
+                    <h5 class="fw-bold mb-3 text-primary"><i class="fas fa-map-marker-alt me-2"></i>Địa chỉ nhận hàng</h5>
+                    <div class="ps-4">
+                        <p class="fw-bold mb-1">@Model.CustomerName <span class="fw-normal text-muted">| @Model.PhoneNumber</span></p>
                         <p class="text-muted mb-0">@Model.Address</p>
+                        @if (!string.IsNullOrEmpty(Model.Notes))
+                        {
+                            <p class="text-warning small mt-1 fst-italic">Ghi chú: @Model.Notes</p>
+                        }
                     </div>
                 </div>
             </div>
@@ -93,63 +183,63 @@
                     </table>
                 </div>
 
-                <div class="card-footer bg-white text-end p-4">
+                <div class="card-footer bg-white p-4">
                     <div class="row justify-content-end">
-                        <div class="col-md-4">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Tổng tiền hàng</span>
-                                <span>@Model.OrderDetails.Sum(x => x.Price * x.Quantity).ToString("N0")₫</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Phí vận chuyển</span>
-                                <span>@( (Model.TotalAmount - Model.OrderDetails.Sum(x => x.Price * x.Quantity) + Model.DiscountValue).ToString("N0") )₫</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2 text-success">
-                                <span>Giảm giá</span>
-                                <span>-@Model.DiscountValue.ToString("N0")₫</span>
-                            </div>
+                        <div class="col-md-5 border-start ps-4">
+                            <div class="d-flex justify-content-between mb-2"><span>Tổng tiền hàng</span><span>@Model.OrderDetails.Sum(x => x.Price * x.Quantity).ToString("N0")₫</span></div>
+                            <div class="d-flex justify-content-between mb-2"><span>Phí vận chuyển</span><span>30,000₫</span></div> @if(Model.DiscountValue > 0) {
+                            <div class="d-flex justify-content-between mb-2 text-success"><span>Voucher giảm giá</span><span>-@Model.DiscountValue.ToString("N0")₫</span></div>
+                                                        }
                             <hr>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-bold fs-5">Thành tiền</span>
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <span class="fw-bold fs-5">Tổng thanh toán</span>
                                 <span class="fw-bold fs-4 text-danger">@Model.TotalAmount.ToString("N0")₫</span>
                             </div>
+
+                            @if (Model.Status == "Pending" || Model.Status == "Unpaid")
+                            {
+                                <button type="button" class="btn btn-outline-danger w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#cancelModal">HỦY ĐƠN HÀNG</button>
+                            }
+
+                            @if (Model.Status == "Completed" || Model.Status == "Cancelled")
+                            {
+                                <a asp-action="BuyAgain" asp-route-id="@Model.Id" class="btn btn-warning text-white w-100 fw-bold">MUA LẠI</a>
+                            }
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    @if (Model.Status == "Completed" || Model.Status == "Cancelled")
-    {
-        <div class="text-center mt-4">
-            <a asp-action="BuyAgain" asp-route-id="@Model.Id" class="btn btn-warning text-white fw-bold px-5 py-2 shadow">MUA LẠI ĐƠN NÀY</a>
-        </div>
-    }
 </div>
 
-<style>
-    .step-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: #eee;
-        color: #999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 10px;
-        border: 2px solid #ddd;
-    }
-
-    .step.active .step-icon {
-        background: #f58220;
-        color: white;
-        border-color: #f58220;
-    }
-
-    .step.active p {
-        color: #f58220;
-        font-weight: bold;
-    }
-</style>
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="CancelOrder" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Xác nhận hủy đơn</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <p>Bạn có chắc chắn muốn hủy đơn hàng này không?</p>
+                    <div class="form-group">
+                        <label class="form-label">Lý do hủy:</label>
+                        <select name="reason" class="form-select">
+                            <option>Muốn đổi địa chỉ giao hàng</option>
+                            <option>Muốn thay đổi sản phẩm (Size, Màu)</option>
+                            <option>Thủ tục thanh toán rắc rối</option>
+                            <option>Tìm thấy giá rẻ hơn ở nơi khác</option>
+                            <option>Đổi ý, không muốn mua nữa</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Không</button>
+                    <button type="submit" class="btn btn-danger">Đồng ý Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
