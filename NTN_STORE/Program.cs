@@ -32,6 +32,7 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+builder.Services.AddMemoryCache();
 var app = builder.Build();
 // Tự động chạy Seed Data khi khởi động
 using (var scope = app.Services.CreateScope())

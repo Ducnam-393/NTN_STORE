@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using NTN_STORE.Models;
 using System.IO;
-using Microsoft.AspNetCore.Hosting;
 
 namespace NTN_STORE.Areas.Admin.Controllers
 {
@@ -13,11 +14,12 @@ namespace NTN_STORE.Areas.Admin.Controllers
     {
         private readonly NTNStoreContext _context;
         private readonly IWebHostEnvironment _env;
-
-        public SlidersController(NTNStoreContext context, IWebHostEnvironment env)
+        private readonly IMemoryCache _cache;
+        public SlidersController(NTNStoreContext context, IWebHostEnvironment env, IMemoryCache cache)
         {
             _context = context;
             _env = env;
+            _cache = cache;
         }
 
         // 1. INDEX
@@ -57,6 +59,7 @@ namespace NTN_STORE.Areas.Admin.Controllers
 
             _context.Add(slider);
             await _context.SaveChangesAsync();
+            _cache.Remove("HomeData");
             return RedirectToAction(nameof(Index));
         }
 
@@ -103,6 +106,7 @@ namespace NTN_STORE.Areas.Admin.Controllers
 
                     _context.Update(slider);
                     await _context.SaveChangesAsync();
+                    _cache.Remove("HomeData");
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -122,6 +126,7 @@ namespace NTN_STORE.Areas.Admin.Controllers
             {
                 _context.Sliders.Remove(slider);
                 await _context.SaveChangesAsync();
+                _cache.Remove("HomeData");
             }
             return RedirectToAction(nameof(Index));
         }

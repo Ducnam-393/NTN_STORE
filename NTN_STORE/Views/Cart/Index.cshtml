@@ -256,32 +256,36 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function() {
-            updateTotal(); // Tính tiền lần đầu
+        // 1. KHỞI TẠO GIÁ TRỊ TỪ SERVER (ViewBag)
+        // Dùng parseFloat để đảm bảo là số
+        var currentCouponPercent = parseFloat('@(ViewBag.CouponPercent ?? 0)');
+        var currentCouponAmount = parseFloat('@(ViewBag.CouponAmount ?? 0)');
 
-            // 1. Xử lý Chọn tất cả
+        $(document).ready(function() {
+            updateTotal(); // Tính tiền ngay khi load trang
+
+            // Sự kiện chọn tất cả
             $('#selectAll').change(function() {
                 $('.item-checkbox').prop('checked', $(this).prop('checked'));
                 updateTotal();
             });
 
-            // 2. Xử lý khi bỏ chọn 1 item -> Bỏ chọn nút All
+            // Sự kiện chọn từng món
             $('.item-checkbox').change(function() {
-                if(false == $(this).prop("checked")){
-                    $("#selectAll").prop('checked', false);
-                }
-                if ($('.item-checkbox:checked').length == $('.item-checkbox').length ){
-                    $("#selectAll").prop('checked', true);
-                }
-                updateTotal();
+                // Nếu bỏ chọn 1 món -> Bỏ chọn nút All
+                var allChecked = $('.item-checkbox:checked').length === $('.item-checkbox').length;
+                $('#selectAll').prop('checked', allChecked);
+
+                updateTotal(); // Tính lại tiền ngay lập tức
             });
         });
 
-        // 3. Hàm tính tổng tiền (Frontend)
+        // 2. HÀM TÍNH TIỀN (CORE LOGIC)
         function updateTotal() {
             let subTotal = 0;
             let count = 0;
 
+            // Chỉ tính tổng tiền của các món ĐANG ĐƯỢC CHỌN (Checked)
             $('.item-checkbox:checked').each(function() {
                 let price = parseFloat($(this).data('price'));
                 let qty = parseInt($(this).data('qty'));
@@ -289,63 +293,114 @@
                 count++;
             });
 
-            // Lấy giá trị giảm giá từ Server (đang fix cứng hoặc % trên tổng cũ)
-            // Ở đây ta tạm thời hiển thị, logic chính xác sẽ do CheckoutController tính lại
-            let discount = parseFloat('@Model.DiscountAmount');
+            // Tính giảm giá (Dựa trên SubTotal của các món đã chọn)
+            let discount = 0;
+            if (count > 0) { // Chỉ giảm giá nếu có chọn sản phẩm
+                if (currentCouponPercent > 0) {
+                    discount = subTotal * currentCouponPercent / 100;
+                } else if (currentCouponAmount > 0) {
+                    discount = currentCouponAmount;
+                }
 
-            // Nếu không chọn gì thì không giảm giá
-            if(count === 0) discount = 0;
+                // Không giảm quá tổng tiền
+                if (discount > subTotal) discount = subTotal;
+            }
 
             let total = subTotal - discount;
-            if(total < 0) total = 0;
 
+            // Hiển thị ra màn hình
             $('#selectedCount').text(count + ' sản phẩm');
-            $('#subTotalDisplay').text(subTotal.toLocaleString('en-US') + '₫');
-            $('#finalTotalDisplay').text(total.toLocaleString('en-US') + '₫');
+            $('#subTotalDisplay').text(formatCurrency(subTotal));
 
-            // Disable nút mua nếu không chọn gì
+            if(discount > 0) {
+                $('#discountDisplay').text('-' + formatCurrency(discount));
+                $('#discountDisplay').addClass('text-success');
+            } else {
+                $('#discountDisplay').text('0₫');
+            }
+
+            $('#finalTotalDisplay').text(formatCurrency(total));
+
+            // Khóa nút mua nếu chưa chọn gì
             $('#btnCheckout').prop('disabled', count === 0);
+            if(count === 0) {
+                 $('#btnCheckout').css('opacity', '0.5').css('cursor', 'not-allowed');
+            } else {
+                 $('#btnCheckout').css('opacity', '1').css('cursor', 'pointer');
+            }
         }
 
-        // 4. Thay đổi số lượng (AJAX) để không reload trang
+        // 3. ÁP DỤNG MÃ (DÙNG AJAX - KHÔNG LOAD LẠI TRANG)
+        function applyCoupon() {
+            let code = $('#couponInput').val();
+            if(!code) { alert("Vui lòng nhập mã!"); return; }
+
+            // Gọi API ApplyCouponAjax trong CartController
+            $.post('/Cart/ApplyCouponAjax', { couponCode: code }, function(res) {
+                if(res.success) {
+                    // Cập nhật biến toàn cục JS
+                    currentCouponPercent = res.percent;
+                    currentCouponAmount = res.amount;
+
+                    // Cập nhật giao diện
+                    alert(res.message);
+
+                    // Cập nhật trạng thái hiển thị mã (Tùy chỉnh thêm nếu muốn ẩn ô nhập hiện ô đã dùng)
+                    // Ví dụ đơn giản: reload lại tính toán
+                    updateTotal();
+                } else {
+                    alert(res.message);
+                }
+            });
+        }
+
+        // 4. GỠ MÃ GIẢM GIÁ (NẾU CÓ NÚT GỠ)
+        // Bạn cần đảm bảo nút "Gỡ" gọi hàm này: onclick="removeCoupon()"
+        function removeCoupon() {
+             $.post('/Cart/RemoveCouponAjax', {}, function(res) {
+                if(res.success) {
+                    currentCouponPercent = 0;
+                    currentCouponAmount = 0;
+                    $('#couponInput').val('');
+                    alert(res.message);
+                    updateTotal();
+                }
+            });
+        }
+
+        // 5. CÁC HÀM KHÁC (Tăng giảm số lượng, xóa)
         function changeQty(id, change) {
             let input = $('#qty-' + id);
             let newQty = parseInt(input.val()) + change;
             if(newQty < 1) return;
 
             $.post('/Cart/UpdateCart', { cartItemId: id, quantity: newQty }, function() {
-                // Cập nhật giao diện sau khi thành công
                 input.val(newQty);
-                // Cập nhật data-qty cho checkbox để tính lại tiền
+                // Cập nhật data-qty để tính toán lại đúng
                 $('input[value="'+id+'"]').data('qty', newQty);
 
-                // Cập nhật thành tiền từng dòng
+                // Cập nhật thành tiền dòng đó
                 let price = parseFloat($('input[value="'+id+'"]').data('price'));
-                $('#total-' + id).text((price * newQty).toLocaleString('en-US') + '₫');
+                $('#total-' + id).text(formatCurrency(price * newQty));
 
                 updateTotal();
             });
         }
 
-        // 5. Xóa sản phẩm (AJAX)
         function removeItem(id) {
-            if(!confirm('Bạn muốn xóa sản phẩm này?')) return;
+            if(!confirm('Xóa sản phẩm này?')) return;
             $.post('/Cart/RemoveItem', { cartItemId: id }, function() {
-                location.reload(); // Reload để làm mới danh sách
+                // Xóa dòng tr khỏi bảng ngay lập tức
+                $('input[value="'+id+'"]').closest('tr').remove();
+                updateTotal();
+
+                // Nếu hết sản phẩm thì reload để hiện giỏ trống
+                if($('.item-checkbox').length === 0) location.reload();
             });
         }
 
-        // 6. Áp dụng mã (Submit form thường để reload tính lại discount server)
-        function applyCoupon() {
-            let code = $('#couponInput').val();
-            if(!code) return;
-            // Tạo form ẩn để submit
-            let f = document.createElement('form');
-            f.action = '/Cart/ApplyCoupon';
-            f.method = 'POST';
-            f.innerHTML = `<input type="hidden" name="couponCode" value="${code}">`;
-            document.body.appendChild(f);
-            f.submit();
+        function formatCurrency(number) {
+            return number.toLocaleString('en-US') + '₫';
         }
     </script>
 }

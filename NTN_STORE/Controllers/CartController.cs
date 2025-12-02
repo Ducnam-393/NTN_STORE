@@ -32,7 +32,7 @@ namespace NTN_STORE.Controllers
         public async Task<IActionResult> Index()
         {
             var userId = GetUserId();
-            var cartItemsFromDb = await _context.CartItems
+            var cartItemsFromDb = await _context.CartItems     
                 .Where(c => c.UserId == userId)
                 .Include(c => c.Product).ThenInclude(p => p.Images) // Lấy thông tin Sản phẩm và Ảnh
                 .Include(c => c.Variant) // Lấy thông tin Biến thể (Size, Color)
@@ -157,51 +157,45 @@ namespace NTN_STORE.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
-        // Thêm Action ApplyCoupon
         [HttpPost]
-        public async Task<IActionResult> ApplyCoupon(string couponCode)
+        public async Task<IActionResult> ApplyCouponAjax(string couponCode)
         {
             if (string.IsNullOrEmpty(couponCode))
-            {
-                TempData["CouponError"] = "Vui lòng nhập mã giảm giá.";
-                return RedirectToAction("Index");
-            }
+                return Json(new { success = false, message = "Vui lòng nhập mã!" });
 
-            var coupon = await _context.Coupons
-                .FirstOrDefaultAsync(c => c.Code == couponCode && c.IsActive);
+            var coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.Code == couponCode && c.IsActive);
 
-            if (coupon == null)
-            {
-                TempData["CouponError"] = "Mã giảm giá không tồn tại.";
-                return RedirectToAction("Index");
-            }
+            if (coupon == null) return Json(new { success = false, message = "Mã không tồn tại!" });
+            if (coupon.ExpiryDate < DateTime.Now) return Json(new { success = false, message = "Mã đã hết hạn!" });
+            if (coupon.UsageLimit > 0 && coupon.UsedCount >= coupon.UsageLimit) return Json(new { success = false, message = "Mã đã hết lượt dùng!" });
 
-            if (coupon.ExpiryDate < DateTime.Now)
-            {
-                TempData["CouponError"] = "Mã giảm giá đã hết hạn.";
-                return RedirectToAction("Index");
-            }
-
-            if (coupon.UsageLimit > 0 && coupon.UsedCount >= coupon.UsageLimit)
-            {
-                TempData["CouponError"] = "Mã giảm giá đã hết lượt sử dụng.";
-                return RedirectToAction("Index");
-            }
-
-            // Mã hợp lệ -> Lưu vào Session
+            // Lưu Session
             HttpContext.Session.SetString("CouponCode", coupon.Code);
-            TempData["CouponSuccess"] = "Áp dụng mã giảm giá thành công!";
 
-            return RedirectToAction("Index");
+            // Trả về dữ liệu cho JS tính toán
+            return Json(new
+            {
+                success = true,
+                message = "Áp dụng thành công!",
+                code = coupon.Code,
+                percent = coupon.DiscountPercent,
+                amount = coupon.DiscountAmount
+            });
         }
 
         // Thêm Action RemoveCoupon
-        public IActionResult RemoveCoupon()
+        [HttpPost]
+        public IActionResult RemoveCouponAjax()
         {
             HttpContext.Session.Remove("CouponCode");
-            TempData["CouponSuccess"] = "Đã hủy mã giảm giá.";
-            return RedirectToAction("Index");
+
+            return Json(new
+            {
+                success = true,
+                message = "Đã gỡ mã giảm giá!"
+            });
         }
+
         // API: Lấy nội dung Mini Cart (trả về PartialView HTML)
         [HttpGet]
         public async Task<IActionResult> GetMiniCart()

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using NTN_STORE.Models;
 using NTN_STORE.Models.ViewModels;
 using System.IO;
@@ -16,18 +17,21 @@ namespace NTN_STORE.Areas.Admin.Controllers
         private readonly NTNStoreContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment; // Để lưu file ảnh
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly IMemoryCache _cache;
 
-        public ProductsController(NTNStoreContext context, IWebHostEnvironment webHostEnvironment, UserManager<IdentityUser> userManager)
+        public ProductsController(NTNStoreContext context, IWebHostEnvironment webHostEnvironment, UserManager<IdentityUser> userManager, IMemoryCache cache)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
-            _userManager = userManager; // Gán giá trị
+            _userManager = userManager;
+            _cache = cache;// Gán giá trị
         }
 
         // 1. DANH SÁCH (Đã làm đẹp ở bước trước, giữ nguyên hoặc cập nhật nếu cần)
         public async Task<IActionResult> Index()
         {
             var products = await _context.Products
+                .AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
                 .Include(p => p.Images)
@@ -130,6 +134,9 @@ namespace NTN_STORE.Areas.Admin.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+                // QUAN TRỌNG: Xóa Cache sau khi lưu thành công
+                // Để trang chủ load lại sản phẩm mới vừa thêm
+                _cache.Remove("HomeData");
                 TempData["Success"] = "Thêm sản phẩm mới thành công!";
                 return RedirectToAction(nameof(Index));
             }
@@ -307,6 +314,9 @@ namespace NTN_STORE.Areas.Admin.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+                // QUAN TRỌNG: Xóa Cache sau khi lưu thành công
+                // Để trang chủ load lại sản phẩm mới vừa thêm
+                _cache.Remove("HomeData");
                 TempData["Success"] = "Cập nhật sản phẩm thành công!";
                 return RedirectToAction(nameof(Index));
             }
@@ -324,6 +334,7 @@ namespace NTN_STORE.Areas.Admin.Controllers
             {
                 _context.Products.Remove(product);
                 await _context.SaveChangesAsync();
+                _cache.Remove("HomeData");
             }
             return RedirectToAction(nameof(Index));
         }

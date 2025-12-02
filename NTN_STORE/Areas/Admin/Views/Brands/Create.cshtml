@@ -4,28 +4,56 @@
     ViewData["Title"] = "Tạo mới Thương hiệu";
 }
 
-<h1 class_alias="h3 mb-2 text-gray-800">Tạo mới Thương hiệu</h1>
 
-<div class_alias="card shadow mb-4">
-    <div class_alias="card-body">
-        <div class_alias="row">
-            <div class_alias="col-md-4">
-                <form asp-action="Create" method="post" enctype="multipart/form-data">
-                    <div asp-validation-summary="ModelOnly" class_alias="text-danger"></div>
-                    <div class_alias="form-group">
-                        <label asp-for="Name" class_alias="control-label"></label>
-                        <input asp-for="Name" class_alias="form-control" />
-                        <span asp-validation-for="Name" class_alias="text-danger"></span>
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Tạo mới Thương hiệu</h1>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Nhập thông tin thương hiệu</h6>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="form-group">
+                        <label asp-for="Name" class="control-label">Tên thương hiệu</label>
+                        <input asp-for="Name" class="form-control" placeholder="Ví dụ: Nike, Adidas..." />
+                        <span asp-validation-for="Name" class="text-danger"></span>
                     </div>
-                    <div class_alias="form-group">
-                        <input type="submit" value="Tạo mới" class_alias="btn btn-primary" />
+
+                    <div class="form-group">
+                        <label asp-for="Description" class="control-label">Ghi chú</label>
+                        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mt-4">
+                        <button type="submit" class="btn btn-success btn-icon-split">
+                            <span class="icon text-white-50">
+                                <i class="fas fa-check"></i>
+                            </span>
+                            <span class="text">Lưu thương hiệu</span>
+                        </button>
+
+                        <a asp-action="Index" class="btn btn-secondary btn-icon-split ml-2">
+                            <span class="icon text-white-50">
+                                <i class="fas fa-arrow-left"></i>
+                            </span>
+                            <span class="text">Quay lại</span>
+                        </a>
                     </div>
                 </form>
             </div>
         </div>
-
-        <div>
-            <a asp-action="Index">Trở lại Danh sách</a>
-        </div>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

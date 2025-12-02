@@ -19,6 +19,7 @@ namespace NTN_STORE.Controllers
         public async Task<IActionResult> Index()
         {
             var posts = await _context.BlogPosts
+                .AsNoTracking()
                 .Where(b => b.IsVisible)
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
