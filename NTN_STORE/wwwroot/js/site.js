@@ -15,19 +15,6 @@ function closeMiniCart() {
     $('.offcanvas-minicart').removeClass('open');
 }
 
-// Hàm xóa item từ Mini Cart
-function removeFromMiniCart(id) {
-    $.post('/Cart/RemoveFromMiniCart', { id: id }, function (res) {
-        if (res.success) {
-            // Reload lại nội dung cart
-            $.get('/Cart/GetMiniCart', function (html) {
-                $('#miniCartContent').html(html);
-                // Cập nhật badge số lượng trên Header (nếu có function đó)
-            });
-        }
-    });
-}
-
 // Bắt sự kiện khi bấm "Thêm vào giỏ" ở trang Detail hoặc Product Card
 // Lưu ý: Cần sửa nút submit form thành button thường và gọi hàm này
 function ajaxAddToCart(formId) {
@@ -40,4 +27,57 @@ function ajaxAddToCart(formId) {
         window.location.href = '/Identity/Account/Login';
     });
     return false; // Chặn submit form thường
+}
+// Hàm xóa item từ Mini Cart (AJAX)
+function removeFromMiniCart(id) {
+     var btn = event.currentTarget;
+    $(btn).closest('li').css('opacity', '0.5');
+    $.post('/Cart/RemoveFromMiniCart', { id: id }, function (res) {
+        if (res.success) {
+            // Reload lại nội dung cart sau khi xóa thành công
+            $.get('/Cart/GetMiniCart', function (html) {
+                $('#miniCartContent').html(html);
+                
+                 updateCartBadge(); 
+            });
+        } else {
+            alert('Có lỗi xảy ra khi xóa sản phẩm.');
+            $(btn).closest('li').css('opacity', '1'); // Hồi phục nếu lỗi
+        }
+    });
+}
+
+// Hàm đóng Mini Cart
+function closeMiniCart() {
+    $('.offcanvas-minicart').removeClass('open');
+}
+function ajaxAddWishlist(e, id, element) {
+    // Hiệu ứng click (nảy nhẹ)
+    $(element).find('i').addClass('animate__animated animate__heartBeat');
+
+    $.post('/Wishlist/AddAjax', { id: id }, function (res) {
+        if (res.success) {
+            // 1. Đổi icon trái tim rỗng (far) thành đặc (fas) và màu đỏ
+            var icon = $('#wish-icon-' + id);
+            icon.removeClass('far').addClass('fas text-danger');
+
+            // 2. Cập nhật số lượng trên Header (nếu bạn có span class="badge-counter" cho wishlist)
+            // Giả sử icon wishlist trên header có id="wishlist-badge-count"
+            $('.wishlist-badge-count').text(res.count);
+            $('.wishlist-badge-count').show(); // Hiện nếu đang ẩn
+
+            // 3. Thông báo nhỏ (Toast hoặc Alert) - Tùy chọn
+            // alert(res.message); 
+        } else {
+            if (res.requireLogin) {
+                // Nếu chưa đăng nhập -> chuyển sang trang login
+                window.location.href = '/Identity/Account/Login';
+            } else {
+                // Đã có rồi -> Thông báo
+                alert(res.message);
+                // Hoặc đổi màu icon để báo đã có
+                $('#wish-icon-' + id).removeClass('far').addClass('fas text-danger');
+            }
+        }
+    });
 }

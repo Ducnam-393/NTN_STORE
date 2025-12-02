@@ -199,26 +199,4 @@ body {
     border-top: 1px solid #eee;
     background: #f9f9f9;
 }
-// Hàm xóa item từ Mini Cart (AJAX)
-function removeFromMiniCart(id) {
-    // Hiệu ứng mờ đi để biết đang xóa var btn = event.currentTarget;
-    // Lấy nút vừa bấm $(btn).closest('li').css('opacity', '0.5');
-    $.post('/Cart/RemoveFromMiniCart', { id: id }, function(res) {
-        if (res.success) {
-            // Reload lại nội dung cart sau khi xóa thành công
-            $.get('/Cart/GetMiniCart', function(html) {
-                $('#miniCartContent').html(html);
-                // Nếu bạn có hàm cập nhật số lượng trên header thì gọi ở đây
-                // updateCartBadge(); 
-            });
-        } else {
-            alert('Có lỗi xảy ra khi xóa sản phẩm.');
-            $(btn).closest('li').css('opacity', '1'); // Hồi phục nếu lỗi
-        }
-    });
-}
 
-// Hàm đóng Mini Cart
-function closeMiniCart() {
-    $('.offcanvas-minicart').removeClass('open');
-}

@@ -338,5 +338,45 @@ namespace NTN_STORE.Areas.Admin.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
+        // GET: Admin/Products/Details/5
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var product = await _context.Products
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Include(p => p.Images)
+                .Include(p => p.Variants)
+                .Include(p => p.Reviews)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (product == null) return NotFound();
+
+            // --- TÍNH TOÁN THỐNG KÊ ---
+            // 1. Tổng số lượng đã bán (Chỉ tính đơn thành công/đang giao)
+            var salesData = await _context.OrderDetails
+                .Include(od => od.Order)
+                .Where(od => od.ProductId == id && (od.Order.Status == "Completed" || od.Order.Status == "Shipped"))
+                .ToListAsync();
+
+            int totalSold = salesData.Sum(od => od.Quantity);
+            decimal totalRevenue = salesData.Sum(od => od.Price * od.Quantity);
+
+            // 2. Tổng tồn kho hiện tại
+            int totalStock = product.Variants?.Sum(v => v.Stock) ?? 0;
+
+            // 3. Lợi nhuận ước tính (Doanh thu - Vốn của hàng đã bán)
+            // Lưu ý: Giá nhập có thể thay đổi, ở đây lấy giá nhập hiện tại để ước tính
+            decimal estimatedProfit = totalRevenue - (totalSold * product.ImportPrice);
+
+            // Truyền dữ liệu qua ViewBag
+            ViewBag.TotalSold = totalSold;
+            ViewBag.TotalRevenue = totalRevenue;
+            ViewBag.TotalStock = totalStock;
+            ViewBag.EstimatedProfit = estimatedProfit;
+
+            return View(product);
+        }
     }
 }

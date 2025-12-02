@@ -165,8 +165,8 @@
                     <input type="hidden" name="quantity" value="1">
                     <button type="submit" class="btn-action"><i class="fa fa-shopping-cart"></i></button>
                 </form>
-                <a class="btn-action" asp-controller="Wishlist" asp-action="Add" asp-route-id="@Model.Id" title="Yêu thích">
-                    <i class="far fa-heart"></i>
+                <a class="btn-action" href="javascript:void(0);" onclick="ajaxAddWishlist(event, @Model.Id, this)" title="Yêu thích">
+                    <i class="far fa-heart" id="wish-icon-@Model.Id"></i>
                 </a>
             </div>
         </div>
