@@ -12,7 +12,7 @@ namespace NTN_STORE.Models
 
         public string UserId { get; set; }
         [ForeignKey("UserId")]
-        public IdentityUser? User { get; set; }
+        public ApplicationUser? User { get; set; }
 
         public int Rating { get; set; }
         public string Comment { get; set; }

@@ -19,9 +19,9 @@ namespace NTN_STORE.Areas.Admin.Controllers
     public class InventoryController : Controller
     {
         private readonly NTNStoreContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public InventoryController(NTNStoreContext context, UserManager<IdentityUser> userManager)
+        public InventoryController(NTNStoreContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;

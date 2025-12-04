@@ -1,0 +1,150 @@
+﻿@model IEnumerable<NTN_STORE.Models.UserAddress>
+
+@{
+    ViewData["Title"] = "Sổ địa chỉ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="bg-light py-5" style="min-height: 85vh;">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold text-dark mb-0 text-uppercase">Sổ địa chỉ</h2>
+                <p class="text-dark opacity-75 mt-1">Quản lý nơi nhận hàng của bạn</p>
+            </div>
+            <a asp-action="Create" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
+                <i class="fas fa-plus me-2"></i>Thêm địa chỉ
+            </a>
+        </div>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success shadow-sm border-0 mb-4">
+                <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            </div>
+        }
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5 bg-white rounded-3 shadow-sm">
+                <img src="https://cdn-icons-png.flaticon.com/512/4076/4076432.png" style="width: 80px; opacity: 0.6;" class="mb-3" alt="Empty" />
+                <h5 class="fw-bold text-dark">Chưa có địa chỉ nào</h5>
+                <p class="text-muted">Thêm địa chỉ ngay để mua hàng nhanh chóng hơn.</p>
+                <a asp-action="Create" class="btn btn-outline-primary mt-2">Thêm mới ngay</a>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var item in Model)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 border-0 shadow-sm address-card @(item.IsDefault ? "default-active" : "")">
+
+                            @if (item.IsDefault)
+                            {
+                                <div class="default-badge">
+                                    <i class="fas fa-check me-1"></i> Mặc định
+                                </div>
+                            }
+
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                                    <div class="icon-box bg-light text-primary me-3">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0" style="font-size: 1.1rem;">@item.FullName</h6>
+                                        <span class="fw-bold text-secondary" style="font-size: 0.95rem;">@item.PhoneNumber</span>
+                                    </div>
+                                </div>
+
+                                <div class="address-info mb-4">
+                                    <div class="d-flex mb-2">
+                                        <i class="fas fa-home text-warning me-2 mt-1" style="width: 20px;"></i>
+                                        <span class="text-dark fw-bold">@item.Address</span>
+                                    </div>
+                                    <div class="d-flex mb-2">
+                                        <i class="fas fa-map-signs text-secondary me-2 mt-1" style="width: 20px;"></i>
+                                        <span class="text-dark">@item.Ward, @item.District</span>
+                                    </div>
+                                    <div class="d-flex">
+                                        <i class="fas fa-city text-primary me-2 mt-1" style="width: 20px;"></i>
+                                        <span class="text-primary fw-bold text-uppercase">@item.Province</span>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-between pt-2">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-light border flex-grow-1 me-2 fw-bold text-dark">
+                                        Sửa
+                                    </a>
+
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger border-0" title="Xóa">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    /* Card Style */
+    .address-card {
+        background: #fff;
+        border-radius: 16px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #eee !important; /* Viền mỏng để tách biệt */
+    }
+
+        .address-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+            border-color: #f58220 !important;
+        }
+
+    /* Style cho thẻ mặc định */
+    .default-active {
+        border: 2px solid #f58220 !important;
+        background-color: #fffbf5; /* Nền vàng siêu nhạt */
+    }
+
+    .default-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: #f58220;
+        color: white;
+        padding: 6px 12px;
+        border-bottom-left-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    /* Icon Box */
+    .icon-box {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 1.2rem;
+    }
+
+    /* Text Tweaks */
+    .text-dark {
+        color: #212529 !important;
+    }
+    /* Đen đậm */
+    .text-secondary {
+        color: #6c757d !important;
+    }
+    /* Xám đậm vừa phải */
+</style>

@@ -24,10 +24,10 @@ namespace NTN_STORE.Models
         public decimal TotalAmount { get; set; } // Tổng tiền
         public string Status { get; set; } // Ví dụ: "Pending", "Processing", "Completed"
         public DateTime CreatedAt { get; set; } = DateTime.Now;
-
+        public string PaymentMethod { get; set; } = "COD"; // Mặc định là COD
         // Khóa ngoại tới người dùng
         public string? UserId { get; set; }
-        public virtual IdentityUser ? User { get; set; } 
+        public virtual ApplicationUser ? User { get; set; } 
 
         // Quan hệ 1-Nhiều
         public ICollection<OrderDetail> OrderDetails { get; set; }

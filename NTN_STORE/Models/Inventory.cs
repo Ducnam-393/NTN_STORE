@@ -12,7 +12,7 @@ namespace NTN_STORE.Models
 
         public string UserId { get; set; } // Người nhập
         [ForeignKey("UserId")]
-        public IdentityUser User { get; set; }
+        public ApplicationUser User { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public string Note { get; set; } // Ghi chú (VD: Nhập hàng vụ Đông)

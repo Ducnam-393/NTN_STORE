@@ -10,9 +10,9 @@ namespace NTN_STORE.Controllers
     public class WishlistController : Controller
     {
         private readonly NTNStoreContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public WishlistController(NTNStoreContext context, UserManager<IdentityUser> userManager)
+        public WishlistController(NTNStoreContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;

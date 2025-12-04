@@ -178,9 +178,18 @@
                                         <td class="text-center">
                                             <div class="qty-control">
                                                 <button type="button" class="qty-btn" onclick="changeQty(@item.Id, -1)">-</button>
+
                                                 <input type="text" class="qty-input" id="qty-@item.Id" value="@item.Quantity" readonly>
+
                                                 <button type="button" class="qty-btn" onclick="changeQty(@item.Id, 1)">+</button>
                                             </div>
+
+                                            @if (item.Quantity > item.Variant.Stock)
+                                            {
+                                                <div class="text-danger small mt-1">
+                                                    <i class="fas fa-exclamation-circle"></i> Kho chỉ còn @item.Variant.Stock. Vui lòng giảm SL.
+                                                </div>
+                                            }
                                         </td>
                                         <td class="text-end fw-bold text-danger price-total" id="total-@item.Id">
                                             @((item.Product.Price * item.Quantity).ToString("N0"))₫
@@ -207,20 +216,28 @@
 
             <div class="col-lg-4">
                 <div class="order-summary">
-                    <div class="mb-3 pb-3 border-bottom">
-                        <h6 class="fw-bold mb-3">MÃ GIẢM GIÁ</h6>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mã giảm giá</label>
+
                         @if (string.IsNullOrEmpty(Model.AppliedCoupon))
                         {
                             <div class="input-group">
-                                <input type="text" id="couponInput" class="form-control text-uppercase" placeholder="Nhập mã voucher">
-                                <button type="button" onclick="applyCoupon()" class="btn btn-dark">Áp dụng</button>
+                                <input type="text" id="couponCodeInput" class="form-control" placeholder="Nhập mã voucher">
+                                <button class="btn btn-dark" type="button" onclick="applyCoupon()">Áp dụng</button>
                             </div>
                         }
                         else
                         {
-                            <div class="alert alert-success d-flex justify-content-between align-items-center p-2 mb-0 small">
-                                <span>Mã <b>@Model.AppliedCoupon</b></span>
-                                <a href="/Cart/RemoveCoupon" class="text-danger fw-bold text-decoration-none">Gỡ</a>
+                            <div class="alert alert-success d-flex justify-content-between align-items-center p-2 mb-0">
+                                <div>
+                                    <i class="fas fa-check-circle me-1"></i> Mã: <strong>@Model.AppliedCoupon</strong>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger border-0" onclick="removeCoupon()" title="Gỡ mã">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="text-success small mt-1">
+                                Bạn được giảm @Model.DiscountAmount.ToString("N0")₫
                             </div>
                         }
                     </div>
@@ -255,152 +272,243 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
-        // 1. KHỞI TẠO GIÁ TRỊ TỪ SERVER (ViewBag)
-        // Dùng parseFloat để đảm bảo là số
-        var currentCouponPercent = parseFloat('@(ViewBag.CouponPercent ?? 0)');
-        var currentCouponAmount = parseFloat('@(ViewBag.CouponAmount ?? 0)');
-
-        $(document).ready(function() {
-            updateTotal(); // Tính tiền ngay khi load trang
-
-            // Sự kiện chọn tất cả
-            $('#selectAll').change(function() {
-                $('.item-checkbox').prop('checked', $(this).prop('checked'));
-                updateTotal();
-            });
-
-            // Sự kiện chọn từng món
-            $('.item-checkbox').change(function() {
-                // Nếu bỏ chọn 1 món -> Bỏ chọn nút All
-                var allChecked = $('.item-checkbox:checked').length === $('.item-checkbox').length;
-                $('#selectAll').prop('checked', allChecked);
-
-                updateTotal(); // Tính lại tiền ngay lập tức
-            });
+        // --- 1. CẤU HÌNH TOAST (Thông báo góc phải) ---
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
         });
 
-        // 2. HÀM TÍNH TIỀN (CORE LOGIC)
-        function updateTotal() {
-            let subTotal = 0;
-            let count = 0;
+        // --- 2. HÀM GỌI AJAX SERVER (Logic chính) ---
+        function updateCartQuantity(itemId, newQuantity, inputElement) {
+            $.ajax({
+                url: '/Cart/UpdateCart',
+                type: 'POST',
+                data: {
+                    cartItemId: itemId,
+                    quantity: newQuantity
+                },
+                success: function (res) {
+                    if (res.reload) {
+                        // Nếu thành công -> Reload trang để tính lại tiền
+                        location.reload();
+                    }
+                    else if (res.isMax) {
+                        // --- ĐÂY LÀ CHỖ HIỆN THÔNG BÁO TỪ SERVER ---
 
-            // Chỉ tính tổng tiền của các món ĐANG ĐƯỢC CHỌN (Checked)
-            $('.item-checkbox:checked').each(function() {
-                let price = parseFloat($(this).data('price'));
-                let qty = parseInt($(this).data('qty'));
-                subTotal += price * qty;
-                count++;
-            });
+                        // 1. Hiện Toast cảnh báo
+                        Toast.fire({
+                            icon: 'warning',
+                            title: res.message // Message từ Controller gửi về
+                        });
 
-            // Tính giảm giá (Dựa trên SubTotal của các món đã chọn)
-            let discount = 0;
-            if (count > 0) { // Chỉ giảm giá nếu có chọn sản phẩm
-                if (currentCouponPercent > 0) {
-                    discount = subTotal * currentCouponPercent / 100;
-                } else if (currentCouponAmount > 0) {
-                    discount = currentCouponAmount;
-                }
-
-                // Không giảm quá tổng tiền
-                if (discount > subTotal) discount = subTotal;
-            }
-
-            let total = subTotal - discount;
-
-            // Hiển thị ra màn hình
-            $('#selectedCount').text(count + ' sản phẩm');
-            $('#subTotalDisplay').text(formatCurrency(subTotal));
-
-            if(discount > 0) {
-                $('#discountDisplay').text('-' + formatCurrency(discount));
-                $('#discountDisplay').addClass('text-success');
-            } else {
-                $('#discountDisplay').text('0₫');
-            }
-
-            $('#finalTotalDisplay').text(formatCurrency(total));
-
-            // Khóa nút mua nếu chưa chọn gì
-            $('#btnCheckout').prop('disabled', count === 0);
-            if(count === 0) {
-                 $('#btnCheckout').css('opacity', '0.5').css('cursor', 'not-allowed');
-            } else {
-                 $('#btnCheckout').css('opacity', '1').css('cursor', 'pointer');
-            }
-        }
-
-        // 3. ÁP DỤNG MÃ (DÙNG AJAX - KHÔNG LOAD LẠI TRANG)
-        function applyCoupon() {
-            let code = $('#couponInput').val();
-            if(!code) { alert("Vui lòng nhập mã!"); return; }
-
-            // Gọi API ApplyCouponAjax trong CartController
-            $.post('/Cart/ApplyCouponAjax', { couponCode: code }, function(res) {
-                if(res.success) {
-                    // Cập nhật biến toàn cục JS
-                    currentCouponPercent = res.percent;
-                    currentCouponAmount = res.amount;
-
-                    // Cập nhật giao diện
-                    alert(res.message);
-
-                    // Cập nhật trạng thái hiển thị mã (Tùy chỉnh thêm nếu muốn ẩn ô nhập hiện ô đã dùng)
-                    // Ví dụ đơn giản: reload lại tính toán
-                    updateTotal();
-                } else {
-                    alert(res.message);
+                        // 2. Reset số lượng ô input về mức tối đa
+                        if(inputElement){
+                            $(inputElement).val(res.maxStock);
+                        }
+                    }
+                },
+                error: function () {
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Lỗi kết nối server!'
+                    });
                 }
             });
         }
 
-        // 4. GỠ MÃ GIẢM GIÁ (NẾU CÓ NÚT GỠ)
-        // Bạn cần đảm bảo nút "Gỡ" gọi hàm này: onclick="removeCoupon()"
-        function removeCoupon() {
-             $.post('/Cart/RemoveCouponAjax', {}, function(res) {
-                if(res.success) {
-                    currentCouponPercent = 0;
-                    currentCouponAmount = 0;
-                    $('#couponInput').val('');
-                    alert(res.message);
-                    updateTotal();
-                }
-            });
-        }
-
-        // 5. CÁC HÀM KHÁC (Tăng giảm số lượng, xóa)
+        // --- 3. HÀM XỬ LÝ KHI BẤM NÚT +/- ---
         function changeQty(id, change) {
             let input = $('#qty-' + id);
-            let newQty = parseInt(input.val()) + change;
-            if(newQty < 1) return;
+            let currentQty = parseInt(input.val());
 
-            $.post('/Cart/UpdateCart', { cartItemId: id, quantity: newQty }, function() {
-                input.val(newQty);
-                // Cập nhật data-qty để tính toán lại đúng
-                $('input[value="'+id+'"]').data('qty', newQty);
+            // Tính số lượng mới
+            let newQty = currentQty + change;
 
-                // Cập nhật thành tiền dòng đó
-                let price = parseFloat($('input[value="'+id+'"]').data('price'));
-                $('#total-' + id).text(formatCurrency(price * newQty));
+            // Chặn số âm (Local check cái này ok)
+            if (newQty < 1) return;
 
-                updateTotal();
+            // === QUAN TRỌNG: ĐÃ XÓA CHECK MAX STOCK Ở ĐÂY ===
+            // Gửi thẳng lên server để server kiểm tra
+            updateCartQuantity(id, newQty, input);
+        }
+
+        // 1. KHỞI TẠO GIÁ TRỊ TỪ SERVER (ViewBag)
+         // Dùng parseFloat để đảm bảo là số
+         var currentCouponPercent = parseFloat('@(ViewBag.CouponPercent ?? 0)');
+         var currentCouponAmount = parseFloat('@(ViewBag.CouponAmount ?? 0)');
+
+         $(document).ready(function() {
+             updateTotal(); // Tính tiền ngay khi load trang
+
+             // Sự kiện chọn tất cả
+             $('#selectAll').change(function() {
+                 $('.item-checkbox').prop('checked', $(this).prop('checked'));
+                 updateTotal();
+             });
+
+             // Sự kiện chọn từng món
+             $('.item-checkbox').change(function() {
+                 // Nếu bỏ chọn 1 món -> Bỏ chọn nút All
+                 var allChecked = $('.item-checkbox:checked').length === $('.item-checkbox').length;
+                 $('#selectAll').prop('checked', allChecked);
+
+                 updateTotal(); // Tính lại tiền ngay lập tức
+             });
+         });
+
+         // 2. HÀM TÍNH TIỀN (CORE LOGIC)
+         function updateTotal() {
+             let subTotal = 0;
+             let count = 0;
+
+             // Chỉ tính tổng tiền của các món ĐANG ĐƯỢC CHỌN (Checked)
+             $('.item-checkbox:checked').each(function() {
+                 let price = parseFloat($(this).data('price'));
+                 let qty = parseInt($(this).data('qty'));
+                 subTotal += price * qty;
+                 count++;
+             });
+
+             // Tính giảm giá (Dựa trên SubTotal của các món đã chọn)
+             let discount = 0;
+             if (count > 0) { // Chỉ giảm giá nếu có chọn sản phẩm
+                 if (currentCouponPercent > 0) {
+                     discount = subTotal * currentCouponPercent / 100;
+                 } else if (currentCouponAmount > 0) {
+                     discount = currentCouponAmount;
+                 }
+
+                 // Không giảm quá tổng tiền
+                 if (discount > subTotal) discount = subTotal;
+             }
+
+             let total = subTotal - discount;
+
+             // Hiển thị ra màn hình
+             $('#selectedCount').text(count + ' sản phẩm');
+             $('#subTotalDisplay').text(formatCurrency(subTotal));
+
+             if(discount > 0) {
+                 $('#discountDisplay').text('-' + formatCurrency(discount));
+                 $('#discountDisplay').addClass('text-success');
+             } else {
+                 $('#discountDisplay').text('0₫');
+             }
+
+             $('#finalTotalDisplay').text(formatCurrency(total));
+
+             // Khóa nút mua nếu chưa chọn gì
+             $('#btnCheckout').prop('disabled', count === 0);
+             if(count === 0) {
+                  $('#btnCheckout').css('opacity', '0.5').css('cursor', 'not-allowed');
+             } else {
+                  $('#btnCheckout').css('opacity', '1').css('cursor', 'pointer');
+             }
+         }
+
+         // 1. Hàm Áp dụng mã (AJAX)
+        function applyCoupon() {
+            var code = $('#couponCodeInput').val();
+            if (!code) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Chưa nhập mã',
+                    text: 'Vui lòng nhập mã giảm giá!',
+                    confirmButtonColor: '#f58220'
+                });
+                return;
+            }
+
+            $.post('/Cart/ApplyCouponAjax', { couponCode: code }, function (res) {
+                if (res.success) {
+                    // Thành công -> Thông báo đẹp & Reload để cập nhật giá
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Thành công!',
+                        text: res.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    // Thất bại -> Báo lỗi đẹp
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Không thể áp dụng',
+                        text: res.message,
+                        confirmButtonColor: '#d33'
+                    });
+                }
             });
         }
 
-        function removeItem(id) {
-            if(!confirm('Xóa sản phẩm này?')) return;
-            $.post('/Cart/RemoveItem', { cartItemId: id }, function() {
-                // Xóa dòng tr khỏi bảng ngay lập tức
-                $('input[value="'+id+'"]').closest('tr').remove();
-                updateTotal();
+        // 2. Hàm Gỡ mã (AJAX)
+        function removeCoupon() {
+            $.post('/Cart/RemoveCouponAjax', function (res) {
+                if (res.success) {
+                    // Gỡ xong -> Thông báo & Reload
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true
+                    });
 
-                // Nếu hết sản phẩm thì reload để hiện giỏ trống
-                if($('.item-checkbox').length === 0) location.reload();
+                    Toast.fire({
+                        icon: 'success',
+                        title: res.message
+                    }).then(() => {
+                        location.reload();
+                    });
+                }
             });
         }
 
-        function formatCurrency(number) {
-            return number.toLocaleString('en-US') + '₫';
-        }
+         // 5. CÁC HÀM KHÁC (Tăng giảm số lượng, xóa)
+         function changeQty(id, change) {
+             let input = $('#qty-' + id);
+             let newQty = parseInt(input.val()) + change;
+             if(newQty < 1) return;
+
+             $.post('/Cart/UpdateCart', { cartItemId: id, quantity: newQty }, function() {
+                 input.val(newQty);
+                 // Cập nhật data-qty để tính toán lại đúng
+                 $('input[value="'+id+'"]').data('qty', newQty);
+
+                 // Cập nhật thành tiền dòng đó
+                 let price = parseFloat($('input[value="'+id+'"]').data('price'));
+                 $('#total-' + id).text(formatCurrency(price * newQty));
+
+                 updateTotal();
+             });
+         }
+
+         function removeItem(id) {
+             if(!confirm('Xóa sản phẩm này?')) return;
+             $.post('/Cart/RemoveItem', { cartItemId: id }, function() {
+                 // Xóa dòng tr khỏi bảng ngay lập tức
+                 $('input[value="'+id+'"]').closest('tr').remove();
+                 updateTotal();
+
+                 // Nếu hết sản phẩm thì reload để hiện giỏ trống
+                 if($('.item-checkbox').length === 0) location.reload();
+             });
+         }
+
+         function formatCurrency(number) {
+             return number.toLocaleString('en-US') + '₫';
+         }
     </script>
 }

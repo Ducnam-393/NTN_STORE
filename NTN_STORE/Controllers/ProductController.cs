@@ -11,9 +11,9 @@ namespace NTN_STORE.Controllers
     public class ProductController : Controller
     {
         private readonly NTNStoreContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public ProductController(NTNStoreContext context, UserManager<IdentityUser> userManager)
+        public ProductController(NTNStoreContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;

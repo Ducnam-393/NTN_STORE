@@ -1,58 +1,141 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Thông tin cá nhân";
+    ViewData["Title"] = "Hồ sơ của tôi";
     ViewData["ActivePage"] = ManageNavPages.Index;
 }
 
-<div class="container-fluid bg-dark mb-30">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <nav class="breadcrumb bg-transparent mb-0">
-                <a class="breadcrumb-item" asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a>
-                <span class="breadcrumb-item active">@ViewData["Title"]</span>
-            </nav>
-        </div>
-    </div>
-</div>
-<div class="container-fluid pt-5 pb-3">
-    <div class="row px-xl-5">
+<div class="container py-5" style="background-color: #f5f5f5;">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-transparent p-0">
+            <li class="breadcrumb-item"><a href="/" class="text-muted text-decoration-none">Trang chủ</a></li>
+            <li class="breadcrumb-item active text-dark">Hồ sơ cá nhân</li>
+        </ol>
+    </nav>
 
-        <div class="col-md-3">
+    <div class="row">
+        <div class="col-lg-3 mb-4">
+            <div class="d-flex align-items-center mb-3 px-2">
+                <img src="@(Model.CurrentAvatar ?? "/img/undraw_profile.svg")" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
+                <div class="ms-3">
+                    <div class="fw-bold text-dark">@User.Identity?.Name</div>
+                    <small class="text-muted"><i class="fas fa-pen"></i> Sửa hồ sơ</small>
+                </div>
+            </div>
+
             <partial name="_ManageNav" />
         </div>
 
-        <div class="col-md-9">
+        <div class="col-lg-9">
+            <div class="card border-0 shadow-sm rounded-3">
+                <div class="card-body p-4">
+                    <div class="border-bottom pb-3 mb-4">
+                        <h5 class="fw-bold text-dark mb-1">Hồ Sơ Của Tôi</h5>
+                        <div class="text-muted small">Quản lý thông tin hồ sơ để bảo mật tài khoản</div>
+                    </div>
 
-            @* <h4>@ViewData["Title"]</h4> *@ 
-            
-            <partial name="_StatusMessage" for="StatusMessage" />
+                    <partial name="_StatusMessage" for="StatusMessage" />
 
-            <div class="row">
-                <div class="col-md-8">
-                    <form id="profile-form" method="post" class="bg-light p-30">
-                        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+                    <form id="profile-form" method="post" enctype="multipart/form-data">
+                        <div class="row flex-column-reverse flex-md-row">
+                            <div class="col-md-8 pe-md-5 border-end">
+                                <div class="mb-3 row align-items-center">
+                                    <label class="col-sm-3 col-form-label text-end text-muted">Email</label>
+                                    <div class="col-sm-9">
+                                        <div class="d-flex align-items-center">
+                                            <span class="me-2">@User.Identity?.Name</span>
+                                            <a asp-page="./Email" class="text-primary small text-decoration-none">Thay đổi</a>
+                                        </div>
+                                    </div>
+                                </div>
 
-                        <div class="form-group mb-3">
-                            <label asp-for="Username" class="form-label"></label>
-                            <input asp-for="Username" class="form-control" disabled />
+                                <div class="mb-3 row align-items-center">
+                                    <label asp-for="Input.FullName" class="col-sm-3 col-form-label text-end text-muted">Họ tên</label>
+                                    <div class="col-sm-9">
+                                        <input asp-for="Input.FullName" class="form-control" placeholder="Nhập họ tên đầy đủ" />
+                                    </div>
+                                </div>
+
+                                <div class="mb-3 row align-items-center">
+                                    <label asp-for="Input.PhoneNumber" class="col-sm-3 col-form-label text-end text-muted">Số điện thoại</label>
+                                    <div class="col-sm-9">
+                                        <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Nhập số điện thoại" />
+                                        <span asp-validation-for="Input.PhoneNumber" class="text-danger small"></span>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3 row align-items-center">
+                                    <label class="col-sm-3 col-form-label text-end text-muted">Giới tính</label>
+                                    <div class="col-sm-9">
+                                        <div class="d-flex gap-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" asp-for="Input.Gender" value="Nam" id="genderMale">
+                                                <label class="form-check-label" for="genderMale">Nam</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" asp-for="Input.Gender" value="Nữ" id="genderFemale">
+                                                <label class="form-check-label" for="genderFemale">Nữ</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" asp-for="Input.Gender" value="Khác" id="genderOther">
+                                                <label class="form-check-label" for="genderOther">Khác</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4 row align-items-center">
+                                    <label asp-for="Input.DateOfBirth" class="col-sm-3 col-form-label text-end text-muted">Ngày sinh</label>
+                                    <div class="col-sm-9">
+                                        <input asp-for="Input.DateOfBirth" class="form-control w-50" type="date" />
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-sm-9 offset-sm-3">
+                                        <button id="update-profile-button" type="submit" class="btn btn-warning text-white px-4 fw-bold shadow-sm">Lưu Thay Đổi</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 text-center mb-4 mb-md-0">
+                                <div class="position-relative d-inline-block mb-3">
+                                    <img id="avatarPreview" src="@(Model.CurrentAvatar ?? "/img/undraw_profile.svg")"
+                                         class="rounded-circle border border-3 border-white shadow-sm"
+                                         style="width: 140px; height: 140px; object-fit: cover; background: #eee;">
+
+                                    <label for="imageUpload" class="btn btn-light btn-sm position-absolute bottom-0 end-0 rounded-circle shadow-sm border"
+                                           style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;"
+                                           title="Chọn ảnh">
+                                        <i class="fas fa-camera text-secondary"></i>
+                                    </label>
+                                    <input type="file" asp-for="Input.ProfilePicture" id="imageUpload" hidden accept="image/*" onchange="previewAvatar(this)">
+                                </div>
+
+                                <div class="text-muted small">
+                                    <div>Dụng lượng file tối đa 1 MB</div>
+                                    <div>Định dạng: .JPEG, .PNG</div>
+                                </div>
+                            </div>
                         </div>
-
-                        <div class="form-group mb-3">
-                            <label asp-for="Input.PhoneNumber" class="form-label"></label>
-                            <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Nhập số điện thoại của bạn..." />
-                            <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
-                        </div>
-
-                        <button id="update-profile-button" type="submit" class="btn btn-primary">Lưu thay đổi</button>
                     </form>
                 </div>
             </div>
         </div>
-
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('avatarPreview').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>
 }

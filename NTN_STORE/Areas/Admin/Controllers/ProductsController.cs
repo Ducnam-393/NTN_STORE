@@ -16,10 +16,10 @@ namespace NTN_STORE.Areas.Admin.Controllers
     {
         private readonly NTNStoreContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment; // Để lưu file ảnh
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMemoryCache _cache;
 
-        public ProductsController(NTNStoreContext context, IWebHostEnvironment webHostEnvironment, UserManager<IdentityUser> userManager, IMemoryCache cache)
+        public ProductsController(NTNStoreContext context, IWebHostEnvironment webHostEnvironment, UserManager<ApplicationUser> userManager, IMemoryCache cache)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;

@@ -13,7 +13,7 @@ builder.Services.AddControllersWithViews()
     });
 builder.Services.AddDbContext<NTNStoreContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddDefaultIdentity<IdentityUser>(options => {
+builder.Services.AddDefaultIdentity<ApplicationUser>(options => {
     // Tùy chọn: Cấu hình mật khẩu (ví dụ: không cần ký tự đặc biệt)
     options.SignIn.RequireConfirmedAccount = false; // Tắt yêu cầu xác thực email (làm sau)
     options.Password.RequireDigit = false;
@@ -33,6 +33,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 builder.Services.AddMemoryCache();
+
 var app = builder.Build();
 // Tự động chạy Seed Data khi khởi động
 using (var scope = app.Services.CreateScope())

@@ -573,7 +573,7 @@
                 }
             </div>
 
-            <form asp-controller="Cart" asp-action="AddToCart" method="post" id="addToCartForm">
+            <form asp-controller="Cart" asp-action="AddToCart" method="post" id="addToCartForm" onsubmit="return ajaxAddToCart(this)">
                 <input type="hidden" name="productId" value="@Model.Product.Id" />
                 <input type="hidden" id="selectedVariantId" name="variantId" required />
 
@@ -632,11 +632,11 @@
                         <input type="email" id="notifyEmail" class="form-control" placeholder="Nhập email của bạn...">
                         <button type="button" class="btn btn-warning text-white fw-bold" onclick="registerNotify()">Đăng ký nhận tin</button>
                     </div>
-                </div>                
+                </div>
             </form>
 
             <div class="row mt-4 pt-4 border-top g-3">
-                <div class="col-6 text-muted small"><i class="fas fa-truck text-warning me-2"></i>Freeship đơn từ 500k</div>
+                <div class="col-6 text-muted small"><i class="fas fa-truck text-warning me-2"></i>Freeship đơn từ 1500k</div>
                 <div class="col-6 text-muted small"><i class="fas fa-sync text-warning me-2"></i>Đổi trả trong 7 ngày</div>
                 <div class="col-6 text-muted small"><i class="fas fa-shield-alt text-warning me-2"></i>Bảo hành chính hãng</div>
                 <div class="col-6 text-muted small"><i class="fas fa-phone-alt text-warning me-2"></i>Hotline: 1900 1234</div>
@@ -855,7 +855,10 @@
     }
 
     // 3. Logic chọn Variant (Size/Color)
-    var variants = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Variants, new System.Text.Json.JsonSerializerOptions { ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles }));
+        var variants = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                Model.Variants.Select(v => new { v.Id, v.Color, v.Size, v.Stock }),
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = null }
+        ));
     var selectedColor = null;
     var selectedSize = null;
 
@@ -901,6 +904,7 @@
         var btnBuy = document.getElementById('btnAddToCart');
         var stockDisplay = document.getElementById('stock-display');
         var inputId = document.getElementById('selectedVariantId');
+        var qtyInput = document.getElementById('quantity');
 
         if (selectedColor && selectedSize) {
             var variant = variants.find(v => v.Color === selectedColor && v.Size === selectedSize);
@@ -915,7 +919,8 @@
 
                     btnBuy.disabled = false;
                     btnBuy.innerHTML = '<i class="fas fa-shopping-bag me-2"></i> THÊM VÀO GIỎ';
-
+                    qtyInput.max = variant.Stock; // Đặt max
+                    qtyInput.value = 1; // Reset về 1
                     stockDisplay.innerText = `Còn ${variant.Stock} sản phẩm`;
                     stockDisplay.className = "stock-status text-stock-ok";
                 } else {
@@ -938,11 +943,27 @@
         }
     }
 
-    function updateQty(val) {
-        var input = document.getElementById('quantity');
-        var current = parseInt(input.value);
-        if (current + val >= 1) input.value = current + val;
+        function updateQty(val) {
+        var el = document.getElementById('quantity');
+        var max = parseInt(el.max) || 9999;
+        var v = parseInt(el.value) + val;
+
+        if (v >= 1 && v <= max) {
+            el.value = v;
+        } else if (v > max) {
+               Swal.fire({
+        icon: 'warning',
+        title: `Bạn chỉ có thể mua tối đa ${max} sản phẩm.`,
+        toast: true,
+        position: 'top-end',
+        timer: 2000,
+        showConfirmButton: false
+    });
+
+            el.value = max;
+        }
     }
+
 
     function registerNotify() {
         var email = $('#notifyEmail').val();

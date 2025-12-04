@@ -1,6 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@inject UserManager<IdentityUser> UserManager
-@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
 
 <style>
     /* --- HEADER STYLES --- */
@@ -201,6 +201,97 @@
         color: #d0021b;
         font-weight: bold;
     }
+    /* Khung chứa dropdown */
+    .header-cart-dropdown {
+        display: none; /* Mặc định ẩn */
+        position: absolute;
+        top: 100%; /* Hiện ngay dưới icon */
+        right: 0; /* Căn lề phải thẳng với icon */
+        width: 350px; /* Chiều rộng giỏ hàng mini */
+        background: #fff;
+        z-index: 1000;
+        border-radius: 4px;
+        border: 1px solid rgba(0,0,0,0.1);
+        margin-top: 10px; /* Cách icon ra 1 chút */
+    }
+
+        /* Mũi tên tam giác nhỏ trỏ lên (Trang trí cho đẹp giống Shopee) */
+        .header-cart-dropdown::before {
+            content: "";
+            position: absolute;
+            top: -8px;
+            right: 15px;
+            border-width: 0 8px 8px 8px;
+            border-style: solid;
+            border-color: transparent transparent #fff transparent;
+            z-index: 1;
+        }
+        /* Viền cho mũi tên (tùy chọn) */
+        .header-cart-dropdown::after {
+            content: "";
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            border-width: 0 8px 8px 8px;
+            border-style: solid;
+            border-color: transparent transparent rgba(0,0,0,0.1) transparent;
+            z-index: 0;
+        }
+
+    /* Lớp cầu nối trong suốt để chuột không bị ngắt quãng khi di từ icon xuống menu */
+    .cart-hover-container::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        right: 0;
+        width: 100%;
+        height: 15px;
+        background: transparent;
+    }
+
+    /* QUAN TRỌNG: Khi di chuột vào khung chứa thì hiện dropdown */
+    .cart-hover-container:hover .header-cart-dropdown {
+        display: block;
+        animation: fadeIn 0.2s ease;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    /* THÊM ĐOẠN NÀY: Xử lý cuộn khi danh sách quá dài */
+    .cart-dropdown-content {
+        max-height: 400px; /* Chiều cao tối đa, quá mức này sẽ hiện thanh cuộn */
+        overflow-y: auto; /* Cho phép cuộn dọc */
+        overflow-x: hidden; /* Ẩn cuộn ngang */
+    }
+
+        /* TÙY CHỌN: Làm đẹp thanh cuộn (Scrollbar) cho giống Shopee/Web hiện đại */
+        /* 1. Độ rộng thanh cuộn */
+        .cart-dropdown-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        /* 2. Màu nền rãnh cuộn */
+        .cart-dropdown-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        /* 3. Màu thanh kéo */
+        .cart-dropdown-content::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+            /* 4. Màu thanh kéo khi di chuột vào */
+            .cart-dropdown-content::-webkit-scrollbar-thumb:hover {
+                background: #aaa;
+            }
 </style>
 
 <div class="header-top py-2 d-none d-lg-block">
@@ -209,9 +300,9 @@
             <div>
                 <i class="fas fa-envelope me-2 text-warning"></i> hotro@ntnstore.com
                 <span class="mx-2 text-muted">|</span>
-                <i class="fas fa-phone-alt me-2 text-warning"></i> 1900 123 456
+                <i class="fas fa-phone-alt me-2 text-warning"></i> 0968 6868 6868
             </div>
-            <div class="small text-muted">Miễn phí vận chuyển cho đơn hàng từ 500k</div>
+            <div class="small text-muted">Miễn phí vận chuyển cho đơn hàng từ 1500k</div>
         </div>
     </div>
 </div>
@@ -263,8 +354,7 @@
                                 </li>
                                 <li><hr class="dropdown-divider m-0"></li>
                             }
-                            <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index"><i class="fas fa-user-cog"></i> Tài khoản của tôi</a></li>
-                            <li><a class="dropdown-item" asp-controller="Order" asp-action="Index"><i class="fas fa-box-open"></i> Đơn mua</a></li>
+                            <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index"><i class="fas fa-user-cog"></i> Tài khoản của tôi</a></li>             
                             <li>
                                 <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" class="m-0">
                                     <button type="submit" class="dropdown-item text-danger"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
@@ -280,15 +370,28 @@
                     </ul>
                 </div>
 
-                <a asp-controller="Wishlist" asp-action="Index" class="btn-icon position-relative" title="Yêu thích">
+                <a asp-area="" asp-controller="Wishlist" asp-action="Index" class="btn-icon position-relative" title="Yêu thích">
                     <i class="far fa-heart"></i>
                     @await Component.InvokeAsync("WishlistBadge")
                 </a>
 
-                <a asp-controller="Cart" asp-action="Index" class="btn-icon position-relative" title="Giỏ hàng">
-                    <i class="fas fa-shopping-bag"></i>
-                    @await Component.InvokeAsync("CartBadge")
-                </a>
+                <div class="cart-hover-container">
+
+                    <a asp-area="" asp-controller="Cart" asp-action="Index" class="btn-icon text-dark relative-link" title="Giỏ hàng">
+                        <i class="fas fa-shopping-bag fa-lg"></i>
+                        @await Component.InvokeAsync("CartBadge")
+                    </a>
+
+                    <div class="header-cart-dropdown shadow-sm" id="headerMiniCart">
+                        <div class="cart-dropdown-content">
+                            <div class="text-center py-3">
+                                <div class="spinner-border text-warning spinner-sm" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </div>
@@ -342,4 +445,5 @@
             }
         });
     });
+    
 </script>

@@ -199,4 +199,38 @@ body {
     border-top: 1px solid #eee;
     background: #f9f9f9;
 }
+/* --- ADDRESS BOOK STYLING --- */
+.bg-gray-100 {
+    background-color: #f3f4f6 !important;
+}
 
+.address-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    background: #fff;
+}
+
+    .address-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border-color: #f58220;
+    }
+
+    .address-card.active {
+        border: 2px solid #f58220;
+        background-color: #fffbf8;
+    }
+
+.form-card {
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    border: none;
+    overflow: hidden;
+}
+
+.form-header {
+    background: linear-gradient(135deg, #f58220 0%, #ffae6d 100%);
+    color: white;
+    padding: 20px;
+}

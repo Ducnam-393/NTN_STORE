@@ -1,0 +1,57 @@
+﻿@model NTN_STORE.Models.UserAddress
+
+@{
+    ViewData["Title"] = "Xóa địa chỉ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-danger text-white p-4 text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-exclamation-triangle fa-3x"></i>
+                    </div>
+                    <h4 class="fw-bold mb-0">Xác nhận xóa?</h4>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <p class="lead text-muted mb-4">
+                        Bạn có chắc chắn muốn xóa địa chỉ này khỏi sổ địa chỉ của mình không? Hành động này không thể hoàn tác.
+                    </p>
+
+                    <div class="bg-light p-3 rounded-3 mb-4 text-start border">
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-user text-secondary me-3 mt-1"></i>
+                            <strong>@Model.FullName</strong>
+                        </div>
+                        <div class="d-flex mb-2">
+                            <i class="fas fa-phone text-secondary me-3 mt-1"></i>
+                            <span>@Model.PhoneNumber</span>
+                        </div>
+                        <div class="d-flex">
+                            <i class="fas fa-map-marker-alt text-secondary me-3 mt-1"></i>
+                            <span>
+                                @Model.Address, @Model.Ward<br>
+                                @Model.District, @Model.Province
+                            </span>
+                        </div>
+                    </div>
+
+                    <form asp-action="Delete">
+                        <input type="hidden" asp-for="Id" />
+                        <div class="d-flex justify-content-center gap-3">
+                            <a asp-action="Index" class="btn btn-outline-secondary text-danger px-4">
+                                <i class="fas fa-times me-2"></i>Hủy bỏ
+                            </a>
+                            >
+                            <button type="submit" class="btn btn-danger px-4">
+                                <i class="fas fa-trash-alt me-2"></i>Đồng ý xóa
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

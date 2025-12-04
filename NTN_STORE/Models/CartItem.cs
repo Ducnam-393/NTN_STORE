@@ -11,7 +11,7 @@ namespace NTN_STORE.Models
         // Thêm Mã người dùng
         public string UserId { get; set; }
         [ForeignKey("UserId")]
-        public virtual IdentityUser User { get; set; }
+        public virtual ApplicationUser User { get; set; }
         public int ProductId { get; set; }
         public int VariantId { get; set; }
         public int Quantity { get; set; }

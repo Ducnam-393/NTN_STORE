@@ -50,7 +50,7 @@ namespace NTN_STORE.Data
                 await context.SaveChangesAsync();
             }
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-            var userManager = serviceProvider.GetRequiredService<UserManager<IdentityUser>>();
+            var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
             // 1. Tạo các Roles
             if (!await roleManager.RoleExistsAsync(ROLE_ADMIN))
@@ -70,7 +70,7 @@ namespace NTN_STORE.Data
 
             if (adminUser == null)
             {
-                adminUser = new IdentityUser
+                adminUser = new ApplicationUser
                 {
                     UserName = adminEmail,
                     Email = adminEmail,

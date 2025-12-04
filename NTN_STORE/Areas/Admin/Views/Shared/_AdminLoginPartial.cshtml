@@ -1,8 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Identity
 
 @* Inject 2 dịch vụ này *@
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 
 @* THÊM KHỐI KIỂM TRA NÀY *@
 @if (SignInManager.IsSignedIn(User))

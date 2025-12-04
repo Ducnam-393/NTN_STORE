@@ -10,5 +10,6 @@ namespace NTN_STORE.Models.ViewModels
         // 2. Dùng để nhận dữ liệu từ Form
         // Chúng ta dùng luôn Model Order để bind dữ liệu
         public Order ShippingDetails { get; set; }
+        public List<UserAddress> SavedAddresses { get; set; }
     }
 }

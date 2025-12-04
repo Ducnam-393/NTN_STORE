@@ -3,20 +3,19 @@ using NTN_STORE.Models;
 using NTN_STORE.Models.ViewModels;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.EntityFrameworkCore; // Dùng Include
-using System.Threading.Tasks; // Dùng Task
-using Microsoft.AspNetCore.Authorization; // Dùng [Authorize]
-using Microsoft.AspNetCore.Identity; // Dùng UserManager
-
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 namespace NTN_STORE.Controllers
 {
     [Authorize]
     public class CartController : Controller
     {
         private readonly NTNStoreContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public CartController(NTNStoreContext context, UserManager<IdentityUser> userManager)
+        public CartController(NTNStoreContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;
@@ -32,16 +31,17 @@ namespace NTN_STORE.Controllers
         public async Task<IActionResult> Index()
         {
             var userId = GetUserId();
-            var cartItemsFromDb = await _context.CartItems     
+            var cartItemsFromDb = await _context.CartItems
                 .Where(c => c.UserId == userId)
-                .Include(c => c.Product).ThenInclude(p => p.Images) // Lấy thông tin Sản phẩm và Ảnh
-                .Include(c => c.Variant) // Lấy thông tin Biến thể (Size, Color)
+                .Include(c => c.Product).ThenInclude(p => p.Images)
+                .Include(c => c.Variant)
                 .ToListAsync();
 
             var vm = new CartViewModel
             {
                 CartItems = cartItemsFromDb
             };
+
             // -- LOGIC TÍNH GIẢM GIÁ --
             var couponCode = HttpContext.Session.GetString("CouponCode");
             if (!string.IsNullOrEmpty(couponCode))
@@ -51,7 +51,13 @@ namespace NTN_STORE.Controllers
                 {
                     vm.AppliedCoupon = coupon.Code;
 
-                    // Tính tiền giảm
+                    // === [THÊM ĐOẠN NÀY] ===
+                    // Truyền dữ liệu xuống View để JavaScript tính toán khi click chọn/bỏ chọn
+                    ViewBag.CouponPercent = coupon.DiscountPercent;
+                    ViewBag.CouponAmount = coupon.DiscountAmount;
+                    // =======================
+
+                    // Tính tiền giảm (Server side - để hiển thị ban đầu)
                     if (coupon.DiscountPercent > 0)
                     {
                         vm.DiscountAmount = vm.SubTotal * coupon.DiscountPercent / 100;
@@ -61,7 +67,6 @@ namespace NTN_STORE.Controllers
                         vm.DiscountAmount = coupon.DiscountAmount;
                     }
 
-                    // Đảm bảo không giảm quá giá trị đơn hàng
                     if (vm.DiscountAmount > vm.SubTotal) vm.DiscountAmount = vm.SubTotal;
                 }
             }
@@ -161,26 +166,26 @@ namespace NTN_STORE.Controllers
         public async Task<IActionResult> ApplyCouponAjax(string couponCode)
         {
             if (string.IsNullOrEmpty(couponCode))
-                return Json(new { success = false, message = "Vui lòng nhập mã!" });
+                return Json(new { success = false, message = "Vui lòng nhập mã giảm giá!" });
 
-            var coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.Code == couponCode && c.IsActive);
+            // Tìm mã trong DB
+            var coupon = await _context.Coupons
+                .FirstOrDefaultAsync(c => c.Code == couponCode && c.IsActive);
 
-            if (coupon == null) return Json(new { success = false, message = "Mã không tồn tại!" });
-            if (coupon.ExpiryDate < DateTime.Now) return Json(new { success = false, message = "Mã đã hết hạn!" });
-            if (coupon.UsageLimit > 0 && coupon.UsedCount >= coupon.UsageLimit) return Json(new { success = false, message = "Mã đã hết lượt dùng!" });
+            // Validate các trường hợp lỗi
+            if (coupon == null)
+                return Json(new { success = false, message = "Mã giảm giá không tồn tại!" });
 
-            // Lưu Session
+            if (coupon.ExpiryDate < DateTime.Now)
+                return Json(new { success = false, message = "Mã này đã hết hạn!" });
+
+            if (coupon.UsageLimit > 0 && coupon.UsedCount >= coupon.UsageLimit)
+                return Json(new { success = false, message = "Mã này đã hết lượt sử dụng!" });
+
+            // Thành công -> Lưu vào Session
             HttpContext.Session.SetString("CouponCode", coupon.Code);
 
-            // Trả về dữ liệu cho JS tính toán
-            return Json(new
-            {
-                success = true,
-                message = "Áp dụng thành công!",
-                code = coupon.Code,
-                percent = coupon.DiscountPercent,
-                amount = coupon.DiscountAmount
-            });
+            return Json(new { success = true, message = "Áp dụng mã giảm giá thành công!" });
         }
 
         // Thêm Action RemoveCoupon
@@ -188,12 +193,7 @@ namespace NTN_STORE.Controllers
         public IActionResult RemoveCouponAjax()
         {
             HttpContext.Session.Remove("CouponCode");
-
-            return Json(new
-            {
-                success = true,
-                message = "Đã gỡ mã giảm giá!"
-            });
+            return Json(new { success = true, message = "Đã gỡ mã giảm giá." });
         }
 
         // API: Lấy nội dung Mini Cart (trả về PartialView HTML)

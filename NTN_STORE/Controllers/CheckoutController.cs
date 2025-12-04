@@ -15,9 +15,9 @@ namespace NTN_STORE.Controllers
     public class CheckoutController : Controller
     {
         private readonly NTNStoreContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public CheckoutController(NTNStoreContext context, UserManager<IdentityUser> userManager)
+        public CheckoutController(NTNStoreContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;
@@ -61,7 +61,14 @@ namespace NTN_STORE.Controllers
                 .ToListAsync();
 
             if (!cartItems.Any()) return RedirectToAction("Index", "Cart");
-
+            foreach (var item in cartItems)
+            {
+                if (item.Quantity > item.Variant.Stock)
+                {
+                    TempData["Error"] = $"Sản phẩm '{item.Product.Name}' chỉ còn {item.Variant.Stock} món. Vui lòng cập nhật lại.";
+                    return RedirectToAction("Index", "Cart"); // Đuổi về giỏ hàng ngay
+                }
+            }
             // Tính toán tiền nong
             var cartVM = new CartViewModel { CartItems = cartItems };
 
@@ -81,21 +88,39 @@ namespace NTN_STORE.Controllers
                     if (cartVM.DiscountAmount > cartVM.SubTotal) cartVM.DiscountAmount = cartVM.SubTotal;
                 }
             }
-
+            var savedAddresses = await _context.UserAddresses
+                .Where(a => a.UserId == userId)
+                .OrderByDescending(a => a.IsDefault)
+                .ToListAsync();
             var checkoutVM = new CheckoutViewModel
             {
                 Cart = cartVM,
-                ShippingDetails = new Order()
+                ShippingDetails = new Order(),
+                SavedAddresses = savedAddresses
             };
 
-            // Điền sẵn thông tin user
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser != null) checkoutVM.ShippingDetails.Email = currentUser.Email;
+            var defaultAddress = savedAddresses.FirstOrDefault(x => x.IsDefault);
+            if (defaultAddress != null)
+            {
+                checkoutVM.ShippingDetails.CustomerName = defaultAddress.FullName;
+                checkoutVM.ShippingDetails.PhoneNumber = defaultAddress.PhoneNumber;
+                checkoutVM.ShippingDetails.Address = $"{defaultAddress.Address}, {defaultAddress.Ward}, {defaultAddress.District}, {defaultAddress.Province}";
+            }
+            else
+            {
+                // Nếu chưa có địa chỉ thì lấy từ User Profile
+                var currentUser = await _userManager.GetUserAsync(User);
+                if (currentUser != null)
+                {
+                    checkoutVM.ShippingDetails.Email = currentUser.Email;
+                    checkoutVM.ShippingDetails.CustomerName = currentUser.FullName; 
+                }
+            }
 
             return View(checkoutVM);
         }
 
-        // 2. Action POST (Khi bấm ĐẶT HÀNG)
+        // POST: /Checkout/Index
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(CheckoutViewModel model, string paymentMethod)
@@ -111,14 +136,14 @@ namespace NTN_STORE.Controllers
             // Lấy lại giỏ hàng và LỌC
             var cartItems = await _context.CartItems
                 .Include(c => c.Product)
-                .Where(c => c.UserId == userId && selectedIds.Contains(c.Id)) // QUAN TRỌNG
+                .Where(c => c.UserId == userId && selectedIds.Contains(c.Id))
                 .ToListAsync();
 
             if (!cartItems.Any()) return RedirectToAction("Index", "Cart");
 
             // Tính toán lại (Logic y hệt phần GET)
             decimal subTotal = cartItems.Sum(x => x.Product.Price * x.Quantity);
-            decimal shippingFee = (subTotal > 1500000 || model.ShippingDetails.Address.Contains("Hà Nội")) ? 0 : 30000;
+            decimal shippingFee = (subTotal > 500000 || (model.ShippingDetails.Address != null && model.ShippingDetails.Address.Contains("Hà Nội"))) ? 0 : 30000;
 
             decimal discountAmount = 0;
             string appliedCouponCode = null;
@@ -140,8 +165,9 @@ namespace NTN_STORE.Controllers
             decimal totalAmount = subTotal + shippingFee - discountAmount;
             if (totalAmount < 0) totalAmount = 0;
 
-            // Bỏ qua validate
+            // --- 1. BỎ QUA VALIDATION KHÔNG CẦN THIẾT ---
             ModelState.Remove("Cart");
+            ModelState.Remove("SavedAddresses"); // Bỏ qua list này
             ModelState.Remove("ShippingDetails.UserId");
             ModelState.Remove("ShippingDetails.OrderCode");
             ModelState.Remove("ShippingDetails.TotalAmount");
@@ -149,6 +175,26 @@ namespace NTN_STORE.Controllers
             ModelState.Remove("ShippingDetails.CreatedAt");
             ModelState.Remove("ShippingDetails.OrderDetails");
             ModelState.Remove("ShippingDetails.User");
+
+            // QUAN TRỌNG: Bỏ qua lỗi PaymentMethod vì ta lấy từ tham số riêng
+            ModelState.Remove("ShippingDetails.PaymentMethod"); // <--- THÊM DÒNG NÀY
+
+            // Kiểm tra tồn kho
+            foreach (var item in cartItems)
+            {
+                // Luôn lấy tồn kho mới nhất từ DB (không tin tưởng dữ liệu cũ trong session/cart)
+                var currentStock = await _context.ProductVariants
+                    .Where(v => v.Id == item.VariantId)
+                    .Select(v => v.Stock)
+                    .FirstOrDefaultAsync();
+
+                if (item.Quantity > currentStock)
+                {
+                    // Nếu quá số lượng -> Đẩy về giỏ hàng kèm thông báo
+                    TempData["Error"] = $"Sản phẩm '{item.Product.Name}' chỉ còn {currentStock} món. Vui lòng cập nhật lại giỏ hàng.";
+                    return RedirectToAction("Index", "Cart");
+                }
+            }
 
             if (ModelState.IsValid)
             {
@@ -161,7 +207,10 @@ namespace NTN_STORE.Controllers
                 order.TotalAmount = totalAmount;
                 order.CouponCode = appliedCouponCode;
                 order.DiscountValue = discountAmount;
-                // Nếu thanh toán online thì set trạng thái là chờ thanh toán
+
+                // Lưu phương thức thanh toán vào Model để lưu xuống DB
+                order.PaymentMethod = paymentMethod; // <--- GÁN GIÁ TRỊ VÀO ĐÂY
+
                 if (paymentMethod == "VNPAY")
                 {
                     order.Status = "Unpaid";
@@ -170,6 +219,7 @@ namespace NTN_STORE.Controllers
                 {
                     order.Status = "Pending"; // COD
                 }
+
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync();
 
@@ -184,18 +234,19 @@ namespace NTN_STORE.Controllers
                         Quantity = item.Quantity,
                         Price = item.Product.Price
                     });
-                    // --- LOGIC KHO MỚI ---
+
+                    // Trừ tồn kho
                     var variant = await _context.ProductVariants.FindAsync(item.VariantId);
                     if (variant != null)
                     {
-                        variant.Stock -= item.Quantity; // Trừ tồn kho
+                        variant.Stock -= item.Quantity;
 
-                        // Ghi Log
+                        // Ghi Log Kho
                         var log = new InventoryLog
                         {
                             ProductVariantId = item.VariantId,
-                            Action = "Sale", // Bán hàng
-                            ChangeAmount = -item.Quantity, // Số âm
+                            Action = "Sale",
+                            ChangeAmount = -item.Quantity,
                             RemainingStock = variant.Stock,
                             ReferenceCode = order.OrderCode,
                             UserId = User.Identity.Name ?? "Guest",
@@ -205,14 +256,14 @@ namespace NTN_STORE.Controllers
                         _context.ProductVariants.Update(variant);
                     }
                 }
-                // 3. Xử lý Thanh toán
+
+                // Xử lý thanh toán VNPAY
                 if (paymentMethod == "VNPAY")
                 {
-                    // --- TÍCH HỢP VNPAY ---
                     var vnpay = new VnPayLibrary();
                     vnpay.AddRequestData("vnp_Version", "2.1.0");
                     vnpay.AddRequestData("vnp_Command", "pay");
-                    vnpay.AddRequestData("vnp_TmnCode", "YOUR_TMN_CODE"); // Lấy từ email VNPay gửi
+                    vnpay.AddRequestData("vnp_TmnCode", "YOUR_TMN_CODE");
                     vnpay.AddRequestData("vnp_Amount", ((long)order.TotalAmount * 100).ToString());
                     vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
                     vnpay.AddRequestData("vnp_CurrCode", "VND");
@@ -220,10 +271,13 @@ namespace NTN_STORE.Controllers
                     vnpay.AddRequestData("vnp_Locale", "vn");
                     vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang " + order.OrderCode);
                     vnpay.AddRequestData("vnp_OrderType", "other");
-                    vnpay.AddRequestData("vnp_ReturnUrl", Url.Action("PaymentCallback", "Checkout", null, Request.Scheme)); // URL trả về
-                    vnpay.AddRequestData("vnp_TxnRef", order.OrderCode); // Mã tham chiếu
+                    vnpay.AddRequestData("vnp_ReturnUrl", Url.Action("PaymentCallback", "Checkout", null, Request.Scheme));
+                    vnpay.AddRequestData("vnp_TxnRef", order.OrderCode);
 
                     string paymentUrl = vnpay.CreateRequestUrl("https://sandbox.vnpayment.vn/paymentv2/vpcpay.html", "YOUR_HASH_SECRET");
+
+                    // Lưu thay đổi trước khi redirect
+                    await _context.SaveChangesAsync();
                     return Redirect(paymentUrl);
                 }
 
@@ -234,10 +288,8 @@ namespace NTN_STORE.Controllers
                     _context.Coupons.Update(coupon);
                 }
 
-                // Xóa các món ĐÃ CHỌN khỏi giỏ (Món chưa chọn giữ nguyên)
+                // Xóa giỏ hàng & Session
                 _context.CartItems.RemoveRange(cartItems);
-
-                // Clear Session
                 HttpContext.Session.Remove("CheckoutItems");
                 HttpContext.Session.Remove("CouponCode");
 
@@ -246,7 +298,15 @@ namespace NTN_STORE.Controllers
                 return RedirectToAction(nameof(OrderCompleted), new { id = order.Id });
             }
 
-            // Nếu lỗi, trả về View với dữ liệu tính toán
+            // --- 2. XỬ LÝ KHI CÓ LỖI (ĐỂ KHÔNG BỊ MẤT GIAO DIỆN) ---
+
+            // Load lại Sổ địa chỉ từ DB (QUAN TRỌNG - Code cũ thiếu dòng này)
+            model.SavedAddresses = await _context.UserAddresses
+                .Where(a => a.UserId == userId)
+                .OrderByDescending(a => a.IsDefault)
+                .ToListAsync();
+
+            // Trả về lại View với đầy đủ dữ liệu
             model.Cart = new CartViewModel
             {
                 CartItems = cartItems,

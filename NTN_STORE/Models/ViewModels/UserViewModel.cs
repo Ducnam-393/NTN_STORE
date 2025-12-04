@@ -15,7 +15,7 @@ namespace NTN_STORE.Models.ViewModels
 
     public class UserDetailViewModel
     {
-        public IdentityUser User { get; set; }
+        public ApplicationUser User { get; set; }
         public IEnumerable<string> Roles { get; set; }
         public IEnumerable<Order> Orders { get; set; } // Lịch sử mua hàng
         public List<string> AllRoles { get; set; } // Tất cả quyền có trong hệ thống (để chọn cấp quyền)

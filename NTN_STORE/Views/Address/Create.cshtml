@@ -1,0 +1,148 @@
+﻿@model NTN_STORE.Models.UserAddress
+@{
+    ViewData["Title"] = "Thêm địa chỉ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="bg-gray-100 py-5" style="min-height: 100vh;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card form-card">
+                    <div class="form-header">
+                        <h4 class="mb-0 fw-bold"><i class="fas fa-plus-circle me-2"></i>Thêm địa chỉ mới</h4>
+                    </div>
+                    <div class="card-body p-4 p-md-5 bg-white">
+                        <form asp-action="Create">
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Họ và tên</label>
+                                    <input asp-for="FullName" class="form-control bg-light" placeholder="VD: Nguyễn Văn A" />
+                                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Số điện thoại</label>
+                                    <input asp-for="PhoneNumber" class="form-control bg-light" placeholder="VD: 0987654321" />
+                                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                                </div>
+
+                                <div class="col-12"><hr class="my-2 opacity-25"></div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Tỉnh/Thành phố</label>
+                                    <select id="province" class="form-select" required>
+                                        <option value="">-- Chọn --</option>
+                                    </select>
+                                    <input type="hidden" asp-for="Province" id="provinceName" />
+                                    <span asp-validation-for="Province" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Quận/Huyện</label>
+                                    <select id="district" class="form-select" disabled required>
+                                        <option value="">-- Chọn --</option>
+                                    </select>
+                                    <input type="hidden" asp-for="District" id="districtName" />
+                                    <span asp-validation-for="District" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Phường/Xã</label>
+                                    <select id="ward" class="form-select" disabled required>
+                                        <option value="">-- Chọn --</option>
+                                    </select>
+                                    <input type="hidden" asp-for="Ward" id="wardName" />
+                                    <span asp-validation-for="Ward" class="text-danger small"></span>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Địa chỉ cụ thể</label>
+                                    <input asp-for="Address" class="form-control bg-light" placeholder="Số nhà, ngõ, tên đường..." />
+                                    <span asp-validation-for="Address" class="text-danger small"></span>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" asp-for="IsDefault" id="defaultSwitch">
+                                        <label class="form-check-label" for="defaultSwitch">Đặt làm địa chỉ mặc định</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 mt-4 d-flex justify-content-end gap-2">
+                                    <a asp-action="Index" class="btn btn-light px-4">Hủy</a>
+                                    <button type="submit" class="btn btn-primary px-4 fw-bold">Lưu địa chỉ</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            const apiBase = "https://esgoo.net/api-tinhthanh";
+
+            // 1. Load Tỉnh
+            $.getJSON(apiBase + "/1/0.htm", function (data) {
+                if (data.error === 0) {
+                    $.each(data.data, function (key, val) {
+                        $("#province").append('<option value="' + val.id + '" data-name="' + val.full_name + '">' + val.full_name + '</option>');
+                    });
+                }
+            });
+
+            // 2. Khi chọn Tỉnh -> Lưu tên vào input hidden -> Load Huyện
+            $("#province").change(function () {
+                let provinceId = $(this).val();
+                let provinceName = $(this).find("option:selected").data("name");
+                $("#provinceName").val(provinceName); // QUAN TRỌNG: Gán giá trị cho Model
+
+                $("#district").html('<option value="">-- Chọn Quận/Huyện --</option>').prop("disabled", true);
+                $("#ward").html('<option value="">-- Chọn Phường/Xã --</option>').prop("disabled", true);
+
+                if (provinceId) {
+                    $.getJSON(apiBase + "/2/" + provinceId + ".htm", function (data) {
+                        if (data.error === 0) {
+                            $.each(data.data, function (key, val) {
+                                $("#district").append('<option value="' + val.id + '" data-name="' + val.full_name + '">' + val.full_name + '</option>');
+                            });
+                            $("#district").prop("disabled", false);
+                        }
+                    });
+                }
+            });
+
+            // 3. Khi chọn Huyện -> Lưu tên -> Load Xã
+            $("#district").change(function () {
+                let districtId = $(this).val();
+                let districtName = $(this).find("option:selected").data("name");
+                $("#districtName").val(districtName); // QUAN TRỌNG
+
+                $("#ward").html('<option value="">-- Chọn Phường/Xã --</option>').prop("disabled", true);
+                if (districtId) {
+                    $.getJSON(apiBase + "/3/" + districtId + ".htm", function (data) {
+                        if (data.error === 0) {
+                            $.each(data.data, function (key, val) {
+                                $("#ward").append('<option value="' + val.id + '" data-name="' + val.full_name + '">' + val.full_name + '</option>');
+                            });
+                            $("#ward").prop("disabled", false);
+                        }
+                    });
+                }
+            });
+
+            // 4. Khi chọn Xã -> Lưu tên
+            $("#ward").change(function () {
+                let wardName = $(this).find("option:selected").data("name");
+                $("#wardName").val(wardName); // QUAN TRỌNG
+            });
+        });
+    </script>
+}

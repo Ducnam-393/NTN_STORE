@@ -160,11 +160,15 @@
                 <a class="btn-action" asp-controller="Product" asp-action="Detail" asp-route-id="@Model.Id" title="Xem chi tiết">
                     <i class="fa fa-eye"></i>
                 </a>
-                <form action="/Cart/AddToCart" method="post" onsubmit="return ajaxAddToCart(this)">
+                
+                @*@<form action="/Cart/AddToCart" method="post" onsubmit="return ajaxAddToCart(this)">
                     <input type="hidden" name="productId" value="@Model.Id">
                     <input type="hidden" name="quantity" value="1">
-                    <button type="submit" class="btn-action"><i class="fa fa-shopping-cart"></i></button>
-                </form>
+                    <button type="submit" class="btn-action" title="Thêm vào giỏ">
+                        <i class="fa fa-shopping-cart"></i>
+                    </button>
+                </form>*@
+
                 <a class="btn-action" href="javascript:void(0);" onclick="ajaxAddWishlist(event, @Model.Id, this)" title="Yêu thích">
                     <i class="far fa-heart" id="wish-icon-@Model.Id"></i>
                 </a>
@@ -194,3 +198,52 @@
         </div>
     </div>
 </div>
+<script>
+    function ajaxAddToCart(form) {
+        event.preventDefault();
+
+        let formData = new FormData(form);
+
+        fetch("/Cart/AddToCart", {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            if (data.success) {
+                // Hiển thị thông báo đẹp
+                Swal.fire({
+                    icon: "success",
+                    title: "Thêm thành công!",
+                    text: data.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                // Load lại minicart nếu có
+                if (typeof loadMiniCart === "function") {
+                    loadMiniCart();
+                }
+
+            } else {
+                // Trường hợp vượt quá số lượng trong kho
+                Swal.fire({
+                    icon: "warning",
+                    title: "Không đủ hàng!",
+                    html: data.message,
+                    confirmButtonText: "OK"
+                });
+            }
+        })
+        .catch(() => {
+            Swal.fire({
+                icon: "error",
+                title: "Lỗi!",
+                text: "Không thể thêm sản phẩm."
+            });
+        });
+
+        return false;
+    }
+</script>

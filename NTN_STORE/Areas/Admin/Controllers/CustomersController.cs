@@ -16,11 +16,11 @@ namespace NTN_STORE.Areas.Admin.Controllers
     [Authorize(Roles = "Admin")] // Chỉ Admin cao nhất mới được vào
     public class CustomersController : Controller
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly NTNStoreContext _context;
 
-        public CustomersController(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager, NTNStoreContext context)
+        public CustomersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, NTNStoreContext context)
         {
             _userManager = userManager;
             _roleManager = roleManager;

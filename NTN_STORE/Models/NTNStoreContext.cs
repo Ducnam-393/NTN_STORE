@@ -1,12 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity; // Thêm thư viện này
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using NTN_STORE.Models;
 
 namespace NTN_STORE.Models
 {
-    public class NTNStoreContext : IdentityDbContext<IdentityUser>
+    public class NTNStoreContext : IdentityDbContext<ApplicationUser>
     {
-        public NTNStoreContext(DbContextOptions<NTNStoreContext> options) : base(options)
+        public NTNStoreContext(DbContextOptions<NTNStoreContext> options)
+            : base(options)
         {
         }
 
@@ -31,6 +33,7 @@ namespace NTN_STORE.Models
         public DbSet<StockImport> StockImports { get; set; }
         public DbSet<StockImportDetail> StockImportDetails { get; set; }
         public DbSet<InventoryLog> InventoryLogs { get; set; }
+        public DbSet<UserAddress> UserAddresses { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

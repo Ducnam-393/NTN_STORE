@@ -8,9 +8,9 @@ namespace NTN_STORE.ViewComponents
     public class WishlistBadgeViewComponent : ViewComponent
     {
         private readonly NTNStoreContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public WishlistBadgeViewComponent(NTNStoreContext context, UserManager<IdentityUser> userManager)
+        public WishlistBadgeViewComponent(NTNStoreContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;

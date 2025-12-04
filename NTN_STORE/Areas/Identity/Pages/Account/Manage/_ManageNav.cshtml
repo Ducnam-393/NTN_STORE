@@ -1,29 +1,77 @@
-﻿@inject SignInManager<IdentityUser> SignInManager
+﻿@using NTN_STORE.Models
+@inject SignInManager<ApplicationUser> SignInManager
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
 }
 
-@* Dùng 'list-group' (Bootstrap 4) thay vì 'nav-pills' (Bootstrap 5) *@
-<div class="list-group">
+<div class="list-group shadow-sm rounded overflow-hidden">
+    <div class="list-group-item bg-light fw-bold text-uppercase small text-muted">Tài khoản của tôi</div>
 
-    <a asp-page="./Index" class="list-group-item list-group-item-action @ManageNavPages.IndexNavClass(ViewContext)">
-        Hồ sơ
+    <a class="list-group-item list-group-item-action @(ViewContext.RouteData.Values["page"]?.ToString() == "/Account/Manage/Index" ? "active-nav" : "")"
+       asp-area="Identity" asp-page="/Account/Manage/Index">
+        <i class="fas fa-user-circle me-2 text-primary"></i> Hồ sơ
     </a>
 
-    <a asp-page="./ChangePassword" id="change-password" class="list-group-item list-group-item-action @ManageNavPages.ChangePasswordNavClass(ViewContext)">
-        Đổi mật khẩu
+    <a class="list-group-item list-group-item-action @(ViewContext.RouteData.Values["controller"]?.ToString() == "Address" ? "active-nav" : "")"
+       asp-area="" asp-controller="Address" asp-action="Index">
+        <i class="fas fa-map-marker-alt me-2 text-danger"></i> Sổ địa chỉ
     </a>
 
-    @* Các trang này chưa được tạo, nên tôi tạm thời ẩn đi
-    Nếu sau này bạn chạy scaffold để tạo chúng, bạn có thể bỏ comment
-    
-    <a asp-page="./Email" class="list-group-item list-group-item-action @ManageNavPages.EmailNavClass(ViewContext)">Email</a>
-    
+    <a class="list-group-item list-group-item-action @(ViewContext.RouteData.Values["page"]?.ToString() == "/Account/Manage/ChangePassword" ? "active-nav" : "")"
+       asp-area="Identity" asp-page="/Account/Manage/ChangePassword">
+        <i class="fas fa-key me-2 text-warning"></i> Đổi mật khẩu
+    </a>
+
+    <div class="list-group-item bg-light fw-bold text-uppercase small text-muted mt-2">Mua sắm</div>
+
+    <a class="list-group-item list-group-item-action @(ViewContext.RouteData.Values["controller"]?.ToString() == "Order" ? "active-nav" : "")"
+      asp-area="" asp-controller="Order" asp-action="Index">
+        <i class="fas fa-shopping-bag me-2 text-success"></i> Đơn mua
+    </a>
+
+    <a class="list-group-item list-group-item-action" asp-controller="Wishlist" asp-action="Index">
+        <i class="fas fa-heart me-2 text-danger"></i> Sản phẩm yêu thích
+    </a>
+
     @if (hasExternalLogins)
     {
-        <a asp-page="./ExternalLogins" id="external-login" class="list-group-item list-group-item-action @ManageNavPages.ExternalLoginsNavClass(ViewContext)">Đăng nhập bên ngoài</a>
+        <a class="list-group-item list-group-item-action @(ViewContext.RouteData.Values["page"]?.ToString() == "/Account/Manage/ExternalLogins" ? "active-nav" : "")"
+           asp-area="Identity" asp-page="/Account/Manage/ExternalLogins">
+            <i class="fas fa-share-alt me-2 text-info"></i> Liên kết MXH
+        </a>
     }
-    <a asp-page="./TwoFactorAuthentication" class="list-group-item list-group-item-action @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)">Xác thực hai yếu tố</a>
-    <a asp-page="./PersonalData" class="list-group-item list-group-item-action @ManageNavPages.PersonalDataNavClass(ViewContext)">Dữ liệu cá nhân</a>
-    *@
+
+    <form class="list-group-item list-group-item-action text-danger" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
+        <button type="submit" class="btn btn-link text-danger p-0 text-decoration-none w-100 text-start">
+            <i class="fas fa-sign-out-alt me-2"></i> Đăng xuất
+        </button>
+    </form>
 </div>
+
+<style>
+    /* Style riêng cho menu active */
+    .active-nav {
+        background-color: #fff5eb !important; /* Màu nền cam nhạt */
+        color: #f58220 !important; /* Chữ màu cam */
+        border-left: 4px solid #f58220 !important;
+        font-weight: 600;
+    }
+
+    .list-group-item {
+        border: none;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 12px 20px;
+        color: #555;
+        transition: 0.2s;
+    }
+
+        .list-group-item:hover {
+            background-color: #f9f9f9;
+            color: #f58220;
+        }
+
+        .list-group-item i {
+            width: 20px;
+            text-align: center;
+        }
+</style>

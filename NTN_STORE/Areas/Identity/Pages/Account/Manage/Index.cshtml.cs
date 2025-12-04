@@ -1,75 +1,85 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
-using System;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Encodings.Web;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using NTN_STORE.Models;
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.IO;
+using System.Text.Encodings.Web;
+using System.Threading.Tasks;
 
 namespace NTN_STORE.Areas.Identity.Pages.Account.Manage
 {
     public class IndexModel : PageModel
     {
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public IndexModel(
-            UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager)
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            IWebHostEnvironment webHostEnvironment)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _webHostEnvironment = webHostEnvironment;
         }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         public string Username { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [TempData]
         public string StatusMessage { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [BindProperty]
         public InputModel Input { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
+        // --- SỬA LỖI 1: THÊM THUỘC TÍNH NÀY ---
+        public string CurrentAvatar { get; set; }
+        // ---------------------------------------
+
         public class InputModel
         {
-            /// <summary>
-            ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-            ///     directly from your code. This API may change or be removed in future releases.
-            /// </summary>
             [Phone]
-            [Display(Name = "Phone number")]
+            [Display(Name = "Số điện thoại")]
             public string PhoneNumber { get; set; }
+
+            [Display(Name = "Họ và tên")]
+            public string FullName { get; set; }
+
+            [Display(Name = "Ngày sinh")]
+            [DataType(DataType.Date)]
+            public DateTime? DateOfBirth { get; set; }
+
+            [Display(Name = "Giới tính")]
+            public string Gender { get; set; }
+
+            [Display(Name = "Ảnh đại diện")]
+            public IFormFile ProfilePicture { get; set; }
         }
 
-        private async Task LoadAsync(IdentityUser user)
+        private async Task LoadAsync(ApplicationUser user)
         {
             var userName = await _userManager.GetUserNameAsync(user);
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
 
             Username = userName;
 
+            // --- SỬA LỖI 2: GÁN GIÁ TRỊ CHO AVATAR ---
+            CurrentAvatar = user.ProfilePicture;
+            // ----------------------------------------
+
             Input = new InputModel
             {
-                PhoneNumber = phoneNumber
+                PhoneNumber = phoneNumber,
+                FullName = user.FullName,
+                DateOfBirth = user.DateOfBirth,
+                Gender = user.Gender
             };
         }
 
@@ -110,8 +120,33 @@ namespace NTN_STORE.Areas.Identity.Pages.Account.Manage
                 }
             }
 
+            // Cập nhật thông tin cá nhân
+            user.FullName = Input.FullName;
+            user.DateOfBirth = Input.DateOfBirth;
+            user.Gender = Input.Gender;
+
+            // Xử lý Upload Avatar
+            if (Input.ProfilePicture != null)
+            {
+                string folderPath = Path.Combine(_webHostEnvironment.WebRootPath, "img/avatars");
+                if (!Directory.Exists(folderPath))
+                {
+                    Directory.CreateDirectory(folderPath);
+                }
+
+                string fileName = Guid.NewGuid().ToString() + Path.GetExtension(Input.ProfilePicture.FileName);
+                string filePath = Path.Combine(folderPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await Input.ProfilePicture.CopyToAsync(stream);
+                }
+                user.ProfilePicture = "/img/avatars/" + fileName;
+            }
+
+            await _userManager.UpdateAsync(user);
             await _signInManager.RefreshSignInAsync(user);
-            StatusMessage = "Your profile has been updated";
+            StatusMessage = "Hồ sơ của bạn đã được cập nhật";
             return RedirectToPage();
         }
     }
