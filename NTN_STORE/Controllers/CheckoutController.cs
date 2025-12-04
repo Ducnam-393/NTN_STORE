@@ -28,13 +28,13 @@ namespace NTN_STORE.Controllers
             return _userManager.GetUserId(User);
         }
 
-        // 1. Action GET (Khi bấm nút MUA HÀNG từ Giỏ)
+        // GET: /Checkout/Index
         [HttpGet]
         public async Task<IActionResult> Index(List<int> selectedIds)
         {
             var userId = _userManager.GetUserId(User);
 
-            // Nếu không có ID nào được chọn (trường hợp truy cập trực tiếp link), thử lấy từ Session cũ
+            // 1. XỬ LÝ SESSION (Giữ nguyên logic của bạn)
             if (selectedIds == null || !selectedIds.Any())
             {
                 var savedIds = HttpContext.Session.GetString("CheckoutItems");
@@ -44,39 +44,77 @@ namespace NTN_STORE.Controllers
                 }
                 else
                 {
-                    // Nếu vẫn không có -> Đá về giỏ hàng
                     TempData["Error"] = "Vui lòng chọn sản phẩm để thanh toán.";
                     return RedirectToAction("Index", "Cart");
                 }
             }
 
-            // Lưu danh sách ID vào Session để dùng cho bước POST sau này
             HttpContext.Session.SetString("CheckoutItems", string.Join(",", selectedIds));
 
-            // Lấy Cart Items từ DB và LỌC theo selectedIds
             var cartItems = await _context.CartItems
-                .Include(c => c.Product).ThenInclude(p => p.Images)
-                .Include(c => c.Variant)
-                .Where(c => c.UserId == userId && selectedIds.Contains(c.Id)) // QUAN TRỌNG: Chỉ lấy item được chọn
+                .AsNoTracking() // 1. Không theo dõi thay đổi (tăng tốc)
+                .Where(c => c.UserId == userId && selectedIds.Contains(c.Id))
+                .Select(c => new CartItem
+                {
+                    Id = c.Id,
+                    ProductId = c.ProductId,
+                    VariantId = c.VariantId,
+                    Quantity = c.Quantity,
+                    UserId = c.UserId,
+
+                    // 2. KỸ THUẬT PROJECTION (CHỌN LỌC): Chỉ lấy trường cần thiết
+                    Product = new Product
+                    {
+                        Id = c.Product.Id,
+                        Name = c.Product.Name,
+                        Price = c.Product.Price,
+                        OriginalPrice = c.Product.OriginalPrice,
+
+                        // 3. QUAN TRỌNG: KHÔNG lấy dòng này: Description = c.Product.Description
+
+                        // 4. CHỈ LẤY 1 ẢNH ĐẦU TIÊN thay vì toàn bộ list ảnh
+                        Images = c.Product.Images.Take(1).Select(img => new ProductImage
+                        {
+                            ImageUrl = img.ImageUrl
+                        }).ToList()
+                    },
+
+                    // 5. Lấy thông tin Variant để check kho/hiển thị màu size
+                    Variant = new ProductVariant
+                    {
+                        Id = c.Variant.Id,
+                        Color = c.Variant.Color,
+                        Size = c.Variant.Size,
+                        Stock = c.Variant.Stock
+                    }
+                })
                 .ToListAsync();
 
             if (!cartItems.Any()) return RedirectToAction("Index", "Cart");
+
+            // 3. KIỂM TRA TỒN KHO
             foreach (var item in cartItems)
             {
                 if (item.Quantity > item.Variant.Stock)
                 {
                     TempData["Error"] = $"Sản phẩm '{item.Product.Name}' chỉ còn {item.Variant.Stock} món. Vui lòng cập nhật lại.";
-                    return RedirectToAction("Index", "Cart"); // Đuổi về giỏ hàng ngay
+                    return RedirectToAction("Index", "Cart");
                 }
             }
-            // Tính toán tiền nong
+
+            // 4. TÍNH TOÁN VÀ COUPON
             var cartVM = new CartViewModel { CartItems = cartItems };
 
-            // Logic Coupon (Áp dụng cho Subtotal của các món ĐÃ CHỌN)
             var couponCode = HttpContext.Session.GetString("CouponCode");
             if (!string.IsNullOrEmpty(couponCode))
             {
-                var coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.Code == couponCode && c.IsActive);
+                // Lấy coupon nhẹ nhàng
+                var coupon = await _context.Coupons
+                    .AsNoTracking()
+                    .Where(c => c.Code == couponCode && c.IsActive)
+                    .Select(c => new { c.Code, c.DiscountPercent, c.DiscountAmount, c.ExpiryDate, c.UsageLimit, c.UsedCount }) // Chỉ lấy cột cần thiết
+                    .FirstOrDefaultAsync();
+
                 if (coupon != null && coupon.ExpiryDate >= DateTime.Now && (coupon.UsageLimit == 0 || coupon.UsedCount < coupon.UsageLimit))
                 {
                     cartVM.AppliedCoupon = coupon.Code;
@@ -88,10 +126,14 @@ namespace NTN_STORE.Controllers
                     if (cartVM.DiscountAmount > cartVM.SubTotal) cartVM.DiscountAmount = cartVM.SubTotal;
                 }
             }
+
+            // 5. LẤY ĐỊA CHỈ
             var savedAddresses = await _context.UserAddresses
+                .AsNoTracking()
                 .Where(a => a.UserId == userId)
                 .OrderByDescending(a => a.IsDefault)
                 .ToListAsync();
+
             var checkoutVM = new CheckoutViewModel
             {
                 Cart = cartVM,
@@ -99,6 +141,7 @@ namespace NTN_STORE.Controllers
                 SavedAddresses = savedAddresses
             };
 
+            // Điền thông tin mặc định
             var defaultAddress = savedAddresses.FirstOrDefault(x => x.IsDefault);
             if (defaultAddress != null)
             {
@@ -108,17 +151,17 @@ namespace NTN_STORE.Controllers
             }
             else
             {
-                // Nếu chưa có địa chỉ thì lấy từ User Profile
                 var currentUser = await _userManager.GetUserAsync(User);
                 if (currentUser != null)
                 {
                     checkoutVM.ShippingDetails.Email = currentUser.Email;
-                    checkoutVM.ShippingDetails.CustomerName = currentUser.FullName; 
+                    checkoutVM.ShippingDetails.CustomerName = currentUser.FullName;
                 }
             }
 
             return View(checkoutVM);
         }
+
 
         // POST: /Checkout/Index
         [HttpPost]

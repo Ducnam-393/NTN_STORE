@@ -75,20 +75,21 @@ namespace NTN_STORE.Controllers
 
         // POST: /Cart/AddToCart
         [HttpPost]
-        [Authorize] // Đảm bảo user đã đăng nhập
+        [Authorize]
         public async Task<IActionResult> AddToCart(int productId, int variantId, int quantity)
         {
-            // 1. KIỂM TRA HỢP LỆ (VALIDATION)
-            if (quantity <= 0) quantity = 1;
+            // 1. KIỂM TRA HỢP LỆ
+            if (quantity <= 0)
+            {
+                // Trả về JSON báo lỗi thay vì Redirect
+                return Json(new { success = false, message = "Số lượng phải lớn hơn 0!" });
+            }
 
-            // Kiểm tra xem Variant có tồn tại thực sự trong DB không?
             var variantExists = await _context.ProductVariants.AnyAsync(v => v.Id == variantId);
-
             if (!variantExists)
             {
-                // Nếu variantId = 0 hoặc ID lạ -> Báo lỗi hoặc quay lại trang cũ
-                TempData["Error"] = "Vui lòng chọn Size/Màu hợp lệ trước khi thêm vào giỏ!";
-                return RedirectToAction("Detail", "Product", new { id = productId });
+                // Trả về JSON báo lỗi
+                return Json(new { success = false, message = "Vui lòng chọn Size/Màu hợp lệ!" });
             }
 
             var userId = _userManager.GetUserId(User);
@@ -99,18 +100,16 @@ namespace NTN_STORE.Controllers
 
             if (cartItem != null)
             {
-                // Nếu đã có -> Cộng dồn số lượng
                 cartItem.Quantity += quantity;
                 _context.CartItems.Update(cartItem);
             }
             else
             {
-                // Nếu chưa có -> Tạo mới
                 var newCartItem = new CartItem
                 {
                     UserId = userId,
                     ProductId = productId,
-                    VariantId = variantId, // Đảm bảo ID này đã được kiểm tra ở bước 1
+                    VariantId = variantId,
                     Quantity = quantity
                 };
                 _context.CartItems.Add(newCartItem);
@@ -118,10 +117,10 @@ namespace NTN_STORE.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Đã thêm vào giỏ hàng!";
-            return RedirectToAction("Index");
+            // --- SỬA ĐOẠN NÀY ---
+            // Thay vì RedirectToAction, trả về JSON success
+            return Json(new { success = true, message = "Đã thêm vào giỏ hàng thành công!" });
         }
-
 
         // POST: /Cart/RemoveItem
         [HttpPost]
