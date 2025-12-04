@@ -51,33 +51,36 @@ namespace NTN_STORE.Areas.Admin.Controllers
             return View(userVMs);
         }
 
-        // 2. CHI TIẾT & LỊCH SỬ MUA HÀNG
+        // GET: Admin/Customers/Details/5
         public async Task<IActionResult> Details(string id)
         {
             if (id == null) return NotFound();
 
-            var user = await _userManager.FindByIdAsync(id);
+            // 1. Lấy User kèm địa chỉ
+            var user = await _userManager.Users
+                .Include(u => u.Addresses)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
             if (user == null) return NotFound();
 
-            // Lấy lịch sử đơn hàng của khách
-            var orders = await _context.Orders
-                .Where(o => o.UserId == id)
-                .OrderByDescending(o => o.CreatedAt)
-                .ToListAsync();
+            // 2. Lấy danh sách đơn hàng
+            var orders = await _context.Orders.Where(o => o.UserId == id).ToListAsync();
 
-            // Lấy Roles hiện tại và Tất cả Roles để hiển thị dropdown
-            var userRoles = await _userManager.GetRolesAsync(user);
+            // 3. Lấy Roles hiện tại của User
+            var roles = await _userManager.GetRolesAsync(user);
+
+            // 4. [QUAN TRỌNG] Lấy tất cả Roles trong hệ thống để đổ vào Dropdown phân quyền
             var allRoles = await _roleManager.Roles.Select(r => r.Name).ToListAsync();
 
-            var vm = new UserDetailViewModel
+            var viewModel = new UserDetailViewModel
             {
                 User = user,
+                Roles = roles,
                 Orders = orders,
-                Roles = userRoles,
-                AllRoles = allRoles
+                AllRoles = allRoles // <--- Gán vào đây
             };
 
-            return View(vm);
+            return View(viewModel);
         }
 
         // 3. KHÓA / MỞ KHÓA TÀI KHOẢN
@@ -106,27 +109,19 @@ namespace NTN_STORE.Areas.Admin.Controllers
 
         // 4. CẬP NHẬT QUYỀN (Role)
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateRole(string userId, string role)
         {
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return NotFound();
 
+            // Xóa quyền cũ (nếu muốn user chỉ có 1 quyền duy nhất)
             var currentRoles = await _userManager.GetRolesAsync(user);
+            await _userManager.RemoveFromRolesAsync(user, currentRoles);
 
-            if (currentRoles.Contains(role))
-            {
-                // Nếu đã có -> Xóa quyền (Gỡ bỏ Admin/Staff)
-                await _userManager.RemoveFromRoleAsync(user, role);
-                TempData["Warning"] = $"Đã gỡ quyền {role} khỏi user {user.UserName}.";
-            }
-            else
-            {
-                // Nếu chưa có -> Thêm quyền
-                await _userManager.AddToRoleAsync(user, role);
-                TempData["Success"] = $"Đã cấp quyền {role} cho user {user.UserName}.";
-            }
+            // Thêm quyền mới
+            await _userManager.AddToRoleAsync(user, role);
 
+            TempData["Success"] = "Cập nhật quyền thành công!";
             return RedirectToAction(nameof(Details), new { id = userId });
         }
         public async Task<IActionResult> ExportExcel()

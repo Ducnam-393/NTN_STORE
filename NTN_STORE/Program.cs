@@ -33,7 +33,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 builder.Services.AddMemoryCache();
-
+builder.Services.AddSingleton<NTN_STORE.Services.QrLoginService>();
 var app = builder.Build();
 // Tự động chạy Seed Data khi khởi động
 using (var scope = app.Services.CreateScope())

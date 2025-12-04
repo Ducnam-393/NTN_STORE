@@ -1,74 +1,317 @@
 ﻿@page
 @model LoginModel
-
 @{
-    ViewData["Title"] = "Đăng nhập";
+    ViewData["Title"] = "Đăng nhập hệ thống";
+    Layout = null;
 }
 
-<div class="container-fluid">
-    <div class="row px-xl-5">
-        <div class="col-12">
-            <nav class="breadcrumb bg-light mb-30">
-                <a class="breadcrumb-item text-dark" asp-controller="Home" asp-action="Index">Trang chủ</a>
-                <span class="breadcrumb-item active">Đăng nhập</span>
-            </nav>
-        </div>
-    </div>
-</div>
-<div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-lg-5 col-md-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-body p-5">
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>@ViewData["Title"] - NTN Store</title>
 
-                    <h3 class="text-center text-uppercase mb-4">@ViewData["Title"]</h3>
+    <link href="~/Admin/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
 
-                    <section>
-                        <form id="account" method="post">
-                            <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+    <link href="~/Admin/css/sb-admin-2.min.css" rel="stylesheet">
 
-                            <div class="form-group mb-3">
-                                <label asp-for="Input.Email" class="form-label font-weight-medium">Email</label>
-                                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                                <span asp-validation-for="Input.Email" class="text-danger"></span>
-                            </div>
+    <style>
+        /* Nền gradient động nhẹ nhàng */
+        body {
+            background: linear-gradient(135deg, #4ff 0%, #2ff 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center; /* Căn giữa chiều dọc */
+        }
 
-                            <div class="form-group mb-3">
-                                <label asp-for="Input.Password" class="form-label font-weight-medium">Mật khẩu</label>
-                                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                                <span asp-validation-for="Input.Password" class="text-danger"></span>
-                            </div>
+        /* Cột ảnh nền bên trái */
+        .bg-login-image {
+            background-image: url('@Url.Content("~/img/carousel-1.jpg")');
+            background-position: center;
+            background-size: cover;
+            min-height: 500px; /* Đảm bảo chiều cao tối thiểu */
+        }
 
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div class="custom-control custom-checkbox">
-                                    <input asp-for="Input.RememberMe" type="checkbox" class="custom-control-input" id="rememberMeCheck">
-                                    <label class="custom-control-label" for="rememberMeCheck">
-                                        @Html.DisplayNameFor(m => m.Input.RememberMe)
-                                    </label>
+        /* Form input đẹp hơn */
+        .form-control-user {
+            border-radius: 10rem;
+            padding: 1.5rem 1rem;
+            font-size: 0.95rem;
+            height: auto; /* Để padding hoạt động tốt */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            border: 1px solid #d1d3e2;
+            transition: all 0.2s;
+        }
+
+            .form-control-user:focus {
+                box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+                border-color: #4ff;
+            }
+
+        /* Nút bấm */
+        .btn-user {
+            font-size: 0.95rem;
+            border-radius: 10rem;
+            padding: 0.75rem 1rem;
+            font-weight: 700; /* Chữ đậm hơn */
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Hiệu ứng chuyển đổi */
+        .animate-fade {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @@keyframes fadeIn {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        /* Khung QR */
+        .qr-frame {
+            border: 2px dashed #4ddf;
+            border-radius: 15px;
+            padding: 20px;
+            background: #f8f9fc;
+            display: inline-block;
+            position: relative;
+        }
+
+            /* Góc trang trí QR */
+            .qr-frame::before, .qr-frame::after {
+                content: '';
+                position: absolute;
+                width: 20px;
+                height: 20px;
+                border-color: #4e73df;
+                border-style: solid;
+                transition: all 0.3s;
+            }
+
+            .qr-frame::before {
+                top: -2px;
+                left: -2px;
+                border-width: 2px 0 0 2px;
+                border-top-left-radius: 15px;
+            }
+
+            .qr-frame::after {
+                bottom: -2px;
+                right: -2px;
+                border-width: 0 2px 2px 0;
+                border-bottom-right-radius: 15px;
+            }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="row justify-content-center w-100">
+            <div class="col-xl-10 col-lg-12 col-md-9">
+
+                <div class="card o-hidden border-0 shadow-lg my-5">
+                    <div class="card-body p-0">
+                        <div class="row">
+                            <div class="col-lg-6 d-none d-lg-block bg-login-image"></div>
+
+                            <div class="col-lg-6">
+                                <div class="p-5 d-flex flex-column justify-content-center h-100">
+
+                                    <div id="loginFormSection" class="animate-fade">
+                                        <div class="text-center mb-4">
+                                            <h1 class="h3 text-gray-900 font-weight-bold">Xin Chào! 👋</h1>
+                                            <p class="text-gray-500 mb-4">Chào mừng bạn quay trở lại NTN Store</p>
+                                        </div>
+
+                                        <form class="user" id="account" method="post">
+                                            <div asp-validation-summary="All" class="text-danger small mb-3" style="list-style:none; padding:0"></div>
+
+                                            <div class="form-group mb-3">
+                                                <input asp-for="Input.Email" class="form-control form-control-user" placeholder="Nhập địa chỉ Email của bạn..." />
+                                                <span asp-validation-for="Input.Email" class="text-danger small ml-3"></span>
+                                            </div>
+
+                                            <div class="form-group mb-3">
+                                                <input asp-for="Input.Password" class="form-control form-control-user" placeholder="Mật khẩu đăng nhập" />
+                                                <span asp-validation-for="Input.Password" class="text-danger small ml-3"></span>
+                                            </div>
+
+                                            <div class="form-group mb-4">
+                                                <div class="custom-control custom-checkbox small ml-1">
+                                                    <input asp-for="Input.RememberMe" class="custom-control-input" />
+                                                    <label class="custom-control-label text-gray-600" asp-for="Input.RememberMe">Ghi nhớ đăng nhập</label>
+                                                </div>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-primary btn-user btn-block shadow-sm">
+                                                ĐĂNG NHẬP
+                                            </button>
+                                        </form>
+
+                                        <div class="text-center mt-3">
+                                            <span class="small text-gray-500">Hoặc đăng nhập nhanh bằng</span>
+                                        </div>
+
+                                        <button onclick="toggleQR(true)" class="btn btn-google btn-user btn-block mt-2 shadow-sm border">
+                                            <i class="fas fa-qrcode fa-fw mr-2"></i> Quét mã QR (Mobile App)
+                                        </button>
+                                    </div>
+
+                                    <div id="qrCodeSection" class="animate-fade text-center" style="display:none;">
+                                        <div class="mb-4">
+                                            <h1 class="h3 text-gray-900 font-weight-bold">Quét Mã QR</h1>
+                                            <p class="text-gray-500">Mở ứng dụng NTN Store để quét</p>
+                                        </div>
+
+                                        <div class="qr-frame mb-3">
+                                            <div id="qrcode"></div>
+                                            <div id="qr-loading" class="d-flex flex-column align-items-center justify-content-center" style="height:160px; width:160px;">
+                                                <div class="spinner-border text-primary mb-2" role="status"></div>
+                                                <small class="text-primary">Đang tạo mã...</small>
+                                            </div>
+                                        </div>
+
+                                        <p class="small font-weight-bold text-primary mb-4" id="qr-status">Đang chờ kết nối...</p>
+
+                                        <button onclick="toggleQR(false)" class="btn btn-light btn-user btn-block border hover-shadow">
+                                            <i class="fas fa-arrow-left mr-2"></i> Quay lại Mật khẩu
+                                        </button>
+                                    </div>
+                                    <hr class="my-4">
+
+                                    <div class="text-center">
+                                        <a class="small font-weight-bold" asp-page="./ForgotPassword">Quên mật khẩu?</a>
+                                    </div>
+                                    <div class="text-center">
+                                        <a class="small font-weight-bold" asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Tạo tài khoản mới!</a>
+                                    </div>
                                 </div>
-                                <a id="forgot-password" asp-page="./ForgotPassword" class="text-primary">Quên mật khẩu?</a>
                             </div>
-
-                            <div>
-                                <button id="login-submit" type="submit" class="btn btn-primary btn-block py-2 font-weight-bold">Đăng nhập</button>
-                            </div>
-
-                            <hr class="my-4" />
-
-                            <div class="text-center">
-                                <p>
-                                    Chưa có tài khoản?
-                                    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-primary font-weight-bold">Đăng ký ngay</a>
-                                </p>
-                            </div>
-                        </form>
-                    </section>
+                        </div>
+                    </div>
                 </div>
+
             </div>
         </div>
-    </div>
-</div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+    </div>
+
+    <script src="~/Admin/vendor/jquery/jquery.min.js"></script>
+    <script src="~/Admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/Admin/vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src="~/Admin/js/sb-admin-2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script>
+        let pollInterval;
+        let currentToken = null;
+        let isQrInitialized = false;
+
+        function toggleQR(showQR) {
+            if (showQR) {
+                $('#loginFormSection').hide();
+                $('#qrCodeSection').fadeIn(300);
+                if (!isQrInitialized) {
+                    loadQr();
+                } else {
+                    // Nếu mã cũ quá lâu (ví dụ 5p), nên load lại
+                    // Ở đây tạm thời giữ mã cũ nếu chưa hết hạn
+                }
+            } else {
+                $('#qrCodeSection').hide();
+                $('#loginFormSection').fadeIn(300);
+            }
+        }
+
+        function loadQr() {
+            // Reset UI state
+            $('#qrcode').empty();
+            $('#qr-loading').removeClass('d-none').css('display', 'flex');
+            $('#qr-status').text("Đang khởi tạo mã bảo mật...");
+            $('#qr-status').removeClass('text-danger text-success').addClass('text-primary');
+
+            if (pollInterval) clearInterval(pollInterval);
+
+            $.get('/QrAuth/GetQrToken', function (data) {
+                $('#qr-loading').hide();
+                currentToken = data.token;
+                isQrInitialized = true;
+
+                // Tạo QR Code
+                new QRCode(document.getElementById("qrcode"), {
+                    text: data.confirmUrl,
+                    width: 160,
+                    height: 160,
+                    colorDark: "#2e59d9", // Màu xanh đậm đẹp hơn đen
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+
+                $('#qr-status').html(`Đang chờ quét...<br><small class='text-muted font-weight-normal'>Hết hạn sau 2 phút</small>`);
+
+                // Bắt đầu hỏi Server
+                startPolling(data.token);
+
+            }).fail(function() {
+                $('#qr-loading').hide();
+                $('#qr-status').text("Lỗi kết nối Server!").addClass('text-danger');
+            });
+        }
+
+        function startPolling(token) {
+            let attempts = 0;
+            const maxAttempts = 60; // 60 lần x 2s = 2 phút (Khớp với server cache)
+
+            pollInterval = setInterval(function () {
+                attempts++;
+                if (attempts > maxAttempts) {
+                    handleExpired();
+                    return;
+                }
+
+                $.get('/QrAuth/CheckLogin?token=' + token, function (response) {
+                    if (response.success) {
+                        $('#qr-status').text("Đăng nhập thành công! Đang chuyển hướng...");
+                        $('#qr-status').removeClass("text-primary text-danger").addClass("text-success");
+
+                        // Hiệu ứng thành công
+                        $('.qr-frame').css('border-color', '#1cc88a'); // Màu xanh lá
+
+                        clearInterval(pollInterval);
+                        window.location.href = response.redirectUrl;
+                    } else if (response.message === "Expired") {
+                        handleExpired();
+                    }
+                });
+            }, 2000);
+        }
+
+        function handleExpired() {
+            $('#qr-status').text("Mã QR đã hết hạn.");
+            $('#qr-status').removeClass("text-primary").addClass("text-danger");
+            $('.qr-frame').css('opacity', '0.5');
+            clearInterval(pollInterval);
+            isQrInitialized = false; // Để lần sau mở lại sẽ tạo mã mới
+
+            // Thêm nút tải lại nhỏ
+            $('#qr-status').append(` <a href="javascript:void(0)" onclick="loadQr(); $('.qr-frame').css('opacity','1');" class="text-danger" style="text-decoration:underline">Tải lại</a>`);
+        }
+    </script>
+
+</body>
+</html>

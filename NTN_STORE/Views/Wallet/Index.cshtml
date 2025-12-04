@@ -1,0 +1,112 @@
+﻿@model NTN_STORE.Controllers.WalletViewModel
+@{
+    ViewData["Title"] = "Kho Voucher & Ưu đãi";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Sử dụng Layout chính của Web
+}
+
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-3">
+            <partial name="~/Areas/Identity/Pages/Account/Manage/_ManageNav.cshtml" />
+        </div>
+
+        <div class="col-md-9">
+            <div class="bg-white p-4 rounded shadow-sm" style="min-height: 500px;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="font-weight-bold text-gray-800 mb-0">Kho Voucher của tôi</h4>
+                    <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="location.reload()">
+                        <i class="fas fa-sync-alt mr-1"></i> Cập nhật
+                    </button>
+                </div>
+
+                <ul class="nav nav-pills mb-4 border-bottom pb-3" id="voucherTab" role="tablist">
+                    <li class="nav-item mr-2">
+                        <a class="nav-link active rounded-pill font-weight-bold" id="usable-tab" data-toggle="pill" href="#usable" role="tab">
+                            Khả dụng <span class="badge badge-light ml-1 text-primary">@Model.UsableCoupons.Count</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mr-2">
+                        <a class="nav-link rounded-pill font-weight-bold" id="expiring-tab" data-toggle="pill" href="#expiring" role="tab">
+                            Sắp hết hạn <span class="badge badge-danger ml-1">@Model.ExpiringSoonCoupons.Count</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link rounded-pill font-weight-bold" id="history-tab" data-toggle="pill" href="#history" role="tab">
+                            Lịch sử / Hết hạn
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="voucherTabContent">
+
+                    <div class="tab-pane fade show active" id="usable" role="tabpanel">
+                        @if (Model.UsableCoupons.Any())
+                        {
+                            <div class="row">
+                                @foreach (var item in Model.UsableCoupons)
+                                {
+                                    <div class="col-lg-6 mb-3">
+                                        @await Html.PartialAsync("_CouponCard", item, new ViewDataDictionary(ViewData) { { "Status", "Active" } })
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-5 mt-4">
+                                <img src="~/img/undraw_empty.svg" width="120" class="mb-3" style="opacity:0.6; filter: grayscale(100%);">
+                                <h6 class="text-muted">Bạn chưa có voucher nào khả dụng.</h6>
+                                <a href="/" class="btn btn-primary btn-sm mt-2 rounded-pill px-4">Săn ngay</a>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="tab-pane fade" id="expiring" role="tabpanel">
+                        <div class="row">
+                            @if (Model.ExpiringSoonCoupons.Any())
+                            {
+                                foreach (var item in Model.ExpiringSoonCoupons)
+                                {
+                                    <div class="col-lg-6 mb-3">
+                                        @await Html.PartialAsync("_CouponCard", item, new ViewDataDictionary(ViewData) { { "Status", "Expiring" } })
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center py-5 w-100 text-muted">Không có voucher nào sắp hết hạn.</div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="history" role="tabpanel">
+                        <div class="row">
+                            @if (Model.UsedOrExpiredCoupons.Any())
+                            {
+                                foreach (var item in Model.UsedOrExpiredCoupons)
+                                {
+                                    <div class="col-lg-6 mb-3">
+                                        @await Html.PartialAsync("_CouponCard", item, new ViewDataDictionary(ViewData) { { "Status", "Inactive" } })
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center py-5 w-100 text-muted">Chưa có lịch sử sử dụng.</div>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function copyCode(code) {
+        navigator.clipboard.writeText(code);
+        // Tạo toast thông báo đẹp hơn (nếu có thư viện) hoặc alert đơn giản
+        alert("Đã sao chép mã: " + code);
+    }
+</script>

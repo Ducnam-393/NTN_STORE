@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="NTN Store Admin Dashboard">
+    <meta name="author" content="NTN Store">
     <title>@ViewData["Title"] - Quản trị hệ thống</title>
 
     <link href="~/Admin/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
@@ -12,47 +14,140 @@
     <link href="~/Admin/css/sb-admin-2.min.css" rel="stylesheet">
 
     <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --sidebar-bg: #1a1c23;
+            --hover-bg: rgba(255, 255, 255, 0.1);
+            --active-bg: #fff;
+            --active-text: #4e73df;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #f8f9fc;
+        }
+
+        /* 1. MODERN SIDEBAR DESIGN */
+        .sidebar {
+            background: var(--primary-gradient) !important;
+            box-shadow: 4px 0 25px rgba(0,0,0,0.05);
+            background-size: 150% 150%;
+            animation: gradientBG 15s ease infinite;
+        }
+
+        @@keyframes gradientBG {
+            0%
+
+        {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+
+        }
+
+        .sidebar .nav-item .nav-link {
+            padding: 1rem 1.5rem;
+            color: rgba(255,255,255,0.8);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-radius: 0 25px 25px 0; /* Bo tròn 1 bên */
+            margin-right: 1rem;
+        }
+
+            .sidebar .nav-item .nav-link:hover {
+                background-color: var(--hover-bg);
+                color: #fff;
+                padding-left: 2rem; /* Hiệu ứng đẩy chữ */
+            }
+
+            .sidebar .nav-item .nav-link i {
+                font-size: 1.1rem;
+                margin-right: 0.5rem;
+                transition: transform 0.3s;
+            }
+
+            .sidebar .nav-item .nav-link:hover i {
+                transform: scale(1.2) rotate(5deg);
+            }
+
+        /* Active State */
+        .sidebar .nav-item.active .nav-link {
+            background-color: var(--active-bg);
+            color: var(--active-text);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+            .sidebar .nav-item.active .nav-link i {
+                color: var(--active-text) !important;
+            }
+
+        .sidebar-brand {
+            background: rgba(255,255,255,0.1);
+            margin-bottom: 1rem;
+        }
+
         .sidebar-brand-icon i {
             color: #f6c23e;
-        }
-        /* Màu vàng cam cho icon logo */
-        .table td, .table th {
-            vertical-align: middle;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        .btn-sm-custom {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.875rem;
-            border-radius: 0.2rem;
+        /* 2. TOPBAR & CONTENT */
+        .topbar {
+            background-color: #fff;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+            height: 4.375rem;
         }
 
-        .img-thumbnail-admin {
-            width: 60px;
-            height: 60px;
+        .img-profile {
+            width: 40px;
+            height: 40px;
             object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-        }
-        /* Badge trạng thái đẹp hơn */
-        .badge-success-soft {
-            background-color: #d1e7dd;
-            color: #0f5132;
-            padding: 5px 10px;
-            border-radius: 20px;
+            border: 2px solid #e3e6f0;
+            padding: 2px;
+            transition: all 0.2s;
         }
 
-        .badge-warning-soft {
-            background-color: #fff3cd;
-            color: #664d03;
-            padding: 5px 10px;
-            border-radius: 20px;
+        .nav-link:hover .img-profile {
+            border-color: #4e73df;
+            transform: scale(1.05);
         }
 
-        .badge-danger-soft {
-            background-color: #f8d7da;
-            color: #842029;
-            padding: 5px 10px;
-            border-radius: 20px;
+        /* 3. CUSTOM SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #a8a8a8;
+            }
+
+        /* 4. UTILITIES */
+        .card {
+            border: none;
+            border-radius: 15px; /* Bo góc card toàn trang */
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.05) !important;
+        }
+
+        .btn {
+            border-radius: 8px; /* Bo góc nút bấm */
+            padding: 6px 16px;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -61,13 +156,13 @@
 
     <div id="wrapper">
 
-        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar" style="background-image: linear-gradient(180deg, #224abe 10%, #4e73df 100%);">
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <a class="sidebar-brand d-flex align-items-center justify-content-center" href="/Admin">
                 <div class="sidebar-brand-icon rotate-n-15">
-                    <i class="fas fa-shoe-prints"></i>
+                    <i class="fas fa-shoe-prints fa-2x"></i>
                 </div>
-                <div class="sidebar-brand-text mx-3">NTN Admin</div>
+                <div class="sidebar-brand-text mx-3">NTN Admin <sup>v2</sup></div>
             </a>
 
             <hr class="sidebar-divider my-0">
@@ -81,35 +176,35 @@
 
             <hr class="sidebar-divider">
 
-            <div class="sidebar-heading">Kinh doanh</div>
+            <div class="sidebar-heading">
+                Quản lý Kinh doanh
+            </div>
 
             <li class="nav-item">
                 <a class="nav-link" href="/Admin/Orders">
-                    <i class="fas fa-fw fa-shopping-cart"></i>
+                    <i class="fas fa-fw fa-receipt"></i>
                     <span>Đơn hàng</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseProduct" aria-expanded="true">
-                    <i class="fas fa-fw fa-box"></i>
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
+                   aria-expanded="true" aria-controls="collapseTwo">
+                    <i class="fas fa-fw fa-box-open"></i>
                     <span>Sản phẩm</span>
                 </a>
-                <div id="collapseProduct" class="collapse" data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Quản lý hàng hóa:</h6>
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded shadow-sm">
+                        <h6 class="collapse-header">Kho hàng & Dữ liệu:</h6>
                         <a class="collapse-item" href="/Admin/Products">Tất cả sản phẩm</a>
-                        <a class="collapse-item" href="/Admin/Categories">Danh mục</a>
+                        <a class="collapse-item" href="/Admin/Categories">Danh mục (Loại)</a>
                         <a class="collapse-item" href="/Admin/Brands">Thương hiệu</a>
+                        <div class="collapse-divider"></div>
+                        <a class="collapse-item" href="/Admin/Inventory">Nhập kho</a>
                     </div>
                 </div>
             </li>
-             <li class="nav-item">
-                <a class="nav-link" href="/Admin/Inventory">
-                    <i class="fas fa-fw fa-box"></i>
-                    <span>Kho hàng</span>
-                </a>
-            </li>
+
             <li class="nav-item">
                 <a class="nav-link" href="/Admin/Customers">
                     <i class="fas fa-fw fa-users"></i>
@@ -119,103 +214,123 @@
 
             <hr class="sidebar-divider">
 
-            <div class="sidebar-heading">Marketing</div>
+            <div class="sidebar-heading">
+                Marketing & Nội dung
+            </div>
 
             <li class="nav-item">
                 <a class="nav-link" href="/Admin/Coupons">
-                    <i class="fas fa-fw fa-ticket-alt"></i>
+                    <i class="fas fa-fw fa-tags"></i>
                     <span>Mã giảm giá</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a class="nav-link" href="/Admin/Sliders">
-                    <i class="fas fa-fw fa-ticket-alt"></i>
-                    <span>Banner Store</span>
+                    <i class="fas fa-fw fa-images"></i>
+                    <span>Banner & Slider</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a class="nav-link" href="/Admin/Blog">
-                    <i class="fas fa-fw fa-newspaper"></i>
+                    <i class="fas fa-fw fa-blog"></i>
                     <span>Tin tức / Blog</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="/Admin/Reviews">
-                    <i class="fas fa-fw fa-newspaper"></i>
-                    <span>Bình luận / Đánh Giá</span>
+                    <i class="fas fa-fw fa-star"></i>
+                    <span>Đánh giá</span>
                 </a>
             </li>
+
+            <hr class="sidebar-divider d-none d-md-block">
 
             <div class="text-center d-none d-md-inline">
                 <button class="rounded-circle border-0" id="sidebarToggle"></button>
             </div>
+
         </ul>
         <div id="content-wrapper" class="d-flex flex-column">
+
             <div id="content">
 
                 <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>
 
                     <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
                         <div class="input-group">
-                            <input type="text" class="form-control bg-light border-0 small" placeholder="Tìm kiếm nhanh..." aria-label="Search">
-                            <div class="input-group-append">
-                                <button class="btn btn-primary" type="button"><i class="fas fa-search fa-sm"></i></button>
+                            <input type="text" class="form-control bg-light border-0 small rounded-pill" placeholder="Tìm kiếm..." aria-label="Search" aria-describedby="basic-addon2">
+                            <div class="input-group-append" style="margin-left: -40px; z-index: 5;">
+                                <button class="btn btn-link" type="button">
+                                    <i class="fas fa-search fa-sm"></i>
+                                </button>
                             </div>
                         </div>
                     </form>
 
                     <ul class="navbar-nav ml-auto">
+
+                        <div class="topbar-divider d-none d-sm-block"></div>
+
                         <li class="nav-item dropdown no-arrow">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Xin chào, Quản trị viên</span>
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small font-weight-bold">Xin chào, Quản trị viên</span>
                                 <img class="img-profile rounded-circle" src="~/Admin/img/undraw_profile.svg">
                             </a>
-                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in">
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                                 aria-labelledby="userDropdown">
                                 <a class="dropdown-item" href="/">
-                                    <i class="fas fa-home fa-sm fa-fw mr-2 text-gray-400"></i> Về trang bán hàng
+                                    <i class="fas fa-home fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Về trang bán hàng
                                 </a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
-                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Đăng xuất
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Đăng xuất
                                 </a>
                             </div>
                         </li>
+
                     </ul>
+
                 </nav>
                 <div class="container-fluid">
                     @RenderBody()
                 </div>
             </div>
-            <footer class="sticky-footer bg-white">
+            <footer class="sticky-footer bg-white shadow-sm mt-4">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; NTN Store Admin 2025</span>
+                        <span>Copyright &copy; NTN Store Admin @DateTime.Now.Year</span>
                     </div>
                 </div>
             </footer>
         </div>
     </div>
-
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
     </a>
 
-    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Bạn muốn đăng xuất?</h5>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="exampleModalLabel">Xác nhận đăng xuất?</h5>
+                    <button class="close text-white" type="button" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>
                 </div>
-                <div class="modal-body">Chọn "Đăng xuất" bên dưới nếu bạn đã hoàn thành công việc.</div>
+                <div class="modal-body">Bạn có chắc chắn muốn đăng xuất khỏi hệ thống quản trị không?</div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Hủy</button>
-                    <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/"><button type="submit" class="btn btn-primary">Đăng xuất</button></form>
+                    <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/"><button type="submit" class="btn btn-danger">Đăng xuất ngay</button></form>
                 </div>
             </div>
         </div>
@@ -223,8 +338,11 @@
 
     <script src="~/Admin/vendor/jquery/jquery.min.js"></script>
     <script src="~/Admin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
     <script src="~/Admin/vendor/jquery-easing/jquery.easing.min.js"></script>
+
     <script src="~/Admin/js/sb-admin-2.min.js"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 
 </body>

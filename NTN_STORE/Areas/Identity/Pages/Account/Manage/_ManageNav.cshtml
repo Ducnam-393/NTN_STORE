@@ -32,7 +32,10 @@
     <a class="list-group-item list-group-item-action" asp-controller="Wishlist" asp-action="Index">
         <i class="fas fa-heart me-2 text-danger"></i> Sản phẩm yêu thích
     </a>
-
+    <a class="list-group-item list-group-item-action @(ViewContext.RouteData.Values["controller"]?.ToString() == "Wallet" ? "active-nav" : "")"
+       asp-area="" asp-controller="Wallet" asp-action="Index">
+        <i class="fas fa-ticket-alt me-2 text-warning" style="width:20px"></i> Kho Voucher
+    </a>
     @if (hasExternalLogins)
     {
         <a class="list-group-item list-group-item-action @(ViewContext.RouteData.Values["page"]?.ToString() == "/Account/Manage/ExternalLogins" ? "active-nav" : "")"

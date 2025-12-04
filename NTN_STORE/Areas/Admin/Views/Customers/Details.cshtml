@@ -1,157 +1,202 @@
 ﻿@model NTN_STORE.Models.ViewModels.UserDetailViewModel
 @using Microsoft.AspNetCore.Identity
-@* 1. Inject UserManager trực tiếp vào View *@
 @inject UserManager<ApplicationUser> UserManager
 
 @{
     ViewData["Title"] = "Hồ sơ khách hàng";
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 
-    // 2. Sử dụng biến đã inject để kiểm tra trạng thái khóa
     bool isLocked = await UserManager.IsLockedOutAsync(Model.User);
+
+    // Tính toán thống kê
+    decimal totalSpent = Model.Orders?.Sum(x => x.TotalAmount) ?? 0;
+    int totalOrders = Model.Orders?.Count() ?? 0;
+
+    // Lấy địa chỉ mặc định
+    var defaultAddress = Model.User.Addresses?.FirstOrDefault(x => x.IsDefault) ?? Model.User.Addresses?.FirstOrDefault();
+    string displayAddress = defaultAddress != null
+        ? $"{defaultAddress.Address}, {defaultAddress.Ward}, {defaultAddress.District}, {defaultAddress.Province}"
+        : "Chưa cập nhật địa chỉ";
 }
 
-<div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">Hồ sơ: <span class="text-primary">@Model.User.UserName</span></h1>
-    <a asp-action="Index" class="btn btn-secondary btn-sm shadow-sm"><i class="fas fa-arrow-left"></i> Quay lại</a>
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h3 mb-0 text-gray-800">Hồ sơ: <span class="text-primary">@Model.User.UserName</span></h1>
+        <p class="text-muted mb-0">Quản lý thông tin, phân quyền và lịch sử đơn hàng</p>
+    </div>
+    <a asp-action="Index" class="btn btn-secondary shadow-sm">
+        <i class="fas fa-arrow-left mr-2"></i>Quay lại
+    </a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Tổng chi tiêu</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@totalSpent.ToString("N0") đ</div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-coins fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Tổng đơn hàng</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">@totalOrders đơn</div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-shopping-cart fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Trạng thái</div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            @(isLocked? Html.Raw("<span class='text-danger'>Bị khóa <i class='fas fa-lock'></i></span>") : Html.Raw("<span class='text-success'>Hoạt động <i class='fas fa-check-circle'></i></span>"))
+                        </div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-user-shield fa-2x text-gray-300"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="row">
     <div class="col-lg-4">
         <div class="card shadow mb-4">
-            <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                <h6 class="m-0 font-weight-bold text-primary">Thông tin cá nhân</h6>
-                @if (isLocked)
-                {
-                    <span class="badge badge-danger">Đang bị khóa</span>
-                }
-                else
-                {
-                    <span class="badge badge-success">Hoạt động</span>
-                }
+            <div class="card-header py-3 bg-gradient-primary">
+                <h6 class="m-0 font-weight-bold text-white"><i class="fas fa-user-circle mr-2"></i>Thông tin cá nhân</h6>
             </div>
             <div class="card-body text-center">
-                <img class="img-profile rounded-circle mb-3" src="~/Admin/img/undraw_profile.svg" style="width: 100px;">
-                <h5 class="font-weight-bold">@Model.User.Email</h5>
-                <p class="text-muted">SĐT: @(Model.User.PhoneNumber ?? "Chưa cập nhật")</p>
-
-                <hr>
-                <div class="text-left">
-                    <p><strong>ID:</strong> <small class="text-muted">@Model.User.Id</small></p>
-                    <p>
-                        <strong>Vai trò hiện tại:</strong>
-                        @if (Model.Roles.Any())
-                        {
-                            @foreach (var r in Model.Roles)
-                            {
-                                <span class="badge badge-info mr-1">@r</span>
-                            }
-                        }
-                        else
-                        {
-                            <span class="badge badge-secondary">Customer</span>
-                        }
-                    </p>
+                <div class="mb-3">
+                    <img class="img-profile rounded-circle shadow"
+                         src="@(string.IsNullOrEmpty(Model.User.ProfilePicture) ? "/img/undraw_profile.svg" : Model.User.ProfilePicture)"
+                         style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #eaecf4;" alt="Avatar">
                 </div>
+                <h5 class="font-weight-bold text-dark">@(Model.User.FullName ?? "Chưa đặt tên")</h5>
+                <p class="text-muted">@Model.User.Email</p>
 
-                <form asp-action="ToggleStatus" method="post" class="mt-3">
-                    <input type="hidden" name="id" value="@Model.User.Id" />
-                    @if (isLocked)
-                    {
-                        <button type="submit" class="btn btn-success btn-block" onclick="return confirm('Mở khóa tài khoản này?')">
-                            <i class="fas fa-unlock me-2"></i> Mở khóa tài khoản
-                        </button>
-                    }
-                    else
-                    {
-                        <button type="submit" class="btn btn-warning btn-block text-white" onclick="return confirm('Bạn chắc chắn muốn KHÓA tài khoản này?')">
-                            <i class="fas fa-lock me-2"></i> Khóa tài khoản
-                        </button>
-                    }
-                </form>
+                <div class="text-left px-2 mt-4">
+                    <p class="mb-2"><i class="fas fa-phone-alt text-primary mr-2 fa-fw"></i> <strong>SĐT:</strong> @(Model.User.PhoneNumber ?? "---")</p>
+                    <p class="mb-2"><i class="fas fa-venus-mars text-info mr-2 fa-fw"></i> <strong>Giới tính:</strong> @(Model.User.Gender ?? "---")</p>
+                    <p class="mb-0"><i class="fas fa-map-marker-alt text-danger mr-2 fa-fw"></i> <strong>Đ/C:</strong> @displayAddress</p>
+                </div>
             </div>
         </div>
 
         <div class="card shadow mb-4">
-            <div class="card-header py-3 bg-gradient-primary">
-                <h6 class="m-0 font-weight-bold text-white">Quản lý Quyền hạn (Roles)</h6>
+            <div class="card-header py-3 d-flex align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-user-tag mr-2"></i>Phân quyền</h6>
             </div>
             <div class="card-body">
-                <p class="small mb-3 text-muted">Cấp quyền hoặc gỡ quyền cho user này:</p>
-                <div class="list-group list-group-flush">
-                    @foreach (var role in Model.AllRoles)
-                    {
-                        bool hasRole = Model.Roles.Contains(role);
-                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
-                            <span class="font-weight-bold @(hasRole ? "text-primary" : "text-secondary")">@role</span>
-                            <form asp-action="UpdateRole" method="post">
-                                <input type="hidden" name="userId" value="@Model.User.Id" />
-                                <input type="hidden" name="role" value="@role" />
-                                @if (hasRole)
-                                {
-                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Gỡ quyền @role?')">Gỡ</button>
-                                }
-                                else
-                                {
-                                    <button type="submit" class="btn btn-outline-primary btn-sm">Cấp quyền</button>
-                                }
-                            </form>
-                        </div>
-                    }
+                <div class="mb-3">
+                    <label class="small font-weight-bold text-secondary">Vai trò hiện tại:</label>
+                    <div>
+                        @if (Model.Roles != null && Model.Roles.Any())
+                        {
+                            @foreach (var role in Model.Roles)
+                            {
+                                <span class="badge badge-info p-2 mr-1">@role</span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="badge badge-secondary p-2">Khách hàng (Chưa có quyền)</span>
+                        }
+                    </div>
                 </div>
+
+                <hr>
+
+                <form asp-action="UpdateRole" method="post">
+                    <input type="hidden" name="userId" value="@Model.User.Id" />
+                    <div class="form-group">
+                        <label class="small font-weight-bold">Cập nhật vai trò:</label>
+                        <select name="role" class="form-control custom-select">
+                            <option value="">-- Chọn quyền --</option>
+                            @if (Model.AllRoles != null)
+                            {
+                                foreach (var role in Model.AllRoles)
+                                {
+                                    <option value="@role">@role</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-save mr-1"></i> Lưu thay đổi
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 
     <div class="col-lg-8">
         <div class="card shadow mb-4">
-            <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                <h6 class="m-0 font-weight-bold text-primary">Lịch sử mua hàng (@Model.Orders.Count() đơn)</h6>
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-history mr-2"></i>Lịch sử đơn hàng</h6>
             </div>
             <div class="card-body">
-                @if (Model.Orders.Any())
+                @if (Model.Orders != null && Model.Orders.Any())
                 {
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover" width="100%" cellspacing="0">
-                            <thead class="thead-light">
+                        <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                            <thead class="bg-light text-dark">
                                 <tr>
-                                    <th>Mã đơn</th>
-                                    <th>Ngày đặt</th>
-                                    <th>Tổng tiền</th>
-                                    <th>Trạng thái</th>
-                                    <th></th>
+                                    <th>Mã Đơn</th>
+                                    <th>Ngày Đặt</th>
+                                    <th>Tổng Tiền</th>
+                                    <th>Trạng Thái</th>
+                                    <th class="text-center">Chi tiết</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var order in Model.Orders)
+                                @foreach (var order in Model.Orders.OrderByDescending(o => o.CreatedAt))
                                 {
                                     <tr>
-                                        <td><a asp-controller="Orders" asp-action="Details" asp-route-id="@order.Id" class="font-weight-bold text-primary">#@order.OrderCode</a></td>
-                                        <td>@order.CreatedAt.ToString("dd/MM/yyyy")</td>
-                                        <td class="text-danger font-weight-bold">@order.TotalAmount.ToString("N0")₫</td>
+                                        <td class="font-weight-bold text-primary">#@order.OrderCode</td>
+                                        <td>@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td class="font-weight-bold text-danger">@order.TotalAmount.ToString("N0") đ</td>
                                         <td>
-                                            @if (order.Status == "Completed")
+                                            @if (order.Status == "Pending" || order.Status == "Unpaid")
                                             {
-                                                <span class="badge badge-success">Hoàn thành</span>
+                                                <span class="badge badge-warning">Chờ xử lý</span>
                                             }
-                                            else if (order.Status == "Cancelled")
+                                            else if (order.Status == "Paid" || order.Status == "Completed")
                                             {
 
-                                                <span class="badge badge-danger">Đã hủy</span>
+                                                <span class="badge badge-success">Hoàn thành</span>
                                             }
                                             else if (order.Status == "Shipping")
                                             {
 
                                                 <span class="badge badge-info">Đang giao</span>
                                             }
+                                            else if (order.Status == "Cancelled")
+                                            {
+
+                                                <span class="badge badge-secondary">Đã hủy</span>
+                                            }
                                             else
                                             {
 
-                                                <span class="badge badge-warning text-dark">@order.Status</span>
+                                                <span class=\"badge badge-light border\">@order.Status</span>
                                             }
                                         </td>
                                         <td class="text-center">
-                                            <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-info shadow-sm">
+                                            <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-circle btn-info">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                         </td>
@@ -163,9 +208,9 @@
                 }
                 else
                 {
-                    <div class="text-center py-5 text-muted">
-                        <i class="fas fa-shopping-basket fa-3x mb-3 text-gray-300"></i>
-                        <p>Khách hàng này chưa có đơn hàng nào.</p>
+                    <div class="text-center py-5">
+                        <i class="fas fa-box-open fa-3x text-gray-300 mb-3"></i>
+                        <p class="text-gray-500">Chưa có lịch sử đơn hàng.</p>
                     </div>
                 }
             </div>

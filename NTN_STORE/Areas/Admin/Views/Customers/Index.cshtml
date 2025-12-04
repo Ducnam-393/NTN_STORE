@@ -4,74 +4,136 @@
     Layout = "~/Areas/Admin/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="card shadow mb-4">
-    <div class="card-header py-3">
-        <h6 class="m-0 font-weight-bold text-primary">Danh sách Tài khoản</h6>
-        <a asp-action="ExportExcel" class="btn btn-success btn-sm shadow-sm"><i class="fas fa-file-excel"></i> Xuất Excel</a>
-    </div>
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 text-gray-800">Danh sách Khách hàng</h1>
+    <a asp-action="ExportExcel" class="btn btn-sm btn-success shadow-sm">
+        <i class="fas fa-file-excel mr-2"></i>Xuất Excel
+    </a>
+</div>
 
+<div class="card shadow mb-4">
+    <div class="card-header py-3 bg-white d-flex align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">
+            <i class="fas fa-users mr-2"></i>Tất cả tài khoản (@Model.Count())
+        </h6>
+    </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+            <table class="table table-hover align-middle" id="dataTable" width="100%" cellspacing="0">
                 <thead class="thead-light">
                     <tr>
-                        <th>Tài khoản / Email</th>
-                        <th>SĐT</th>
-                        <th>Vai trò (Role)</th>
-                        <th class="text-center">Trạng thái</th>
-                        <th class="text-center">Thao tác</th>
+                        <th style="width: 5%">#</th>
+                        <th style="width: 30%">Thông tin tài khoản</th>
+                        <th style="width: 15%">Liên hệ</th>
+                        <th style="width: 20%">Vai trò</th>
+                        <th style="width: 15%">Trạng thái</th>
+                        <th class="text-center" style="width: 15%">Hành động</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var item in Model)
+                    @if (Model != null && Model.Any())
                     {
-                        <tr>
-                            <td>
-                                <div class="font-weight-bold text-primary">@item.UserName</div>
-                                <small class="text-muted">@item.Email</small>
-                            </td>
-                            <td>@item.PhoneNumber</td>
-                            <td>
-                                @foreach (var role in item.Roles)
-                                {
-                                    <span class="badge badge-info mr-1">@role</span>
-                                }
-                            </td>
-                            <td class="text-center">
-                                @if (item.IsLocked)
-                                {
-                                    <span class="badge badge-danger p-2">Đang bị khóa</span>
-                                }
-                                else
-                                {
-                                    <span class="badge badge-success p-2">Hoạt động</span>
-                                }
-                            </td>
-                            <td class="text-center">
-                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-primary shadow-sm">
-                                    <i class="fas fa-user-cog"></i> Chi tiết
-                                </a>
-
-                                <form asp-action="ToggleStatus" method="post" class="d-inline ml-1">
-                                    <input type="hidden" name="id" value="@item.Id" />
-                                    @if (item.IsLocked)
+                        int index = 1;
+                        foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@(index++)</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-gradient-primary text-white rounded-circle mr-3 d-flex align-items-center justify-content-center"
+                                             style="width: 40px; height: 40px; font-size: 1.2rem;">
+                                            @(item.UserName?.Substring(0, 1).ToUpper() ?? "U")
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-bold text-dark">@item.UserName</div>
+                                            <div class="small text-muted">ID: @item.Id.Substring(0, 8)...</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="text-dark"><i class="fas fa-envelope text-gray-400 mr-1"></i> @item.Email</span>
+                                        <span class="small text-muted mt-1"><i class="fas fa-phone text-gray-400 mr-1"></i> @(item.PhoneNumber ?? "---")</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (item.Roles != null && item.Roles.Any())
                                     {
-                                        <button type="submit" class="btn btn-sm btn-success shadow-sm" title="Mở khóa" onclick="return confirm('Mở khóa tài khoản này?')">
-                                            <i class="fas fa-unlock"></i>
-                                        </button>
+                                        @foreach (var role in item.Roles)
+                                        {
+                                            if (role == "Admin")
+                                            {
+                                                <span class="badge badge-danger px-2 py-1">@role</span>
+                                            }
+                                            else if (role == "Staff" || role == "Manager")
+                                            {
+                                                <span class="badge badge-warning px-2 py-1">@role</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-info px-2 py-1">@role</span>
+                                            }
+                                        }
                                     }
                                     else
                                     {
-                                        <button type="submit" class="btn btn-sm btn-warning shadow-sm" title="Khóa tài khoản" onclick="return confirm('Bạn chắc chắn muốn KHÓA tài khoản này?')">
-                                            <i class="fas fa-lock"></i>
-                                        </button>
+                                        <span class="badge badge-light border text-secondary">Customer</span>
                                     }
-                                </form>
-                            </td>
-                        </tr>
+                                </td>
+                                <td>
+                                    @if (item.IsLocked)
+                                    {
+                                        <span class="badge badge-pill badge-danger">
+                                            <i class="fas fa-lock mr-1"></i> Đang khóa
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-pill badge-success">
+                                            <i class="fas fa-check-circle mr-1"></i> Hoạt động
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Xem chi tiết">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+
+                                        <form asp-action="ToggleStatus" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            @if (item.IsLocked)
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-outline-success ml-1" title="Mở khóa" onclick="return confirm('Mở khóa tài khoản này?')">
+                                                    <i class="fas fa-unlock"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="btn btn-sm btn-outline-danger ml-1" title="Khóa tài khoản" onclick="return confirm('Bạn chắc chắn muốn KHÓA tài khoản này?')">
+                                                    <i class="fas fa-lock"></i>
+                                                </button>
+                                            }
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<style>
+    .table td {
+        vertical-align: middle !important;
+    }
+
+    .badge-pill {
+        padding-right: 0.6em;
+        padding-left: 0.6em;
+        border-radius: 10rem;
+    }
+</style>

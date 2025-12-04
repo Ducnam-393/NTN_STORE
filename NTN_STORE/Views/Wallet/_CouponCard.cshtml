@@ -1,0 +1,97 @@
+﻿@model NTN_STORE.Models.Coupon
+@{
+    string status = (string)ViewData["Status"];
+    bool isInactive = status == "Inactive";
+    bool isExpiring = status == "Expiring";
+
+    // Màu sắc dựa trên trạng thái
+    string cardBorder = isInactive ? "border-secondary" : (isExpiring ? "border-warning" : "border-primary");
+    string bgLeft = isInactive ? "bg-secondary" : (isExpiring ? "bg-warning" : "bg-gradient-primary");
+}
+
+<div class="coupon-ticket d-flex bg-white rounded shadow-sm overflow-hidden h-100 position-relative @(isInactive ? "opacity-50" : "")">
+
+    <div class="@bgLeft text-white d-flex flex-column align-items-center justify-content-center p-3" style="width: 30%; min-width: 90px; position:relative;">
+        <div style="font-weight: 800; font-size: 1.4rem; line-height:1.1;">
+            @if (Model.DiscountPercent > 0)
+            {
+                @Model.DiscountPercent
+            
+                <span style="font-size:0.8rem">%</span>
+            }
+            else
+            {
+                <span style="font-size:1rem">VND</span>
+            }
+        </div>
+        <small class="text-uppercase" style="font-size: 0.65rem; letter-spacing:1px;">OFF</small>
+
+        <div class="ticket-dots"></div>
+    </div>
+
+    <div class="p-3 d-flex flex-column justify-content-between flex-grow-1" style="border: 1px solid #eee; border-left:none; border-radius: 0 8px 8px 0;">
+        <div>
+            <div class="d-flex justify-content-between align-items-start mb-1">
+                <span class="badge @(isInactive ? "badge-light border" : "badge-light text-primary border border-primary") px-2">
+                    @Model.Code
+                </span>
+                @if (isExpiring)
+                {
+                    <small class="text-warning font-weight-bold" style="font-size:10px;"><i class="fas fa-clock"></i> Sắp hết</small>
+                }
+            </div>
+
+            <h6 class="font-weight-bold text-dark mb-1" style="font-size: 0.95rem;">
+                Giảm @(Model.DiscountPercent > 0 ? Model.DiscountPercent + "%" : Model.DiscountAmount.ToString("N0") + "đ")
+            </h6>
+            <p class="text-muted mb-0" style="font-size: 0.75rem; line-height: 1.3;">
+                @(string.IsNullOrEmpty(Model.Description) ? "Áp dụng cho toàn bộ sản phẩm" : Model.Description)
+            </p>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-end mt-2 pt-2 border-top border-light">
+            <small class="text-muted" style="font-size: 0.7rem;">
+                HSD: @Model.ExpiryDate.ToString("dd/MM/yyyy")
+            </small>
+
+            @if (!isInactive)
+            {
+                <button onclick="copyCode('@Model.Code')" class="btn btn-sm btn-primary py-0 px-2 shadow-sm" style="font-size: 0.75rem;">
+                    Sao chép
+                </button>
+            }
+            else
+            {
+                <small class="text-secondary font-italic">Đã dùng/Hết hạn</small>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Hiệu ứng răng cưa ngăn cách */
+    .ticket-dots {
+        position: absolute;
+        right: -5px;
+        top: 0;
+        bottom: 0;
+        width: 10px;
+        background-image: radial-gradient(circle, #fff 4px, transparent 5px);
+        background-size: 10px 14px;
+        background-position: left center;
+    }
+
+    .coupon-ticket {
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+
+        .coupon-ticket:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+        }
+
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    }
+</style>
